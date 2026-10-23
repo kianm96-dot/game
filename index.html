@@ -1169,9 +1169,9 @@ function jobPick(){
 let testRAF=0;
 function testIntro(){
   const tier=S.job.tier+1,nm=S.job.p[(tier-1)*2],em=S.job.p[(tier-1)*2+1],line=S.job.line,stat=S.st[line];
-  const zone=Math.min(46,16+stat*0.7);
+  const zone=Math.min(34,10+stat*0.5);
   let tries=3,hits=0,zs=0,pos=0,dir=1,last=0,locked=false;const res=[];
-  const speed=55+tier*12;
+  const speed=80+tier*18;
   const m=$('#modal');
   m.innerHTML=`<div class="qhead"><span class="big">${em}</span><div><span class="chip" style="background:var(--t-job);color:#fff">${tier}차 전직 시험</span><h3>${jobName()} → ${nm}</h3><p class="qtext">막대가 <b style="color:#2f9e44">초록 칸</b>에 올 때 "멈춰!"를 눌러요. 3번 중 2번 성공하면 전직! (${SM[line].e} ${SM[line].n}이 높을수록 초록 칸이 넓어요)</p></div></div>
    <div class="test-bar" id="tbar"><div class="test-zone" id="tzone"></div><div class="test-mark" id="tmark"></div></div>
@@ -1291,7 +1291,7 @@ function startMission(q,k){
   const stat=S.st[GSTAT[t]];
   const item=g.item||q.ic;
   const theme=t==='deliver'?(g.theme||themeOf(q,c)):null;
-  const need={money:5,pour:1,harvest:g.animal?6:g.ripe?14:18,memo:6,dots:2,plant:8,guide:4,safari:6,cook:3,clean:10,herd:5,collect:6,catch:10,deliver:4,run:0,soccer:1,lane:0,rhythm:0,stack:7,sort:10,aim:5}[t];
+  const need={money:7,pour:1,harvest:g.animal?10:g.ripe?20:26,memo:8,dots:3,plant:10,guide:6,safari:9,cook:5,clean:18,herd:7,collect:8,catch:16,deliver:6,run:0,soccer:1,lane:0,rhythm:0,stack:10,sort:16,aim:8}[t];
   const ctrl=isLaneT(t)?'▲ ▼ 위아래 이동 · 오른쪽 버튼 = '+(t==='soccer'?'⚡개인기 / 골대 앞에서 슛':'💨 가속')+' (키보드: ↑↓, 스페이스)'
     :t==='rhythm'?'화면의 동그라미를 직접 눌러도 되고, ◀ ● ▶ 버튼도 돼요 (키보드: ←, 스페이스, →)'
     :t==='stack'?'⬇ 버튼으로 블록을 떨어뜨려요 (키보드: 스페이스)'
@@ -1301,15 +1301,15 @@ function startMission(q,k){
     money:g.send?'화면의 돈 버튼을 눌러 보낼 금액을 정확히 맞춘 뒤 ✔ 건네기! 5번 성공':'손님이 낸 돈에서 물건값을 빼고, 거스름돈을 돈 버튼으로 정확히 맞춰 ✔ 건네기! 손님 5명',
     pour:'시험관을 눌러 고르고, 옮길 시험관을 누르면 맨 위 액체가 부어져요. 같은 색끼리만 쌓여요! 시험관마다 한 가지 색만 남기면 성공 (↩️ 되돌리기)',
     harvest:g.animal?`${g.crop}을(를) 여러 번 톡톡 눌러 ${g.yield} ${need}개 얻기!`:`${g.crop}을(를) 직접 톡톡 눌러 ${g.tool==='scissors'?'가위로 잘라요':'낫으로 베어요'}! 한 번에 안 베이니 여러 번! ${need}개${g.ripe?' · 🟢 덜 익은 건 건드리지 마요':''}`,
-    memo:'카드를 두 장씩 뒤집어 같은 그림 짝을 찾아요! 화면을 직접 눌러요',
-    dots:'1번부터 순서대로 점을 눌러 이으면 그림이 완성돼요! 2장 그리기',
+    memo:'카드를 두 장씩 뒤집어 같은 그림 짝 8쌍을 찾아요! 화면을 직접 눌러요',
+    dots:'1번부터 순서대로 점을 눌러 이으면 그림이 완성돼요! 3장 그리기 · 틀린 점을 누르면 처음부터',
     plant:g.nocrow?`⬇ 표시된 자리에 서서 ${g.btn||'🌱'} 버튼을 눌러요! ${need}곳`:`⬇ 표시된 빈 자리에 서서 🌱 버튼으로 ${need}곳에 심어요! 새가 오면 가서 쫓아내요`,
     guide:`!가 뜬 손님에게 가면 나를 따라와요. 말풍선 속 장소(${(g.dests||['🏛️','🍜','🛍️']).join(' ')})로 데려다줘요! ${need}명`,
     safari:`지프를 타고 가며 동물이 네모 안에 들어올 때 📸 버튼! ${need}마리 찍기 · 돌은 점프로 피해요`,
     cook:`위의 순서대로 ${g.name&&!g.name.includes('요리')?'물건':'재료'}을 받아 ${g.dish||'요리'} ${need}개 완성! 엉뚱한 물건은 피해요`,
-    clean:g.bin?`물건을 한 번에 3개까지 들어서 ${g.bin}(으)로 옮겨요! 모두 ${need}개`:`쓰레기를 한 번에 3개까지 주워서 🗑️에 버려요! 모두 ${need}개`,
+    clean:(g.bin?'':'🐝 벌을 피하며 ')+(g.bin?`물건을 한 번에 3개까지 들어서 ${g.bin}(으)로 옮겨요! 모두 ${need}개`:`쓰레기를 한 번에 3개까지 주워서 🗑️에 버려요! 모두 ${need}개`),
     herd:`동물 뒤(왼쪽)에서 다가가면 앞으로 도망가요. 오른쪽 우리 안으로 ${need}마리 몰아넣기!`,
-    collect:`${item} ${need}개를 모두 찾아 모아요! 발판 위로 점프!`,
+    collect:`${item} ${need}개를 모두 찾아 모아요! 발판 위로 점프! 🐝 벌은 피해요`,
     catch:`하늘에서 떨어지는 ${item}을(를) ${need}개 받아요! 🪨는 피하기`,
     deliver:theme==='zoo'?`📦에서 ${item}을(를) 들고 배고픈 동물 ${need}마리에게 먹여 줘요!`:`📦에서 ${item}을(를) 들고 💭 표시한 ${theme==='school'?'친구':theme==='home'?'가족':theme==='train'?'승객':'사람'} ${need}명에게 전해 줘요!${theme==='market'?' 오토바이는 점프로 피해요':theme==='festival'?' 춤추는 사람은 점프로 피해요':theme==='hill'?' 계단을 올라가요':''}`,
     run:`장애물을 점프로 넘으며 끝까지 달려요!`,
@@ -1320,7 +1320,7 @@ function startMission(q,k){
     sort:`내려오는 물건을 알맞은 쪽으로 분류해요! ${need}개 성공하면 클리어`,
     aim:`${g.target||'🎯'}이(가) 머리 위에 올 때 발사! ${need}번 맞히기`}[t];
   M={q,k,g,t,theme,item,haz,need,got:0,bonus:0,hearts:3+(stat>=25?1:0),maxH:3+(stat>=25?1:0),t0:0,time:0,
-     tLimit:{money:70,pour:120,harvest:25,memo:60,dots:45,plant:32,guide:50,safari:34,cook:45,clean:45,herd:45,collect:30,catch:25,deliver:35,run:20,soccer:45,lane:18,rhythm:99,stack:45,sort:40,aim:25}[t],
+     tLimit:{money:60,pour:90,harvest:22,memo:45,dots:35,plant:28,guide:45,safari:32,cook:45,clean:40,herd:40,collect:24,catch:22,deliver:30,run:26,soccer:40,lane:24,rhythm:99,stack:40,sort:35,aim:22}[t],
      obs:K.obs,over:false,started:false,inv:0,carry:false,items:[],hz:[],plats:[],npcs:[],pops:[],sp:{a:0,b:0,h:1,o:1,c:2},scroll:0,
      sky:cc.sky,gr:g.snow?'#eef4fa':cc.gr,land:cc.land,w:q.w||cc.w,P:{x:70,y:0,vy:0,ground:true}};
   if(t==='soccer'||t==='lane'||t==='stack'||t==='rhythm'||t==='sort'||t==='aim')M.w='none';
@@ -1343,7 +1343,7 @@ function mgInit(){
   M.P={x:60,y:GY,vy:0,ground:true};M.started=true;M.time=0;tapQ=[];jumpQ=false;
   if(t==='collect'){
     M.plats=[{x:W*.12,y:GY-88,w:120},{x:W*.42,y:GY-172,w:110},{x:W*.68,y:GY-88,w:120}];const p=M.plats;
-    M.items=[[W*.3,GY],[W*.58,GY],[W-36,GY],[p[0].x+60,p[0].y],[p[1].x+55,p[1].y],[p[2].x+60,p[2].y]].map(([x,y])=>({x,y,e:M.item}));
+    M.items=[[W*.3,GY],[W*.58,GY],[W-80,GY],[p[0].x+30,p[0].y],[p[0].x+95,p[0].y],[p[1].x+55,p[1].y],[p[2].x+25,p[2].y],[p[2].x+95,p[2].y]].map(([x,y])=>({x,y,e:M.item}));
   }else if(t==='deliver'){initDeliver(W);
   }else if(isLaneT(t)){
     M.top=60;M.bot=LH-96;M.P={x:W*.22,y:(60+LH-96)/2};M.dash=0;M.cd=0;M.dist=0;M.goalDist=1500;M.phase='drib';M.shots=2;M.ball=null;M.kp={y:LH/2,t:0};
@@ -1359,7 +1359,7 @@ function mgInit(){
   else if(t==='harvest')initHarvest(W);
   else if(t==='pour')initPour(W);
   else if(t==='money')initMoney(W);
-  else if(t==='aim'){M.tg={x:W*.5,y:110,vx:120};M.shotsF=[];M.cd=0;M.P={x:W/2,y:GY,vy:0,ground:true}}
+  else if(t==='aim'){M.tg={x:W*.5,y:110,vx:200};M.shotsF=[];M.cd=0;M.P={x:W/2,y:GY,vy:0,ground:true}}
   cancelAnimationFrame(mgRAF);let last=0;
   const loop=ts=>{if(!last)last=ts;const dt=Math.min(.033,(ts-last)/1000);last=ts;mgUpdate(dt);mgDraw(ts);if(M&&!M.done)mgRAF=requestAnimationFrame(loop)};
   mgRAF=requestAnimationFrame(loop);
@@ -1383,19 +1383,21 @@ function mgUpdate(dt){
   const px=P.x,py=P.y-20;
   if(M.haz&&['run','collect','catch','deliver','plant','guide','cook','clean','herd'].includes(t)){M.sp.h-=dt;if(M.sp.h<=0){M.sp.h=1.1;M.hz.push({x:Math.max(20,Math.min(W-20,P.x+(Math.random()-.5)*320)),y:-20,vy:170+Math.random()*80})}
     for(const h of M.hz){h.y+=h.vy*dt;if(!h.hit&&dist(px,py,h.x,h.y-14)<28){h.hit=true;hurt()}}M.hz=M.hz.filter(h=>!h.hit&&h.y<GY+20)}
+  if(t==='collect'||t==='clean')updMovers2(dt);
   if(t==='collect'){for(const it of M.items)if(!it.got&&dist(px,py,it.x,it.y-18)<30){it.got=true;M.got++;pop(it.x,it.y-40,'+1');beep(880,.1)}}
   else if(t==='catch'){M.sp.a-=dt;M.sp.b-=dt;
-    if(M.sp.a<=0){M.sp.a=.6;M.items.push({x:30+Math.random()*(W-60),y:-20,vy:120+Math.random()*80+S.stage*6,e:M.item,good:true})}
-    if(M.sp.b<=0){M.sp.b=1.5;M.items.push({x:30+Math.random()*(W-60),y:-20,vy:150+Math.random()*80,e:'🪨',good:false})}
+    if(M.sp.a<=0){M.sp.a=.55;M.items.push({x:30+Math.random()*(W-60),y:-20,vy:180+Math.random()*110+S.stage*10,e:M.item,good:true})}
+    if(M.sp.b<=0){M.sp.b=.75;M.items.push({x:30+Math.random()*(W-60),y:-20,vy:210+Math.random()*110,e:'🪨',good:false})}
     for(const it of M.items){it.y+=it.vy*dt;if(!it.hit&&dist(px,py,it.x,it.y-16)<30){it.hit=true;if(it.good){M.got++;pop(it.x,it.y-30,'+1');beep(880,.08)}else hurt()}}
     M.items=M.items.filter(it=>!it.hit&&it.y<GY+30)}
   else if(t==='deliver'){
     if(!M.carry&&dist(px,py,M.src.x,M.src.y-18)<38){M.carry=true;pop(M.src.x,M.src.y-50,'들었다!');beep(600,.08)}
-    if(M.carry)for(const n of M.npcs)if(!n.done&&dist(px,py,n.x,n.y-18)<36){n.done=true;M.carry=false;M.got++;pop(n.x,n.y-60,'💖');beep(990,.15)}}
-  else if(t==='run'){const sp=230+S.stage*14;M.scroll+=sp*dt;M.sp.o-=dt;M.sp.c-=dt;
-    if(M.sp.o<=0){M.sp.o=.85+Math.random()*.8;M.items.push({x:W+30,y:GY,e:rnd(M.g.snow?['⛄','🪵']:M.obs),ob:true})}
+    if(M.carry)for(const n of M.npcs)if(!n.done&&dist(px,py,n.x,n.y-18)<36){n.done=true;M.carry=false;M.got++;pop(n.x,n.y-60,'💖');beep(990,.15)}
+    if(M.npcs.every(n=>n.done)&&M.got<M.need){const a=[...M.npcs].sort(()=>Math.random()-.5).slice(0,2);a.forEach(n=>n.done=false);pop(LW/2,80,'또 주문이 왔어요!')}}
+  else if(t==='run'){const sp=290+S.stage*20;M.scroll+=sp*dt;M.sp.o-=dt;M.sp.c-=dt;
+    if(M.sp.o<=0){M.sp.o=.55+Math.random()*.6;M.items.push({x:W+30,y:GY,e:rnd(M.g.snow?['⛄','🪵']:M.obs),ob:true});if(Math.random()<.3)M.items.push({x:W+30,y:GY-120,e:'🦅',ob:true,fly:1})}
     if(M.sp.c<=0){M.sp.c=1.6+Math.random();M.items.push({x:W+30,y:GY-95,e:'⭐',ob:false})}
-    for(const it of M.items){it.x-=sp*dt;if(it.ob){if(!it.hit&&Math.abs(px-it.x)<24&&P.y>GY-30){it.hit=true;hurt()}}else if(!it.hit&&dist(px,py,it.x,it.y-16)<30){it.hit=true;M.bonus++;pop(it.x,it.y-30,'+★');beep(990,.08)}}
+    for(const it of M.items){it.x-=sp*dt*(it.fly?1.3:1);if(it.ob){if(!it.hit&&Math.abs(px-it.x)<24&&(it.fly?Math.abs(P.y-20-it.y+16)<30:P.y>GY-30)){it.hit=true;hurt()}}else if(!it.hit&&dist(px,py,it.x,it.y-16)<30){it.hit=true;M.bonus++;pop(it.x,it.y-30,'+★');beep(990,.08)}}
     M.items=M.items.filter(it=>it.x>-40&&!(it.hit&&!it.ob))}
   else if(isLaneT(t))updLane(dt,taps);
   else if(t==='rhythm')updRhythmStyled(dt,taps);
@@ -1423,17 +1425,17 @@ function updLane(dt,taps){
   const act=taps.includes('j');
   if(M.phase==='drib'){
     if(act&&M.cd<=0){M.dash=.55;M.cd=1.4;pop(P.x,P.y-30,soccer?'개인기!':'💨');beep(700,.1,'triangle')}
-    const sp=(soccer?200:220+S.stage*10)*(M.dash>0?1.7:1);M.scroll+=sp*dt;M.dist+=sp*dt;
+    const sp=(soccer?230:300+S.stage*14)*(M.dash>0?1.6:1);M.scroll+=sp*dt;M.dist+=sp*dt;
     M.sp.o-=dt;M.sp.c-=dt;
     if(M.sp.o<=0){
-      M.sp.o=soccer?.95+Math.random()*.5:.7+Math.random()*.6;
+      M.sp.o=soccer?.55+Math.random()*.45:.42+Math.random()*.45;
       const y=M.top+20+Math.random()*(M.bot-M.top-30);
-      if(g.v==='ski'&&g.skin==='⛷️'&&Math.random()<.5){M.items.push({x:W+30,y,gate:true,gap:96})}
+      if(g.v==='ski'&&g.skin==='⛷️'&&Math.random()<.5){M.items.push({x:W+30,y,gate:true,gap:70})}
       else M.items.push({x:W+30,y,e:soccer?(g.v==='ice'?'⛸️':'🏃'):rnd({boat:['🪨','🪵','🐊'],ski:['🌲','🪨'],road:['🛵','🚗','🛵'],sky:['🦅','⚡']}[g.v]),ob:true,track:soccer});
     }
     if(M.sp.c<=0){M.sp.c=1.3+Math.random();M.items.push({x:W+30,y:M.top+20+Math.random()*(M.bot-M.top-30),e:'⭐',ob:false})}
     for(const it of M.items){it.x-=sp*dt+(it.track?40*dt:0);
-      if(it.track&&it.x>P.x)it.y+=Math.sign(P.y-it.y)*Math.min(Math.abs(P.y-it.y),70*dt);
+      if(it.track&&it.x>P.x)it.y+=Math.sign(P.y-it.y)*Math.min(Math.abs(P.y-it.y),135*dt);
       if(it.gate){if(!it.done&&it.x<P.x){it.done=true;if(Math.abs(P.y-it.y)<it.gap/2){M.got++;pop(P.x,P.y-30,'통과!');beep(880,.1)}else hurt('깃발 놓침!')}}
       else if(it.ob){if(!it.hit&&M.dash<=0&&dist(P.x,P.y,it.x,it.y)<30){it.hit=true;hurt(soccer?'공 뺏김!':'💥')}}
       else if(!it.hit&&dist(P.x,P.y,it.x,it.y)<30){it.hit=true;M.bonus++;pop(it.x,it.y-20,'+★');beep(990,.08)}}
@@ -1442,15 +1444,15 @@ function updLane(dt,taps){
   }else{ /* 슛 단계 */
     const gx=W-46,gTop=LH/2-74,gBot=LH/2+74;M.kp.t+=dt;
     if(g.v==='rugby'){ /* 트라이: 끝선까지 수비 1명을 피해 달려가 찍기 */
-      P.x=Math.min(gx,P.x+150*dt);M.kp.y=LH/2+Math.sin(M.kp.t*2.2)*80;
-      if(dist(P.x,P.y,W*.7,M.kp.y)<32&&hurt('태클!')){P.x=W*.22}
+      P.x=Math.min(gx,P.x+150*dt);M.kp.y=LH/2+Math.sin(M.kp.t*3.4)*85;
+      if(dist(P.x,P.y,W*.7,M.kp.y)<40&&hurt('태클!')){P.x=W*.22}
       if(P.x>=gx-4){M.got=1;mgEnd(true)}return}
-    M.kp.y=LH/2+Math.sin(M.kp.t*(1.8+S.stage*.15))*58;
+    M.kp.y=LH/2+Math.sin(M.kp.t*(2.6+S.stage*.2))*52+Math.sin(M.kp.t*4.1)*14;
     if(act&&!M.ball&&M.shots>0){M.ball={x:P.x+20,y:P.y};M.shots--;beep(300,.12,'square',.1)}
     if(M.ball){M.ball.x+=560*dt;
       if(M.ball.x>=gx-14){const b=M.ball;M.ball=null;
-        if(Math.abs(b.y-M.kp.y)<30){pop(gx-30,b.y-20,'막혔다!');beep(200,.2,'sawtooth',.1)}
-        else if(b.y>gTop&&b.y<gBot){M.got=1;pop(gx-40,b.y-20,'골~인!');beep(660,.15);beep(990,.3);return mgEnd(true)}
+        if(Math.abs(b.y-M.kp.y)<36){pop(gx-30,b.y-20,'막혔다!');beep(200,.2,'sawtooth',.1)}
+        else if(b.y>gTop+14&&b.y<gBot-14){M.got=1;pop(gx-40,b.y-20,'골~인!');beep(660,.15);beep(990,.3);return mgEnd(true)}
         else pop(gx-40,b.y-20,'골대 밖!');
         if(M.shots<=0)setTimeout(()=>{if(M&&!M.over)mgEnd(false)},500)}}
   }
@@ -1470,11 +1472,11 @@ function updRhythm(dt,taps){
 /* ── 쌓기 ── */
 function updStack(dt,taps){
   const W=LW,cur=M.cur,top=M.stack[M.stack.length-1];
-  cur.x+=cur.dir*(150+M.stack.length*16)*dt;if(cur.x<10){cur.x=10;cur.dir=1}if(cur.x+cur.w>W-10){cur.x=W-10-cur.w;cur.dir=-1}
+  cur.x+=cur.dir*(220+M.stack.length*26)*dt;if(cur.x<10){cur.x=10;cur.dir=1}if(cur.x+cur.w>W-10){cur.x=W-10-cur.w;cur.dir=-1}
   if(taps.includes('j')){
     const L=Math.max(cur.x,top.x),R=Math.min(cur.x+cur.w,top.x+top.w),ov=R-L;
     if(ov<=6){hurt('빗나감!');M.debris.push({x:cur.x,w:cur.w,y:0,lvl:M.stack.length,vy:0})}
-    else if(Math.abs(cur.x-top.x)<7){M.stack.push({x:top.x,w:top.w});M.got++;pop(W/2,LH/2,'퍼펙트!');beep(1046,.15,'triangle')}
+    else if(Math.abs(cur.x-top.x)<5){M.stack.push({x:top.x,w:top.w});M.got++;pop(W/2,LH/2,'퍼펙트!');beep(1046,.15,'triangle')}
     else{M.stack.push({x:L,w:ov});M.got++;beep(660,.1,'triangle');
       const cutX=cur.x<top.x?cur.x:R,cutW=cur.w-ov;M.debris.push({x:cutX,w:cutW,y:0,lvl:M.stack.length-1,vy:0})}
     const nt=M.stack[M.stack.length-1];M.cur={x:Math.random()<.5?10:W-10-nt.w,w:nt.w,dir:Math.random()<.5?1:-1};
@@ -1485,11 +1487,11 @@ function updStack(dt,taps){
 /* ── 분류 ── */
 function updSort(dt,taps){
   const W=LW,g=M.g,lineY=LH-170;M.sp.a-=dt;
-  if(M.sp.a<=0){M.sp.a=Math.max(.9,1.6-M.got*.05);const side=Math.random()<.5?'L':'R';M.queue.push({e:rnd(g[side].items),side,x:W/2,y:56,fly:0})}
+  if(M.sp.a<=0){M.sp.a=Math.max(.6,1.1-M.got*.04);const side=Math.random()<.5?'L':'R';M.queue.push({e:rnd(g[side].items),side,x:W/2,y:56,fly:0})}
   const front=M.queue.find(it=>!it.fly);
   for(const tp of taps){if(!front)break;const s=tp==='l'?'L':(tp==='r'||tp==='j')?'R':null;if(!s)continue;
     front.fly=s==='L'?-1:1;if(front.side===s){M.got++;pop(W/2,lineY-30,'딩동!');beep(880,.1)}else{front.wrong=true;hurt('땡!')}break}
-  for(const it of M.queue){if(it.fly){it.x+=it.fly*520*dt;it.y+=120*dt}else it.y+=(70+M.got*3)*dt;
+  for(const it of M.queue){if(it.fly){it.x+=it.fly*520*dt;it.y+=120*dt}else it.y+=(110+M.got*6)*dt;
     if(!it.fly&&it.y>lineY+50){it.fly=it.side==='L'?-1:1;it.missed=true;pop(W/2,lineY,'놓쳤다');}}
   M.queue=M.queue.filter(it=>it.x>-40&&it.x<W+40&&it.y<LH+40);
 }
@@ -1499,9 +1501,9 @@ function updAim(dt,taps){
   tg.x+=tg.vx*dt;if(tg.x<40||tg.x>W-40){tg.vx*=-1;tg.x=Math.max(40,Math.min(W-40,tg.x))}
   if(M.g.target==='🪅'||M.g.target==='🌠')tg.y=100+Math.sin(M.time*2.3)*30;
   M.cd=Math.max(0,M.cd-dt);
-  if(taps.includes('j')&&M.cd<=0){M.cd=.45;M.shotsF.push({x:P.x,y:P.y-40});beep(400,.06,'square',.06)}
-  for(const s of M.shotsF){s.y-=560*dt;if(!s.hit&&dist(s.x,s.y,tg.x,tg.y-18)<30){s.hit=true;M.got++;pop(tg.x,tg.y-40,'명중!');beep(990,.15);
-    tg.vx=Math.sign(tg.vx||1)*(Math.abs(tg.vx)+35);tg.x=40+Math.random()*(W-80)}}
+  if(taps.includes('j')&&M.cd<=0){M.cd=.6;M.shotsF.push({x:P.x,y:P.y-40});beep(400,.06,'square',.06)}
+  for(const s of M.shotsF){s.y-=560*dt;if(!s.hit&&dist(s.x,s.y,tg.x,tg.y-18)<24){s.hit=true;M.got++;pop(tg.x,tg.y-40,'명중!');beep(990,.15);
+    tg.vx=Math.sign(tg.vx||1)*(Math.abs(tg.vx)+50);tg.x=40+Math.random()*(W-80)}}
   M.shotsF=M.shotsF.filter(s=>!s.hit&&s.y>-20);
 }
 function mgEnd(ok){
@@ -1582,7 +1584,7 @@ const fmt=n=>n.toLocaleString('ko-KR');
 function newCustomer(){const[cn,d]=CUR[S.cid]||CUR.KR,u=d[2],g=M.g;
   const goods=g.goods||['🍞','🥛','🍎','🧃','🍙','🥚','🍌','🧀'];
   if(g.send){const amt=u*(6+Math.floor(Math.random()*40));M.cust={e:rnd(PEOPLE),item:g.item||'📱',price:amt,paid:0,change:amt}}
-  else{const price=u*(3+Math.floor(Math.random()*45)),paid=price<d[0]*5?d[0]*5:d[0]*10;M.cust={e:rnd(PEOPLE),item:rnd(goods),price,paid,change:paid-price}}
+  else{const price=u*(13+Math.floor(Math.random()*84)),paid=price<d[0]*5?d[0]*5:d[0]*10;M.cust={e:rnd(PEOPLE),item:rnd(goods),price,paid,change:paid-price}}
   M.tray=[];M.cn=cn;M.den=d;M.cust.x=LW+40}
 function initMoney(W){M.clicks=[];newCustomer();M.btns=[]}
 function moneyBtns(){const W=LW,y=LH-58,d=M.den,b=[];const bw=Math.min(92,(W-120)/5);const x0=W/2-bw*2.5;
@@ -1616,7 +1618,7 @@ function drawMoney(ts){
 /* ── 시험관 색깔 정렬 (과학 실험) ── */
 const LIQ=['#ff6b6b','#4dabf7','#ffd43b','#69db7c','#cc5de8'];
 function initPour(W){
-  const nc=S.stage>=3?4:3,cap=4;let balls=[];for(let c=0;c<nc;c++)for(let i=0;i<cap;i++)balls.push(c);
+  const nc=S.stage>=3?5:4,cap=4;let balls=[];for(let c=0;c<nc;c++)for(let i=0;i<cap;i++)balls.push(c);
   let tubes,tries=0;do{balls.sort(()=>Math.random()-.5);tubes=[];for(let t=0;t<nc;t++)tubes.push(balls.slice(t*cap,t*cap+cap));tubes.push([],[]);tries++}while(tries<30&&(tubes.some(t=>t.length&&t.every(x=>x===t[0]))||!pourSolvable(tubes,cap)));M.tubes=tubes;M.cap=cap;M.sel=-1;M.hist=[];M.clicks=[];M.lift=0;M.pourAnim=null;
   const n=tubes.length,tw=Math.min(54,(W-80)/n-14);M.tw=tw;M.th=tw*.9*cap+20;M.tx=i=>W/2-(n*(tw+20))/2+i*(tw+20)+10;M.ty=LH/2-M.th/2+20;
 }
@@ -1653,16 +1655,16 @@ function drawPour(ts){
 /* ── 수확 (작물을 터치해 낫으로 베기) ── */
 function initHarvest(W){
   const g=M.g;M.cuts=[];M.flyers=[];M.clicks=[];
-  if(g.animal){M.crops=[0,1,2,3,4].map(i=>({x:W*(.18+i*.16),y:LH-110,hp:3,max:3,cool:0}));}
+  if(g.animal){M.crops=[0,1,2,3,4].map(i=>({x:W*(.18+i*.16),y:LH-110,hp:5,max:5,cool:0}));}
   else{const rows=[LH-104,LH-160,LH-216],cols=8;M.crops=[];
-    rows.forEach((y,ri)=>{for(let c=0;c<cols;c++){const x=W*.13+c*(W*.74/(cols-1))+(ri%2?14:0);M.crops.push({x,y,hp:g.hp||2,max:g.hp||2,cut:false,unripe:g.ripe?Math.random()<.32:false})}})}
+    rows.forEach((y,ri)=>{for(let c=0;c<cols;c++){const x=W*.13+c*(W*.74/(cols-1))+(ri%2?14:0);M.crops.push({x,y,hp:g.hp||3,max:g.hp||3,cut:false,unripe:g.ripe?Math.random()<.32:false})}})}
 }
 function chop(cr){
   const g=M.g;M.cuts.push({x:cr.x,y:cr.y-18,life:.22});
   if(cr.unripe){hurt('덜 익었어!');cr.unripe=false;cr.cut=true;return}
   cr.hp--;beep(g.animal?500:900-cr.hp*120,.05,'triangle',.08);
   if(cr.hp<=0){M.got++;M.flyers.push({x:cr.x,y:cr.y-20,life:.6,e:g.yield||g.crop});
-    if(g.animal){cr.hp=cr.max;cr.cool=1.1;pop(cr.x,cr.y-60,'+1')}else cr.cut=true}
+    if(g.animal){cr.hp=cr.max;cr.cool=1.6;pop(cr.x,cr.y-60,'+1')}else cr.cut=true}
 }
 function updHarvest(dt,taps){
   for(const c of M.clicks){let best=null,bd=40;for(const cr of M.crops){if(cr.cut||cr.cool>0)continue;const d=Math.hypot(c.x-cr.x,c.y-(cr.y-18));if(d<bd){bd=d;best=cr}}if(best)chop(best)}
@@ -1719,10 +1721,12 @@ function initDeliver(W){
   M.plats=pl;M.src={x:30,y:GY};
   const who=th==='zoo'?[zooAnimal(M.q,M.q.ch[M.k])]:th==='school'?['👧','👦','🧒','👧🏽','👦🏻']:th==='home'?['👵','👴','👩','👨','👧']:th==='train'?['🧑‍💼','👵','🧔','👩']:P_;
   M.npcs=spots.map(([x,y],i)=>({x,y,e:who[i%who.length],done:false}));
-  M.movers=[];M.sp.m=th==='market'||th==='festival'?1.6:1e9;
+  M.movers=[];M.sp.m=1.4;
 }
+
+function updMovers2(dt){if(!M.bees){M.bees=[{x:LW*.4,v:110},{x:LW*.75,v:-140}]}for(const b of M.bees){b.x+=b.v*dt;if(b.x<40||b.x>LW-40)b.v*=-1;if(Math.abs(b.x-M.P.x)<22&&M.P.y>GY-34)hurt('앗 따가워!')}}
 function updMovers(dt){if(M.t!=='deliver')return;M.sp.m-=dt;
-  if(M.sp.m<=0){M.sp.m=2.2+Math.random()*1.4;M.movers.push({x:LW+30,e:M.theme==='market'?rnd(['🛵','🚲','🛒']):rnd(['💃','🕺','🤹']),v:150+Math.random()*80})}
+  if(M.sp.m<=0){M.sp.m=1.5+Math.random()*1.1;M.movers.push({x:LW+30,e:({market:['🛵','🚲','🛒'],festival:['💃','🕺','🤹'],zoo:['🐗','🦆'],harbor:['🦀','🐕'],school:['⚽','🏀'],home:['🐈','🧸'],train:['🧳','🛄'],hill:['🪨','🐐']})[M.theme]?rnd(({market:['🛵','🚲','🛒'],festival:['💃','🕺','🤹'],zoo:['🐗','🦆'],harbor:['🦀','🐕'],school:['⚽','🏀'],home:['🐈','🧸'],train:['🧳','🛄'],hill:['🪨','🐐']})[M.theme]):rnd(['🐕','🚲','🐈']),v:170+Math.random()*90})}
   for(const m of M.movers){m.x-=m.v*0.016*60*dt;if(!m.hit&&Math.abs(m.x-M.P.x)<24&&M.P.y>GY-30){m.hit=true;hurt('부딪혔다!')}}M.movers=M.movers.filter(m=>m.x>-40)}
 function drawDeliverBg(ts){
   const W=LW,th=M.theme;
@@ -1746,22 +1750,22 @@ function rnd2(x){return(Math.sin(x*12.9898)*43758.5453)%1+(x<0?1:0)}
 /* ── 카드 짝 맞추기 · 점 잇기 ── */
 function initBoard(t,W){
   M.clicks=[];
-  if(t==='memo'){const set=(M.g.set||['📘','🔬','🌍','💡','🧪','📐']).slice(0,6);const deck=[...set,...set].sort(()=>Math.random()-.5);
-    const cw=Math.min(66,(W-120)/6),ch=Math.min(66,(LH-120)/2.2);M.cards=deck.map((e,i)=>({e,col:i%6,row:Math.floor(i/6),open:false,done:false}));
-    M.cw=cw;M.chh=ch;M.ox=W/2-cw*3;M.oy=LH/2-ch-6;M.flip=[];M.wait=0}
+  if(t==='memo'){const base=(M.g.set||['📘','🔬','🌍','💡','🧪','📐']).slice(0,6);const set=[...base,...['⭐','🔔'].filter(x=>!base.includes(x))].slice(0,8);const deck=[...set,...set].sort(()=>Math.random()-.5);
+    const cw=Math.min(60,(W-120)/8),ch=Math.min(58,(LH-110)/2.2);M.cards=deck.map((e,i)=>({e,col:i%8,row:Math.floor(i/8),open:false,done:false}));
+    M.cw=cw;M.chh=ch;M.ox=W/2-cw*4;M.oy=LH/2-ch-6;M.flip=[];M.wait=0}
   else if(t==='dots'){M.round=0;newDots(W)}
 }
-function newDots(W){const n=7,cx=W/2,cy=LH/2+6,r=Math.min(W*.3,110);const a0=Math.random()*6;
+function newDots(W){const n=10,cx=W/2,cy=LH/2+6,r=Math.min(W*.3,110);const a0=Math.random()*6;
   M.dots=Array.from({length:n},(_,i)=>{const a=a0+i*(Math.PI*2/n)+(Math.random()-.5)*.35,rr=r*(.7+Math.random()*.35);return{x:cx+Math.cos(a)*rr*1.5,y:cy+Math.sin(a)*rr*.8}});M.next=0;M.shown=0}
 function updBoard(dt){
   const cl=M.clicks;M.clicks=[];
   if(M.t==='memo'){
     if(M.wait>0){M.wait-=dt;if(M.wait<=0){const[a,b]=M.flip;if(a.e===b.e){a.done=b.done=true;M.got++;pop(LW/2,40,'짝 찾았다!');beep(990,.15)}else{a.open=b.open=false}M.flip=[]}return}
     for(const c of cl){const col=Math.floor((c.x-M.ox)/M.cw),row=Math.floor((c.y-M.oy)/M.chh);const cd=M.cards.find(k=>k.col===col&&k.row===row);
-      if(!cd||cd.open||cd.done)continue;cd.open=true;M.flip.push(cd);beep(600,.05,'triangle');if(M.flip.length===2){M.wait=.6;break}}
+      if(!cd||cd.open||cd.done)continue;cd.open=true;M.flip.push(cd);beep(600,.05,'triangle');if(M.flip.length===2){M.wait=.4;break}}
   }else{
     if(M.shown>0){M.shown-=dt;if(M.shown<=0){if(M.got>=M.need)return;newDots(LW)}return}
-    for(const c of cl){const d=M.dots[M.next];if(d&&Math.hypot(c.x-d.x,c.y-d.y)<34){M.next++;beep(500+M.next*80,.07,'triangle');
+    for(const c of cl){const d=M.dots[M.next];const wrong=M.dots.findIndex((q,i)=>i!==M.next&&i>=M.next&&Math.hypot(c.x-q.x,c.y-q.y)<20);if(wrong>=0){M.next=0;pop(LW/2,60,'순서가 틀렸어요! 처음부터');beep(200,.1,'square',.06);continue}if(d&&Math.hypot(c.x-d.x,c.y-d.y)<26){M.next++;beep(500+M.next*80,.07,'triangle');
       if(M.next>=M.dots.length){M.got++;M.shown=1.4;pop(LW/2,60,'완성!');beep(1046,.25,'triangle')}}}
   }
 }
@@ -1782,13 +1786,13 @@ function drawBoard(ts){
 /* ── 전용 미션: 심기 · 안내 · 사파리 · 요리 · 청소 · 가축 몰기 ── */
 function initSpecial(t,W){
   const g=M.g;
-  if(t==='plant'){M.spots=[];const n=8;for(let i=0;i<n;i++)M.spots.push({x:W*.12+i*(W*.76/(n-1)),st:0,gr:0});M.crows=[];M.sp.c=g.nocrow?1e9:3.5}
+  if(t==='plant'){M.spots=[];const n=10;for(let i=0;i<n;i++)M.spots.push({x:W*.12+i*(W*.76/(n-1)),st:0,gr:0});M.crows=[];M.sp.c=g.nocrow?1e9:3.5}
   else if(t==='guide'){const ds=g.dests||['🏛️','🍜','🛍️'];M.dests=ds.map((e,i)=>({e,x:ds.length===1?W*.85:W*(.38+i*.26)}));M.tour=null;M.queueN=0;M.sp.a=.2}
-  else if(t==='safari'){if(!g.skin)g.skin='🚙';M.P={x:W*.25,y:GY,vy:0,ground:true};M.animals=[];M.sp.a=.6;M.sp.o=1.8;M.flash=0;M.frameX=W*.6}
+  else if(t==='safari'){if(!g.skin)g.skin='🚙';M.P={x:W*.25,y:GY,vy:0,ground:true};M.animals=[];M.sp.a=.6;M.sp.o=1.8;M.flash=0;M.frameX=W*.6;M.fw=30}
   else if(t==='cook'){M.step=0;M.items=[];M.sp.a=.3}
   else if(t==='clean'){M.plats=[{x:W*.3,y:GY-80,w:120},{x:W*.62,y:GY-80,w:120}];M.bin={x:40,e:g.bin||'🗑️'};M.carryN=0;const it=g.items||['🥤','🧴','🍌','📰','🥫','🛍️'];
     M.trash=[];const xs=[W*.22,W*.45,W*.55,W*.8,W*.92,W*.36,W*.7];xs.forEach(x=>M.trash.push({x,y:GY,e:rnd(it)}));M.plats.forEach(p=>{M.trash.push({x:p.x+30,y:p.y,e:rnd(it)});M.trash.push({x:p.x+90,y:p.y,e:rnd(it)})});M.sp.a=4}
-  else if(t==='herd'){M.herd=[];for(let i=0;i<5;i++)M.herd.push({x:W*(.25+i*.09),vx:0,pen:false,ph:Math.random()*6});M.P.x=W*.12}
+  else if(t==='herd'){M.herd=[];for(let i=0;i<7;i++)M.herd.push({x:W*(.2+i*.075),vx:0,pen:false,ph:Math.random()*6});M.P.x=W*.12}
 }
 function updSpecial(dt,taps){
   const P=M.P,W=LW,t=M.t,g=M.g,px=P.x,py=P.y-20;
@@ -1796,31 +1800,32 @@ function updSpecial(dt,taps){
     if(taps.includes('j')){const s=M.spots.filter(s=>!s.st).sort((a,b)=>Math.abs(a.x-px)-Math.abs(b.x-px))[0];
       if(s&&Math.abs(s.x-px)<34){s.st=1;s.gr=0;M.got++;pop(s.x,GY-40,'쏙!');beep(780,.08,'triangle')}else pop(px,py-30,'빈 자리로 가요')}
     for(const s of M.spots)if(s.st)s.gr=Math.min(1,s.gr+dt*.7);
-    M.sp.c-=dt;if(M.sp.c<=0){M.sp.c=2.6+Math.random()*1.5;const tg=M.spots.filter(s=>s.st);if(tg.length){const s=rnd(tg);M.crows.push({x:s.x,y:-20,tgt:s,land:0})}}
-    for(const c of M.crows){if(c.y<GY-26)c.y+=110*dt;else{c.land+=dt;if(c.land>1.6&&c.tgt.st){c.tgt.st=0;M.got--;c.gone=true;pop(c.x,GY-50,'냠!')}}
+    M.sp.c-=dt;if(M.sp.c<=0){M.sp.c=1.3+Math.random()*1.1;const tg=M.spots.filter(s=>s.st);if(tg.length){const s=rnd(tg);M.crows.push({x:s.x,y:-20,tgt:s,land:0})}}
+    for(const c of M.crows){if(c.y<GY-26)c.y+=170*dt;else{c.land+=dt;if(c.land>1&&c.tgt.st){c.tgt.st=0;M.got--;c.gone=true;pop(c.x,GY-50,'냠!')}}
       if(!c.gone&&dist(px,py,c.x,c.y)<40){c.gone=true;pop(c.x,c.y-20,'훠이!');beep(300,.1,'square',.08)}}
-    M.crows=M.crows.filter(c=>!c.gone&&!(c.land>1.6));
+    M.crows=M.crows.filter(c=>!c.gone&&!(c.land>1));
   }else if(t==='guide'){
+    updMovers2(dt);
     if(!M.tour&&M.queueN<M.need){M.sp.a-=dt;if(M.sp.a<=0){M.tour={x:36,e:rnd(PEOPLE),want:rnd(M.dests),fol:false};M.queueN++}}
     const tr=M.tour;if(tr){
       if(!tr.fol&&Math.abs(px-tr.x)<36&&P.ground){tr.fol=true;pop(tr.x,GY-60,'따라갈게요!');beep(600,.08)}
       if(tr.fol){tr.x+=((px-34*(M.face||1))-tr.x)*Math.min(1,dt*5);
         if(Math.abs(px-tr.want.x)<44&&P.ground){M.got++;pop(tr.want.x,GY-90,'고마워요! 💖');beep(990,.15);M.tour=null;M.sp.a=.6}}}
   }else if(t==='safari'){
-    const sp=170;M.scroll+=sp*dt;
+    const sp=230;M.scroll+=sp*dt;
     if(jumpQ&&P.ground){P.vy=-560;P.ground=false}jumpQ=false;P.vy+=1500*dt;P.y+=P.vy*dt;if(P.y>=GY){P.y=GY;P.vy=0;P.ground=true}
     M.sp.a-=dt;M.sp.o-=dt;
-    if(M.sp.a<=0){M.sp.a=1.3+Math.random()*.9;M.animals.push({x:W+40,e:rnd(g.animals||['🦁','🦓','🐘','🦒']),shot:false,f:.55+Math.random()*.3})}
-    if(M.sp.o<=0){M.sp.o=1.6+Math.random()*1.2;M.items.push({x:W+30,e:rnd(M.obs),ob:true})}
+    if(M.sp.a<=0){M.sp.a=1+Math.random()*.8;M.animals.push({x:W+40,e:rnd(g.animals||['🦁','🦓','🐘','🦒']),shot:false,f:.55+Math.random()*.3})}
+    if(M.sp.o<=0){M.sp.o=.9+Math.random()*.9;M.items.push({x:W+30,e:rnd(M.obs),ob:true})}
     for(const a of M.animals)a.x-=sp*a.f*dt;M.animals=M.animals.filter(a=>a.x>-60);
     for(const it of M.items){it.x-=sp*dt;if(!it.hit&&Math.abs(px-it.x)<24&&P.y>GY-30){it.hit=true;hurt('덜컹!')}}M.items=M.items.filter(it=>it.x>-40);
     if(taps.includes('l')){M.flash=.25;beep(1500,.05,'square',.06);
-      const a=M.animals.find(a=>!a.shot&&Math.abs(a.x-M.frameX)<46);if(a){a.shot=true;M.got++;pop(a.x,GY-150,'찰칵! 📸')}else pop(M.frameX,GY-150,'흔들렸다!')}
+      const a=M.animals.find(a=>!a.shot&&Math.abs(a.x-M.frameX)<M.fw);if(a){a.shot=true;M.got++;pop(a.x,GY-150,'찰칵! 📸')}else pop(M.frameX,GY-150,'흔들렸다!')}
     M.flash=Math.max(0,M.flash-dt);
   }else if(t==='cook'){
     const rec=g.recipe;M.sp.a-=dt;
-    if(M.sp.a<=0){M.sp.a=.55;const need=rec[M.step];const r=Math.random();const e=r<.42?need:r<.72?rnd(rec):rnd(g.decoy||['🧦','🪨','👟','🧸']);
-      M.items.push({x:30+Math.random()*(W-60),y:-20,vy:110+Math.random()*70,e})}
+    if(M.sp.a<=0){M.sp.a=.42;const need=rec[M.step];const r=Math.random();const e=r<.3?need:r<.6?rnd(rec):rnd(g.decoy||['🧦','🪨','👟','🧸']);
+      M.items.push({x:30+Math.random()*(W-60),y:-20,vy:170+Math.random()*100,e})}
     for(const it of M.items){it.y+=it.vy*dt;if(!it.hit&&dist(px,py,it.x,it.y-16)<30){it.hit=true;
       if(it.e===rec[M.step]){M.step++;pop(it.x,it.y-30,'✔');beep(700+M.step*120,.08);if(M.step>=rec.length){M.step=0;M.got++;pop(px,py-60,`${g.dish} 완성!`);beep(1046,.25,'triangle')}}
       else if(rec.includes(it.e))pop(it.x,it.y-30,'순서가 달라요');else hurt('이건 재료가 아니야!')}}
@@ -1832,7 +1837,7 @@ function updSpecial(dt,taps){
     M.sp.a-=dt;if(M.sp.a<=0&&M.trash.filter(t=>!t.got).length<4){M.sp.a=3;M.trash.push({x:W*.2+Math.random()*W*.75,y:GY,e:rnd(g.items||['🥤','🧴','🍌','📰'])})}
   }else if(t==='herd'){
     for(const a of M.herd){if(a.pen)continue;const d=a.x-px;
-      if(Math.abs(d)<95){a.vx=Math.sign(d||1)*150}else{a.ph+=dt;a.vx+=(Math.sin(a.ph*1.7)*40-a.vx)*dt*2}
+      if(Math.abs(d)<95){a.vx=Math.sign(d||1)*150}else{a.ph+=dt;a.vx+=(Math.sin(a.ph*1.7+a.x)*110-a.vx)*dt*2.5;if(Math.random()<dt*.6)a.vx=-160}
       a.x+=a.vx*dt;if(a.x<24){a.x=24;a.vx=0}if(a.x>W-24)a.x=W-24;
       if(a.x>W-96){a.pen=true;M.got++;pop(a.x,GY-60,'우리 안으로!');beep(880,.12)}}
   }
@@ -1888,6 +1893,7 @@ function mgDraw(ts){
     if(M.spots||M.dests||M.animals||M.recipe||M.trash||M.herd||t==='cook')drawSpecial(ts,bob);
     if(t==='aim'){const tg=M.tg;if(tg){emo(M.g.target||'🎯',tg.x,tg.y+bob,40);for(const s of M.shotsF)emo(M.g.shot||'🔸',s.x,s.y,22)}}
     for(const h of M.hz)emo(M.haz,h.x,h.y,28);
+    if(M.bees)for(const b of M.bees)emo('🐝',b.x,GY-4+Math.sin(ts/120+b.x)*6,30);
     if(!(M.inv>0&&Math.floor(ts/90)%2)){if(M.g.skin&&M.g.skin!=='🏃')emo(hero(),P.x,P.y+2,40,1,['🚴','🏇','🐪','🦘'].includes(M.g.skin));else drawMe(mx,P.x,P.y+2,54,P.ground===false?1.2:((keys.l||keys.r)?ts/70:0),M.face||1)}
     if(M.carry)emo(M.item,P.x,P.y-40+bob*.5,24);
     if(t==='clean')for(let i=0;i<(M.carryN||0);i++)emo('📦',P.x,P.y-42-i*14,16);
