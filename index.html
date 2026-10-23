@@ -778,6 +778,26 @@ const GMAP={
  'ko1:0':G_.st('🪨','#6b7a8a'),'ko1:1':G_.del('📢'),'ko2:0':SO('beach'),'ko2:1':G_.col('🧴'),'ko3:0':G_.del('⛏️'),'ko3:1':G_.col('🚢'),'ko4:0':G_.col('🧊'),'ko4:1':G_.col('🐧'),
 };
 
+
+/* 미션 이름에 딱 맞는 전용 미니게임 (기존 지정보다 우선) */
+const P_=(grow,paddy,item)=>({t:'plant',grow,paddy,item:item||'🌱',name:paddy&&grow==='🌾'?'🌾 모내기 미션':grow==='🌷'?'🌷 튤립 심기':grow==='🌳'||grow==='🌲'?'🌳 나무 심기':`${grow} 심기 미션`}),GD=d=>({t:'guide',dests:d}),SF=(a,skin)=>({t:'safari',animals:a,skin}),CK=(r,dish)=>({t:'cook',recipe:r,dish}),CL=it=>({t:'clean',items:it}),HD=it=>({t:'herd',item:it});
+const BEACH=['🧴','🥤','🛍️','🥫','👟'];
+const OVR={
+ 'in4:0':P_('🌾',1),'cs3:0':P_('🌾',1),'cn1:0':P_('🌾',1),'xph2:1':P_('🌾',1),'xid2:1':P_('🌾',1),
+ 'xnl1:1':P_('🌷',0),'xse1:0':P_('🌲',0),'xfj1:1':P_('🌳',1),'br5:0':P_('🌳',0),'mn5:0':P_('🌳',0),'e1:0':P_('🌳',0),
+ 'cr4:0':P_('🌽',0),'cs1:0':P_('🌽',0),'ct3:0':P_('🌲',0),'g_s1:1':P_('🍅',0),'ke1x:1':P_('🌳',0),
+ 'cs2:0':GD(['🦁','🦓','🐘']),'cm4:0':GD(['🏖️','🏛️','🍝']),'xgb3:1':GD(['💂','🎡','🕰️']),'xit3:1':GD(['🏛️','⛲','🍕']),'xgr2:1':GD(['🏛️','🌅','⛪']),
+ 'eg3:1':GD(['🔺','🐫','🏺']),'ke3x:0':GD(['🏰','🏛️','⛪']),'jp5:1':GD(['🏟️']),'mx4:0':GD(['🏫']),'xph1:0':GD(['🏫']),
+ 'cs2:1':SF(['🦓','🦁','🐘','🦒']),'ke5:0':SF(['🐘','🦏','🦒','🦁']),'xcn4:1':SF(['🐼'],'🚶'),'xza3:1':SF(['🐧'],'🚶'),'ko4:1':SF(['🐧','🦭'],'🛷'),
+ 'mx5:1':SF(['🦋'],'🚶'),'no1:1':SF(['🦊','🦌','🐇'],'⛷️'),'xth4:1':SF(['🐘']),
+ 'kr1:0':CK(['🍚','🫘','🍯'],'🥟'),'kr2:1':CK(['🍚','🥚','🥩'],'🍲'),'kr3:1':CK(['🥬','🌶️','🧄'],'🥗'),'br3:0':CK(['🫘','🥓','🧅'],'🍲'),
+ 'mx3:0':CK(['🌽','💧','🧂'],'🫓'),'xcn1:0':CK(['🫓','🥩','🥬'],'🥟'),'xcn3:1':CK(['🍚','🥜','🎋'],'🍙'),'xvn2:1':CK(['🍜','🥩','🌿'],'🍲'),
+ 'xtr3:0':CK(['🥩','🧅','🫑'],'🍢'),'xit2:0':CK(['🍅','🧀','🌿'],'🍕'),'xus3:0':CK(['🎃','🥚','🧈'],'🥧'),'g_y2:0':CK(['🥚','🍚','🧅'],'🍳'),
+ 'ct4:0':CK(['🥛','🧂','🔥'],'🧀'),'cc4:1':CK(['🥔','🥕','🧅'],'🥣'),'xet1:0':CK(['🫘','🔥','💧'],'☕'),'xfr2:1':CK(['🌾','💧','🧂'],'🥖'),
+ 'in3:0':CK(['🍚','🍛','🫓'],'🍽️'),'br1:1':CK(['🪶','✨','🧵'],'👗'),'xes3:1':CK(['🌹','🧵','✨'],'👗'),'mx2:1':CK(['📰','🎨','🍬'],'🪅'),
+ 'g_t4:1':CL(),'cm4:1':CL(BEACH),'ko2:0':CL(BEACH),'xes2:1':CL(['🍅','🥤','📰','🍅']),'kr4:0':CL(['🍂','🍁','🪵','🍂']),'xza3:0':CL(BEACH),'xau4:1':CL(BEACH),'xfj2:1':CL(BEACH),
+ 'ct1:0':HD('🐑'),'mn4:0':HD('🐑'),'xch2:0':HD('🐄'),'xar2:1':HD('🐄'),'xnz1:0':HD('🐑'),'cd4:0':HD('🐪'),'ch1:0':HD('🦙'),'xpe2:0':HD('🦙'),
+};
 /* ───────── 172개 나라 (1in8b.life: UN 세계인구전망 2024 출생, UN IGME, 세계은행) ─────────
    iso, 출생 확률 1/N, 기대수명, 5세 미만 사망률%, 1인당 소득 PPP$, 대륙, 기후 */
 const ROWS=`IN,6,72.0,2.8,8871,AS,sav
@@ -981,6 +1001,34 @@ Object.values(CONTQ).flat().forEach(q=>{allQ[q.id]=q;SRC[q.id]='cont'});
 [...Object.values(G).flat(),...ENV,...Object.values(JQ).flat(),FREE].forEach(q=>allQ[q.id]=q);
 Object.entries(GMAP).forEach(([key,g])=>{const[id,k]=key.split(':');if(allQ[id]&&allQ[id].ch[+k]&&!allQ[id].ch[+k].g)allQ[id].ch[+k].g=g});
 
+const MEM=(set,name)=>({t:'memo',set,name}),DOT=(pic,dot,name)=>({t:'dots',pic,dot,name}),CKN=(r,dish,name)=>({t:'cook',recipe:r,dish,name,decoy:['🪨','🧦','🐟']});
+Object.assign(OVR,{
+ 'in3:1':MEM(['🌶️','🧄','🫚','🧅','🌿','🍋'],'🧠 향신료 외우기'),'g_t1:0':MEM(['➕','📐','🧪','🌍','📖','✏️'],'📖 시험공부 카드'),'kr4:1':MEM(['📕','📗','📘','📙','📓','📔'],'📖 책 읽기 카드'),'cm3:1':MEM(['📕','📗','📘','📙','📓','📔'],'📖 책 읽기 카드'),
+ 'free:1':MEM(['➕','📐','🧪','🌍','📖','✏️'],'📖 공부 카드'),'j_i2:0':MEM(['📚','📊','🔍','🗂️','📈','📝'],'🔍 자료 조사 카드'),
+ 'g_y3:1':MEM(['👋','🙏','🍽️','🚻','🚕','💰'],'🗣️ 현지어 단어 카드'),'kf1:0':MEM(['👋','🙏','🍽️','💧','🏠','👪'],'🗣️ 옆 마을 말 카드'),'xnz2:1':MEM(['👋','🙏','🌊','⛰️','🏠','👪'],'🗣️ 마오리 말 카드'),
+ 'eg3:0':MEM(['👁️','🦅','🐍','🪲','☀️','🌊'],'𓂀 상형문자 해독'),'no5:1':MEM(['☀️','🧲','🌍','✨','🌌','🟢'],'🧠 오로라 원리 카드'),'no4:1':MEM(['🌍','☀️','🌙','🧭','🕛','📐'],'🧠 백야 원리 카드'),
+ 'ch3:1':MEM(['⛰️','🌡️','☁️','❄️','🌄','🧗'],'🧠 고도·기온 카드'),'cc3:1':MEM(['🧊','🏠','🔥','🪵','🌡️','🏗️'],'🧠 영구 동토층 카드'),'e1:1':MEM(['🌲','🌳','🌴','🌵','🍁','🌸'],'🌳 나무 이름 카드'),
+ 'ch2:1':MEM(['🥔','🍠','🌽','🥕','🧅','🫘'],'🥔 감자 종류 카드'),'g_c2:1':MEM(['😊','😢','😠','😨','😲','😴'],'💭 내 마음 카드'),'g_t3:1':MEM(['⚽','🎨','🎵','📚','🍳','🎮'],'📔 좋아하는 것 카드'),
+ 'j_i1:0':MEM(['🧪','🔬','🧫','⚗️','🧲','🔭'],'🧪 실험 카드'),'xus2:0':MEM(['💻','⌨️','🖱️','💾','📱','🤖'],'💾 코딩 카드'),'xus4:1':MEM(['🌍','🪐','🌙','☀️','⭐','☄️'],'🪐 행성 카드'),
+ 'kr5:1':MEM(['🚗','🏭','🌬️','🔥','🌫️','😷'],'🔎 미세먼지 원인 카드'),'co3:1':MEM(['☀️','💨','💧','🌋','🌊','🔋'],'⚡ 재생 에너지 카드'),'ke2x:1':MEM(['🇪🇺','💶','🛂','🚚','🎓','✈️'],'🇪🇺 EU 조사 카드'),
+ 'g_s4:0':MEM(['👶','🎒','🎓','💼','💍','🧓'],'📝 내 인생 카드'),'g_s4:1':MEM(['👶','🎂','🎓','💒','🏖️','👪'],'🖼️ 사진첩 정리'),'br5:1':MEM(['🌿','🍃','🌺','🍄','🌰','🍌'],'🌿 숲의 지혜 카드'),
+ 'jp1:1':DOT('🌸','🖌️','🖌️ 벚꽃 그리기'),'g_c3:0':DOT('🏅','🖍️','🖍️ 꿈 그리기'),'g_c3:1':DOT('🚲','🖍️','🖍️ 발명품 그리기'),'xru2:1':DOT('🪆','🖌️','🖌️ 인형 그리기'),
+ 'cc1:1':DOT('🌲','🗺️','🗺️ 숲 지도 그리기'),'ch4:1':DOT('🏙️','🗺️','🗺️ 고산 도시 지도'),'in5:1':DOT('🌳','🗺️','🗺️ 그늘 지도 그리기'),'ka2:0':DOT('📊','📈','📊 인구 피라미드 그리기'),
+ 'ko3:1':DOT('🚢','🗺️','🗺️ 수출 지도 그리기'),'eg5:1':DOT('✨','⭐','⭐ 별자리 잇기'),'xma2:1':DOT('✨','⭐','⭐ 별자리 잇기'),'cd3:1':DOT('✨','⭐','⭐ 별자리 잇기'),'cd4:1':DOT('🧭','⭐','⭐ 별로 길 찾기'),
+ 'xch1:1':DOT('🗺️','🗺️','🗺️ 언어 지도 그리기'),'xma1:1':DOT('🗺️','🗺️','🗺️ 골목 지도 그리기'),'xau2:1':DOT('📍','🗺️','🗺️ 인구 지도 그리기'),'ke5:1':DOT('🦁','🖍️','🖍️ 보호 포스터 그리기'),
+ 'cd2:0':CKN(['👘','🧣','🩴'],'🧕','👗 옷 입기 미션'),'cd2:1':CKN(['🧣','🕶️','👘'],'🧕','👗 두건 두르기'),'co4:0':CKN(['🧥','🧣','👟'],'🧑','👗 옷 챙기기'),'co1:0':CKN(['🧥','👢','☂️'],'🧑','☔ 비옷 입기'),
+ 'no2:1':CKN(['👗','🎀','🥿'],'💃','👗 부나드 입기'),'xnl2:1':CKN(['🔧','⚙️','🛞'],'🚲','🛠️ 자전거 수리'),'xvn3:1':CKN(['🔧','🛢️','⚙️'],'🛵','🛠️ 오토바이 정비'),'mx4:1':CKN(['💧','🔦','🩹'],'🎒','🎒 비상 가방 싸기'),
+ 'e3:0':CKN(['🪥','🥛','💧'],'😁','🪥 양치 컵 쓰기'),'km1:0':CKN(['🌮','🍚','🌶️'],'🌯','🍳 퓨전 요리'),'in2:1':CKN(['🌸','🪨','💧'],'🎨','🎨 천연 물감 만들기'),'xse2:1':CKN(['🌼','🌸','🌿'],'👑','💐 화관 만들기'),
+ 'xng3:1':CKN(['🪵','🐂','🧵'],'🥁','🛠️ 북 만들기'),'xar1:1':{t:'rhythm',name:'🎵 반도네온 연주'},'ch3:0':{t:'rhythm',name:'🫁 숨쉬기 리듬'},
+ 'g_b3:1':{t:'aim',target:'🧱',shot:'⚽',name:'🧱 블록 무너뜨리기'},'kr5:0':{t:'aim',target:'🧒',shot:'🏐',name:'🏐 실내 피구'},
+ 'cn2:0':{t:'clean',bin:'🏠',items:['🪴','🚲','🧺','🪣'],name:'🏠 물건 들여놓기'},'jp4:0':{t:'clean',bin:'🏠',items:['🪴','🚲','🧺','🪣'],name:'🏠 물건 들여놓기'},
+ 'mn4:1':{t:'clean',bin:'🛖',items:['🌾'],name:'🌾 건초 모으기'},'mx5:0':{t:'clean',items:['🥤','🪵','🛍️','🧴'],name:'🌲 숲 청소'},
+ 'mx1:0':{t:'plant',item:'🌼',grow:'🌼',nocrow:1,btn:'🌼',name:'🌼 꽃길 만들기'},'in1:0':{t:'plant',item:'🪔',grow:'🪔',nocrow:1,btn:'🔥',name:'🪔 등불 켜기'},
+ 'xpe3:0':{t:'plant',item:'🥔',grow:'🥔',nocrow:1,btn:'⛏️',name:'⛏️ 감자 캐기'},'g_s3:1':{t:'safari',animals:['🏞️','🏯','🌉','⛰️'],skin:'🚶',name:'📸 고향 여행 사진'},
+ 'ko3:0':{t:'stack',item:'📦',col:'#2b8a3e',name:'🚢 컨테이너 쌓기'},
+});
+Object.entries(OVR).forEach(([key,g])=>{const[id,k]=key.split(':');if(allQ[id]&&allQ[id].ch[+k])allQ[id].ch[+k].g=g});
+
 function fresh(name){return{name:name||'모험가',cid:null,fam:0,age:0,stage:0,step:0,lv:1,st:{s:5,i:5,c:5,d:5,j:40,m:0},job:null,life:80,done:[],album:[],cards:[],weather:null,phase:'play'}}
 function save(){if(S)LS.set('lifeRPG3.save',S)}
 function jobName(){return S.job?S.job.p[(S.job.tier-1)*2]:''}
@@ -1148,10 +1196,10 @@ function ending(){
 function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2700)}
 const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 /* ───────── 퀘스트 모달 ───────── */
-const GN={run:'🏃 달리기 미션',collect:'🔍 찾기 미션',deliver:'🎁 전달 미션',catch:'🧺 받기 미션',soccer:'⚽ 드리블 & 슛',rhythm:'🎵 리듬 미션',stack:'🧱 쌓기 미션',sort:'🗂️ 분류 미션',aim:'🎯 조준 미션'};
-const GSTAT={run:'s',collect:'i',deliver:'c',catch:'d',soccer:'s',lane:'s',rhythm:'c',stack:'d',sort:'i',aim:'d'};
+const GN={memo:'🧠 카드 짝 맞추기',dots:'✏️ 점 잇기 그리기',plant:'🌱 심기 미션',guide:'🧭 안내 미션',safari:'📸 사파리 촬영',cook:'🍳 요리 미션',clean:'🧹 청소 미션',herd:'🐾 가축 몰기',run:'🏃 달리기 미션',collect:'🔍 찾기 미션',deliver:'🎁 전달 미션',catch:'🧺 받기 미션',soccer:'⚽ 드리블 & 슛',rhythm:'🎵 리듬 미션',stack:'🧱 쌓기 미션',sort:'🗂️ 분류 미션',aim:'🎯 조준 미션'};
+const GSTAT={memo:'i',dots:'d',plant:'s',guide:'c',safari:'i',cook:'d',clean:'s',herd:'s',run:'s',collect:'i',deliver:'c',catch:'d',soccer:'s',lane:'s',rhythm:'c',stack:'d',sort:'i',aim:'d'};
 function specOf(c){if(c.g)return c.g;let b=null,v=0;for(const k of['s','i','c','d'])if((c.e[k]||0)>v){v=c.e[k];b=k}return{t:({s:'run',i:'collect',c:'deliver',d:'catch'})[b]||'catch'}}
-function gName(g){if(g.t==='lane')return({ski:g.skin==='⛸️'?'⛸️ 스케이트 미션':g.skin==='🦌'?'🛷 썰매 미션':'⛷️ 활강 미션',road:'🚸 안전하게 건너기',sky:'🎈 하늘 비행 미션',boat:g.skin==='🤿'?'🤿 바닷속 탐험':g.skin==='🏄'?'🏄 서핑 미션':'🚣 노 젓기 미션'})[g.v];
+function gName(g){if(g.name)return g.name;if(g.t==='lane')return({ski:g.skin==='⛸️'?'⛸️ 스케이트 미션':g.skin==='🦌'?'🛷 썰매 미션':'⛷️ 활강 미션',road:'🚸 안전하게 건너기',sky:'🎈 하늘 비행 미션',boat:g.skin==='🤿'?'🤿 바닷속 탐험':g.skin==='🏄'?'🏄 서핑 미션':'🚣 노 젓기 미션'})[g.v];
   if(g.t==='soccer')return g.v==='ice'?'🏒 하키 드리블 & 슛':g.v==='rugby'?'🏉 럭비 돌파':GN.soccer;return GN[g.t]}
 function openQuest(id,np){
   const q=allQ[id];
@@ -1196,13 +1244,21 @@ function startMission(q,k){
   const haz=g.haz||(q.w&&HAZ[q.w]&&['wea','clim','cont'].includes(q.t)&&['run','collect','catch','deliver'].includes(t)?HAZ[q.w]:null);
   const stat=S.st[GSTAT[t]];
   const item=g.item||q.ic;
-  const need={collect:6,catch:10,deliver:4,run:0,soccer:1,lane:0,rhythm:0,stack:7,sort:10,aim:5}[t];
+  const need={memo:6,dots:2,plant:8,guide:4,safari:6,cook:3,clean:10,herd:5,collect:6,catch:10,deliver:4,run:0,soccer:1,lane:0,rhythm:0,stack:7,sort:10,aim:5}[t];
   const ctrl=isLaneT(t)?'▲ ▼ 위아래 이동 · 오른쪽 버튼 = '+(t==='soccer'?'⚡개인기 / 골대 앞에서 슛':'💨 가속')+' (키보드: ↑↓, 스페이스)'
     :t==='rhythm'?'화면의 동그라미를 직접 눌러도 되고, ◀ ● ▶ 버튼도 돼요 (키보드: ←, 스페이스, →)'
     :t==='stack'?'⬇ 버튼으로 블록을 떨어뜨려요 (키보드: 스페이스)'
     :t==='sort'?`왼쪽 버튼 ${g.L.e} ${g.L.n} · 오른쪽 버튼 ${g.R.e} ${g.R.n} (통을 직접 눌러도 돼요 · 키보드: ← →)`
-    :t==='aim'?'◀ ▶ 이동 · 오른쪽 버튼으로 발사 (키보드: ← → 스페이스)':'◀ ▶ 이동 · ⤴ 점프 (키보드: 방향키·스페이스)';
+    :t==='aim'?'◀ ▶ 이동 · 오른쪽 버튼으로 발사 (키보드: ← → 스페이스)':t==='plant'?'◀ ▶ 이동 · 🌱 버튼으로 심기 (키보드: ← → 스페이스)':t==='safari'?'왼쪽 📸 버튼 촬영 · 오른쪽 ⤴ 점프 (키보드: ← 촬영, 스페이스 점프)':'◀ ▶ 이동 · ⤴ 점프 (키보드: 방향키·스페이스)';
   const text={
+    memo:'카드를 두 장씩 뒤집어 같은 그림 짝을 찾아요! 화면을 직접 눌러요',
+    dots:'1번부터 순서대로 점을 눌러 이으면 그림이 완성돼요! 2장 그리기',
+    plant:g.nocrow?`⬇ 표시된 자리에 서서 ${g.btn||'🌱'} 버튼을 눌러요! ${need}곳`:`⬇ 표시된 빈 자리에 서서 🌱 버튼으로 ${need}곳에 심어요! 새가 오면 가서 쫓아내요`,
+    guide:`!가 뜬 손님에게 가면 나를 따라와요. 말풍선 속 장소(${(g.dests||['🏛️','🍜','🛍️']).join(' ')})로 데려다줘요! ${need}명`,
+    safari:`지프를 타고 가며 동물이 네모 안에 들어올 때 📸 버튼! ${need}마리 찍기 · 돌은 점프로 피해요`,
+    cook:`위의 순서대로 ${g.name&&!g.name.includes('요리')?'물건':'재료'}을 받아 ${g.dish||'요리'} ${need}개 완성! 엉뚱한 물건은 피해요`,
+    clean:g.bin?`물건을 한 번에 3개까지 들어서 ${g.bin}(으)로 옮겨요! 모두 ${need}개`:`쓰레기를 한 번에 3개까지 주워서 🗑️에 버려요! 모두 ${need}개`,
+    herd:`동물 뒤(왼쪽)에서 다가가면 앞으로 도망가요. 오른쪽 우리 안으로 ${need}마리 몰아넣기!`,
     collect:`${item} ${need}개를 모두 찾아 모아요! 발판 위로 점프!`,
     catch:`하늘에서 떨어지는 ${item}을(를) ${need}개 받아요! 🪨는 피하기`,
     deliver:`📦에서 ${item}을(를) 들고 💭 표시한 사람 ${need}명에게 전해 줘요!`,
@@ -1214,7 +1270,7 @@ function startMission(q,k){
     sort:`내려오는 물건을 알맞은 쪽으로 분류해요! ${need}개 성공하면 클리어`,
     aim:`${g.target||'🎯'}이(가) 머리 위에 올 때 발사! ${need}번 맞히기`}[t];
   M={q,k,g,t,item,haz,need,got:0,bonus:0,hearts:3+(stat>=25?1:0),maxH:3+(stat>=25?1:0),t0:0,time:0,
-     tLimit:{collect:30,catch:25,deliver:35,run:20,soccer:45,lane:18,rhythm:99,stack:45,sort:40,aim:25}[t],
+     tLimit:{memo:60,dots:45,plant:32,guide:50,safari:34,cook:45,clean:45,herd:45,collect:30,catch:25,deliver:35,run:20,soccer:45,lane:18,rhythm:99,stack:45,sort:40,aim:25}[t],
      obs:K.obs,over:false,started:false,inv:0,carry:false,items:[],hz:[],plats:[],npcs:[],pops:[],sp:{a:0,b:0,h:1,o:1,c:2},scroll:0,
      sky:cc.sky,gr:g.snow?'#eef4fa':cc.gr,land:cc.land,w:q.w||cc.w,P:{x:70,y:0,vy:0,ground:true}};
   if(t==='soccer'||t==='lane'||t==='stack'||t==='rhythm'||t==='sort'||t==='aim')M.w='none';
@@ -1223,7 +1279,7 @@ function startMission(q,k){
     <p class="hint">${ctrl}</p><div class="mrow" style="justify-content:center"><button class="btn" id="mgGo">▶ 시작!</button></div></div>`;
   $('#mgGo').onclick=()=>{try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume&&AC.resume()}catch(e){}$('#mgIntro').hidden=true;mgInit()};
   $('#mgGo').focus();
-  if(isLaneT(t))setPads('▲','▼',t==='soccer'?'⚡':'💨');
+  if(t==='memo'||t==='dots')setPads(null,null,null);else if(t==='plant')setPads('◀','▶',g.btn||'🌱');else if(t==='safari')setPads('📸',null,'⤴');else if(isLaneT(t))setPads('▲','▼',t==='soccer'?'⚡':'💨');
   else if(t==='rhythm')setPads(null,null,null);
   else if(t==='stack')setPads(null,null,'⬇');
   else if(t==='sort')setPads(g.L.e,null,g.R.e);
@@ -1250,6 +1306,8 @@ function mgInit(){
   }else if(t==='stack'){
     M.bh=24;M.stack=[{x:W/2-80,w:160}];M.cur={x:20,w:160,dir:1};M.cam=0;M.debris=[];
   }else if(t==='sort'){M.queue=[];M.sp.a=.3}
+  else if(['plant','guide','safari','cook','clean','herd'].includes(t))initSpecial(t,W);
+  else if(t==='memo'||t==='dots')initBoard(t,W);
   else if(t==='aim'){M.tg={x:W*.5,y:110,vx:120};M.shotsF=[];M.cd=0;M.P={x:W/2,y:GY,vy:0,ground:true}}
   cancelAnimationFrame(mgRAF);let last=0;
   const loop=ts=>{if(!last)last=ts;const dt=Math.min(.033,(ts-last)/1000);last=ts;mgUpdate(dt);mgDraw(ts);if(M&&!M.done)mgRAF=requestAnimationFrame(loop)};
@@ -1269,9 +1327,10 @@ function mgUpdate(dt){
   if(!M||M.over)return;
   const P=M.P,W=LW,t=M.t;M.time+=dt;M.inv=Math.max(0,M.inv-dt);
   const taps=tapQ;tapQ=[];
-  if(['run','collect','catch','deliver'].includes(t))platformMove(dt,t==='run'?W*.6:W-24);
+  if(t==='plant')jumpQ=false;
+  if(['run','collect','catch','deliver','plant','guide','cook','clean','herd'].includes(t)){const ox=P.x;platformMove(dt,t==='run'?W*.6:t==='herd'?W-100:W-24);if(P.x!==ox)M.face=Math.sign(P.x-ox)}
   const px=P.x,py=P.y-20;
-  if(M.haz&&['run','collect','catch','deliver'].includes(t)){M.sp.h-=dt;if(M.sp.h<=0){M.sp.h=1.1;M.hz.push({x:Math.max(20,Math.min(W-20,P.x+(Math.random()-.5)*320)),y:-20,vy:170+Math.random()*80})}
+  if(M.haz&&['run','collect','catch','deliver','plant','guide','cook','clean','herd'].includes(t)){M.sp.h-=dt;if(M.sp.h<=0){M.sp.h=1.1;M.hz.push({x:Math.max(20,Math.min(W-20,P.x+(Math.random()-.5)*320)),y:-20,vy:170+Math.random()*80})}
     for(const h of M.hz){h.y+=h.vy*dt;if(!h.hit&&dist(px,py,h.x,h.y-14)<28){h.hit=true;hurt()}}M.hz=M.hz.filter(h=>!h.hit&&h.y<GY+20)}
   if(t==='collect'){for(const it of M.items)if(!it.got&&dist(px,py,it.x,it.y-18)<30){it.got=true;M.got++;pop(it.x,it.y-40,'+1');beep(880,.1)}}
   else if(t==='catch'){M.sp.a-=dt;M.sp.b-=dt;
@@ -1292,10 +1351,12 @@ function mgUpdate(dt){
   else if(t==='stack')updStack(dt,taps);
   else if(t==='sort')updSort(dt,taps);
   else if(t==='aim')updAim(dt,taps);
+  else if(t==='memo'||t==='dots')updBoard(dt);
+  else updSpecial(dt,taps);
   for(const p of M.pops)p.life-=dt;M.pops=M.pops.filter(p=>p.life>0);
   if(M.over)return;
   if(M.hearts<=0)return mgEnd(false);
-  if(['collect','catch','deliver','stack','sort','aim'].includes(t)&&M.got>=M.need)return mgEnd(true);
+  if(['memo','dots','collect','catch','deliver','stack','sort','aim','plant','guide','safari','cook','clean','herd'].includes(t)&&M.got>=M.need)return mgEnd(true);
   if(t==='rhythm'&&M.time>=M.end)return mgEnd(M.got>=M.need);
   if(M.time>=M.tLimit)return mgEnd(t==='run'||t==='lane');
 }
@@ -1395,16 +1456,135 @@ function mgEnd(ok){
   const q=M.q,k=M.k;
   setTimeout(()=>{M.done=true;cancelAnimationFrame(mgRAF);$('#mg').hidden=true;$('#mgMsg').hidden=true;showResult(q,k,ok,perfect)},1300);
 }
-function emo(e,x,y,size,alpha=1,flip=false){mx.globalAlpha=alpha;mx.font=`${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;mx.textAlign='center';mx.textBaseline='bottom';
+function emo(e,x,y,size,alpha=1,flip=false){mx.fillStyle='#000';mx.globalAlpha=alpha;mx.font=`${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;mx.textAlign='center';mx.textBaseline='bottom';
   if(flip){mx.save();mx.translate(x,y);mx.scale(-1,1);mx.fillText(e,0,0);mx.restore()}else mx.fillText(e,x,y);mx.globalAlpha=1}
 function txt(s,x,y,size,col){mx.font=`${size}px Jua, sans-serif`;mx.textAlign='center';mx.textBaseline='middle';mx.lineWidth=4;mx.strokeStyle='rgba(0,0,0,.45)';mx.strokeText(s,x,y);mx.fillStyle=col||'#fff';mx.fillText(s,x,y)}
 function hero(){return M.g.skin||STAGES[S.stage].e}
+/* ── 카드 짝 맞추기 · 점 잇기 ── */
+function initBoard(t,W){
+  M.clicks=[];
+  if(t==='memo'){const set=(M.g.set||['📘','🔬','🌍','💡','🧪','📐']).slice(0,6);const deck=[...set,...set].sort(()=>Math.random()-.5);
+    const cw=Math.min(66,(W-120)/6),ch=Math.min(66,(LH-120)/2.2);M.cards=deck.map((e,i)=>({e,col:i%6,row:Math.floor(i/6),open:false,done:false}));
+    M.cw=cw;M.chh=ch;M.ox=W/2-cw*3;M.oy=LH/2-ch-6;M.flip=[];M.wait=0}
+  else if(t==='dots'){M.round=0;newDots(W)}
+}
+function newDots(W){const n=7,cx=W/2,cy=LH/2+6,r=Math.min(W*.3,110);const a0=Math.random()*6;
+  M.dots=Array.from({length:n},(_,i)=>{const a=a0+i*(Math.PI*2/n)+(Math.random()-.5)*.35,rr=r*(.7+Math.random()*.35);return{x:cx+Math.cos(a)*rr*1.5,y:cy+Math.sin(a)*rr*.8}});M.next=0;M.shown=0}
+function updBoard(dt){
+  const cl=M.clicks;M.clicks=[];
+  if(M.t==='memo'){
+    if(M.wait>0){M.wait-=dt;if(M.wait<=0){const[a,b]=M.flip;if(a.e===b.e){a.done=b.done=true;M.got++;pop(LW/2,40,'짝 찾았다!');beep(990,.15)}else{a.open=b.open=false}M.flip=[]}return}
+    for(const c of cl){const col=Math.floor((c.x-M.ox)/M.cw),row=Math.floor((c.y-M.oy)/M.chh);const cd=M.cards.find(k=>k.col===col&&k.row===row);
+      if(!cd||cd.open||cd.done)continue;cd.open=true;M.flip.push(cd);beep(600,.05,'triangle');if(M.flip.length===2){M.wait=.6;break}}
+  }else{
+    if(M.shown>0){M.shown-=dt;if(M.shown<=0){if(M.got>=M.need)return;newDots(LW)}return}
+    for(const c of cl){const d=M.dots[M.next];if(d&&Math.hypot(c.x-d.x,c.y-d.y)<34){M.next++;beep(500+M.next*80,.07,'triangle');
+      if(M.next>=M.dots.length){M.got++;M.shown=1.4;pop(LW/2,60,'완성!');beep(1046,.25,'triangle')}}}
+  }
+}
+function drawBoard(ts){
+  const W=LW,g=M.g;const gr=mx.createLinearGradient(0,0,0,LH);gr.addColorStop(0,'#fff6df');gr.addColorStop(1,'#f3e3bd');mx.fillStyle=gr;mx.fillRect(0,0,W,LH);
+  if(M.t==='memo'&&M.cards){for(const k of M.cards){const x=M.ox+k.col*M.cw+3,y=M.oy+k.row*M.chh+3,w=M.cw-6,h=M.chh-6;
+      mx.fillStyle=k.done?'#d3f9d8':k.open?'#fff':'#ff8a1f';roundRect(x,y,w,h,10);mx.fill();mx.strokeStyle='#c45f06';mx.lineWidth=2;mx.stroke();
+      if(k.open||k.done)emo(k.e,x+w/2,y+h/2+16,Math.min(w,h)*.55);else txt('?',x+w/2,y+h/2,22,'#fff')}
+    emo(STAGES[S.stage].e,40,LH-20,40)}
+  if(M.t==='dots'&&M.dots){mx.strokeStyle='#3b2d1c';mx.lineWidth=4;mx.lineCap='round';mx.beginPath();
+    for(let i=0;i<M.next;i++){const d=M.dots[i];i?mx.lineTo(d.x,d.y):mx.moveTo(d.x,d.y)}if(M.next>=M.dots.length){mx.closePath()}mx.stroke();
+    M.dots.forEach((d,i)=>{mx.fillStyle=i<M.next?'#2f9e44':i===M.next?'#e8590c':'#fff';mx.beginPath();mx.arc(d.x,d.y,15,0,7);mx.fill();mx.strokeStyle='#3b2d1c';mx.lineWidth=2;mx.stroke();txt(String(i+1),d.x,d.y,14,i===M.next||i<M.next?'#fff':'#3b2d1c')});
+    if(M.next<M.dots.length){const d=M.dots[M.next];mx.strokeStyle='rgba(232,89,12,.6)';mx.lineWidth=3;mx.beginPath();mx.arc(d.x,d.y,20+Math.sin(ts/150)*4,0,7);mx.stroke()}
+    if(M.shown>0)emo(g.pic||'🖼️',W/2,LH/2+40,90);
+    emo(g.dot||'✏️',W*.1,LH-20,40)}
+}
+
+/* ── 전용 미션: 심기 · 안내 · 사파리 · 요리 · 청소 · 가축 몰기 ── */
+function initSpecial(t,W){
+  const g=M.g;
+  if(t==='plant'){M.spots=[];const n=8;for(let i=0;i<n;i++)M.spots.push({x:W*.12+i*(W*.76/(n-1)),st:0,gr:0});M.crows=[];M.sp.c=g.nocrow?1e9:3.5}
+  else if(t==='guide'){const ds=g.dests||['🏛️','🍜','🛍️'];M.dests=ds.map((e,i)=>({e,x:ds.length===1?W*.85:W*(.38+i*.26)}));M.tour=null;M.queueN=0;M.sp.a=.2}
+  else if(t==='safari'){if(!g.skin)g.skin='🚙';M.P={x:W*.25,y:GY,vy:0,ground:true};M.animals=[];M.sp.a=.6;M.sp.o=1.8;M.flash=0;M.frameX=W*.6}
+  else if(t==='cook'){M.step=0;M.items=[];M.sp.a=.3}
+  else if(t==='clean'){M.plats=[{x:W*.3,y:GY-80,w:120},{x:W*.62,y:GY-80,w:120}];M.bin={x:40,e:g.bin||'🗑️'};M.carryN=0;const it=g.items||['🥤','🧴','🍌','📰','🥫','🛍️'];
+    M.trash=[];const xs=[W*.22,W*.45,W*.55,W*.8,W*.92,W*.36,W*.7];xs.forEach(x=>M.trash.push({x,y:GY,e:rnd(it)}));M.plats.forEach(p=>{M.trash.push({x:p.x+30,y:p.y,e:rnd(it)});M.trash.push({x:p.x+90,y:p.y,e:rnd(it)})});M.sp.a=4}
+  else if(t==='herd'){M.herd=[];for(let i=0;i<5;i++)M.herd.push({x:W*(.25+i*.09),vx:0,pen:false,ph:Math.random()*6});M.P.x=W*.12}
+}
+function updSpecial(dt,taps){
+  const P=M.P,W=LW,t=M.t,g=M.g,px=P.x,py=P.y-20;
+  if(t==='plant'){
+    if(taps.includes('j')){const s=M.spots.filter(s=>!s.st).sort((a,b)=>Math.abs(a.x-px)-Math.abs(b.x-px))[0];
+      if(s&&Math.abs(s.x-px)<34){s.st=1;s.gr=0;M.got++;pop(s.x,GY-40,'쏙!');beep(780,.08,'triangle')}else pop(px,py-30,'빈 자리로 가요')}
+    for(const s of M.spots)if(s.st)s.gr=Math.min(1,s.gr+dt*.7);
+    M.sp.c-=dt;if(M.sp.c<=0){M.sp.c=2.6+Math.random()*1.5;const tg=M.spots.filter(s=>s.st);if(tg.length){const s=rnd(tg);M.crows.push({x:s.x,y:-20,tgt:s,land:0})}}
+    for(const c of M.crows){if(c.y<GY-26)c.y+=110*dt;else{c.land+=dt;if(c.land>1.6&&c.tgt.st){c.tgt.st=0;M.got--;c.gone=true;pop(c.x,GY-50,'냠!')}}
+      if(!c.gone&&dist(px,py,c.x,c.y)<40){c.gone=true;pop(c.x,c.y-20,'훠이!');beep(300,.1,'square',.08)}}
+    M.crows=M.crows.filter(c=>!c.gone&&!(c.land>1.6));
+  }else if(t==='guide'){
+    if(!M.tour&&M.queueN<M.need){M.sp.a-=dt;if(M.sp.a<=0){M.tour={x:36,e:rnd(PEOPLE),want:rnd(M.dests),fol:false};M.queueN++}}
+    const tr=M.tour;if(tr){
+      if(!tr.fol&&Math.abs(px-tr.x)<36&&P.ground){tr.fol=true;pop(tr.x,GY-60,'따라갈게요!');beep(600,.08)}
+      if(tr.fol){tr.x+=((px-34*(M.face||1))-tr.x)*Math.min(1,dt*5);
+        if(Math.abs(px-tr.want.x)<44&&P.ground){M.got++;pop(tr.want.x,GY-90,'고마워요! 💖');beep(990,.15);M.tour=null;M.sp.a=.6}}}
+  }else if(t==='safari'){
+    const sp=170;M.scroll+=sp*dt;
+    if(jumpQ&&P.ground){P.vy=-560;P.ground=false}jumpQ=false;P.vy+=1500*dt;P.y+=P.vy*dt;if(P.y>=GY){P.y=GY;P.vy=0;P.ground=true}
+    M.sp.a-=dt;M.sp.o-=dt;
+    if(M.sp.a<=0){M.sp.a=1.3+Math.random()*.9;M.animals.push({x:W+40,e:rnd(g.animals||['🦁','🦓','🐘','🦒']),shot:false,f:.55+Math.random()*.3})}
+    if(M.sp.o<=0){M.sp.o=1.6+Math.random()*1.2;M.items.push({x:W+30,e:rnd(M.obs),ob:true})}
+    for(const a of M.animals)a.x-=sp*a.f*dt;M.animals=M.animals.filter(a=>a.x>-60);
+    for(const it of M.items){it.x-=sp*dt;if(!it.hit&&Math.abs(px-it.x)<24&&P.y>GY-30){it.hit=true;hurt('덜컹!')}}M.items=M.items.filter(it=>it.x>-40);
+    if(taps.includes('l')){M.flash=.25;beep(1500,.05,'square',.06);
+      const a=M.animals.find(a=>!a.shot&&Math.abs(a.x-M.frameX)<46);if(a){a.shot=true;M.got++;pop(a.x,GY-150,'찰칵! 📸')}else pop(M.frameX,GY-150,'흔들렸다!')}
+    M.flash=Math.max(0,M.flash-dt);
+  }else if(t==='cook'){
+    const rec=g.recipe;M.sp.a-=dt;
+    if(M.sp.a<=0){M.sp.a=.55;const need=rec[M.step];const r=Math.random();const e=r<.42?need:r<.72?rnd(rec):rnd(g.decoy||['🧦','🪨','👟','🧸']);
+      M.items.push({x:30+Math.random()*(W-60),y:-20,vy:110+Math.random()*70,e})}
+    for(const it of M.items){it.y+=it.vy*dt;if(!it.hit&&dist(px,py,it.x,it.y-16)<30){it.hit=true;
+      if(it.e===rec[M.step]){M.step++;pop(it.x,it.y-30,'✔');beep(700+M.step*120,.08);if(M.step>=rec.length){M.step=0;M.got++;pop(px,py-60,`${g.dish} 완성!`);beep(1046,.25,'triangle')}}
+      else if(rec.includes(it.e))pop(it.x,it.y-30,'순서가 달라요');else hurt('이건 재료가 아니야!')}}
+    M.items=M.items.filter(it=>!it.hit&&it.y<GY+30);
+  }else if(t==='clean'){
+    for(const tr of M.trash)if(!tr.got&&M.carryN<3&&dist(px,py,tr.x,tr.y-16)<28){tr.got=true;M.carryN++;pop(tr.x,tr.y-40,`${M.carryN}/3`);beep(700,.06)}
+    else if(!tr.got&&M.carryN>=3&&dist(px,py,tr.x,tr.y-16)<28&&!tr.warn){tr.warn=1;pop(px,py-40,'손이 꽉 찼어요! 🗑️로')}
+    if(M.carryN&&Math.abs(px-M.bin.x)<34){M.got+=M.carryN;pop(M.bin.x,GY-70,`+${M.carryN} 깨끗!`);beep(990,.15);M.carryN=0;M.trash.forEach(t=>t.warn=0)}
+    M.sp.a-=dt;if(M.sp.a<=0&&M.trash.filter(t=>!t.got).length<4){M.sp.a=3;M.trash.push({x:W*.2+Math.random()*W*.75,y:GY,e:rnd(g.items||['🥤','🧴','🍌','📰'])})}
+  }else if(t==='herd'){
+    for(const a of M.herd){if(a.pen)continue;const d=a.x-px;
+      if(Math.abs(d)<95){a.vx=Math.sign(d||1)*150}else{a.ph+=dt;a.vx+=(Math.sin(a.ph*1.7)*40-a.vx)*dt*2}
+      a.x+=a.vx*dt;if(a.x<24){a.x=24;a.vx=0}if(a.x>W-24)a.x=W-24;
+      if(a.x>W-96){a.pen=true;M.got++;pop(a.x,GY-60,'우리 안으로!');beep(880,.12)}}
+  }
+}
+function drawSpecial(ts,bob){
+  const W=LW,t=M.t,g=M.g,P=M.P;
+  if(t==='plant'){if(g.paddy){mx.fillStyle='rgba(80,140,170,.55)';mx.fillRect(0,GY+4,W,LH-GY)}
+    for(const s of M.spots){mx.fillStyle=g.paddy?'rgba(60,100,120,.6)':'#6b4a2b';mx.beginPath();mx.ellipse(s.x,GY+6,24,8,0,0,7);mx.fill();
+      if(s.st){const sz=18+s.gr*22;emo(s.gr>=1?(g.grow||'🌳'):(g.item||'🌱'),s.x,GY+4,sz)}else txt('⬇',s.x,GY-18+bob,14,'#ffe066')}
+    for(const c of M.crows)emo('🐦',c.x,c.y,30);}
+  else if(t==='guide'){for(const d of M.dests){emo(d.e,d.x,GY+2,58);mx.fillStyle='rgba(21,26,46,.8)';roundRect(d.x-22,GY+8,44,18,6);mx.fill()}
+    const tr=M.tour;if(tr){emo(tr.e,tr.x,GY+2,38);emo('🧳',tr.x-16,GY+2,18);mx.fillStyle='#fff';roundRect(tr.x-20,GY-80,40,34,10);mx.fill();emo(tr.want.e,tr.x,GY-50,24);
+      if(!tr.fol)txt('!',tr.x+20,GY-80+bob,18,'#ffd43b')}}
+  else if(t==='safari'){mx.fillStyle='rgba(0,0,0,.06)';for(let x=-(M.scroll%70);x<W;x+=70)mx.fillRect(x,GY+18,34,6);
+    for(const a of M.animals)emo(a.e,a.x,GY-70,46,a.shot?.6:1);
+    for(const it of M.items)emo(it.e,it.x,GY,32);
+    mx.strokeStyle='#fff';mx.lineWidth=3;const fx=M.frameX,fy=GY-140;const L=14;
+    [[fx-46,fy,1,1],[fx+46,fy,-1,1],[fx-46,fy+86,1,-1],[fx+46,fy+86,-1,-1]].forEach(([x,y,a,b])=>{mx.beginPath();mx.moveTo(x,y+b*L);mx.lineTo(x,y);mx.lineTo(x+a*L,y);mx.stroke()});
+    if(M.flash>0){mx.fillStyle=`rgba(255,255,255,${M.flash*3})`;mx.fillRect(0,0,W,LH)}}
+  else if(t==='cook'){for(const it of M.items)emo(it.e,it.x,it.y,30);
+    const rec=g.recipe,bx=W/2-rec.length*26-30;mx.fillStyle='rgba(255,246,223,.92)';roundRect(bx,48,rec.length*52+70,44,12);mx.fill();
+    rec.forEach((e,i)=>{emo(e,bx+30+i*52,86,28,i<M.step?.35:1);if(i===M.step){mx.strokeStyle='#e8590c';mx.lineWidth=3;mx.strokeRect(bx+12+i*52,52,36,36)}if(i<M.step)txt('✔',bx+30+i*52,70,18,'#2f9e44')});
+    txt('→',bx+rec.length*52+10,70,18,'#3b2d1c');emo(g.dish,bx+rec.length*52+42,86,28)}
+  else if(t==='clean'){emo(M.bin.e,M.bin.x,GY+2,48);for(const tr of M.trash)if(!tr.got)emo(tr.e,tr.x,tr.y,28)}
+  else if(t==='herd'){mx.strokeStyle='#8b5a2b';mx.lineWidth=5;const fx=W-96;mx.beginPath();mx.moveTo(fx,GY-46);mx.lineTo(fx,GY);mx.moveTo(fx,GY-40);mx.lineTo(W,GY-40);mx.moveTo(fx,GY-18);mx.lineTo(W,GY-18);mx.stroke();txt('우리',W-48,GY-62,16,'#fff');
+    for(const a of M.herd)emo(g.item,a.x,GY+2,38,1)}
+}
+
 function mgDraw(ts){
   if(!M)return;const W=LW,P=M.P,t=M.t,bob=Math.sin(ts/250)*3;
   if(isLaneT(t))drawLane(ts,bob);
   else if(t==='rhythm')drawRhythm(ts);
   else if(t==='stack')drawStack(ts);
   else if(t==='sort')drawSort(ts,bob);
+  else if(t==='memo'||t==='dots')drawBoard(ts);
   else{
     const g=mx.createLinearGradient(0,0,0,LH);g.addColorStop(0,M.sky[0]);g.addColorStop(1,M.sky[1]);mx.fillStyle=g;mx.fillRect(0,0,W,LH);
     if(M.w==='rain'){mx.fillStyle='rgba(40,55,90,.25)';mx.fillRect(0,0,W,LH)}else if(M.w==='sand'){mx.fillStyle='rgba(215,165,90,.3)';mx.fillRect(0,0,W,LH)}else if(M.w==='aurora'){mx.fillStyle='rgba(8,18,45,.5)';mx.fillRect(0,0,W,LH)}
@@ -1418,10 +1598,12 @@ function mgDraw(ts){
     if(t==='catch'||t==='run')for(const it of M.items)emo(it.e,it.x,it.y,it.ob?34:30);
     if(t==='deliver'&&M.src){emo('📦',M.src.x,M.src.y,34);emo(M.item,M.src.x,M.src.y-28+bob,20);
       for(const n of M.npcs){emo(n.e,n.x,n.y,34);emo(n.done?'💖':'💭',n.x+16,n.y-34+bob,18);if(!n.done)emo(M.item,n.x+16,n.y-38+bob,11)}}
+    if(M.spots||M.dests||M.animals||M.recipe||M.trash||M.herd||t==='cook')drawSpecial(ts,bob);
     if(t==='aim'){const tg=M.tg;if(tg){emo(M.g.target||'🎯',tg.x,tg.y+bob,40);for(const s of M.shotsF)emo(M.g.shot||'🔸',s.x,s.y,22)}}
     for(const h of M.hz)emo(M.haz,h.x,h.y,28);
     if(!(M.inv>0&&Math.floor(ts/90)%2)){emo(hero(),P.x,P.y+2,40,1,!!M.g.skin&&['🚴','🏇','🐪','🦘','🏃'].includes(M.g.skin));if(S.job&&!M.g.skin)emo(jobEmoji(),P.x+16,P.y-26,16)}
     if(M.carry)emo(M.item,P.x,P.y-40+bob*.5,24);
+    if(t==='clean')for(let i=0;i<(M.carryN||0);i++)emo('📦',P.x,P.y-42-i*14,16);
   }
   for(const p of M.pops){mx.globalAlpha=Math.min(1,p.life*2);txt(p.t,p.x,p.y-(.9-p.life)*30,18);mx.globalAlpha=1}
   /* HUD */
@@ -1430,8 +1612,8 @@ function mgDraw(ts){
     t==='run'||t==='lane'?`🏁 ${Math.round(Math.min(1,M.time/M.tLimit)*100)}%${M.g.v==='ski'&&M.g.skin==='⛷️'?' · 🚩'+M.got:''} · ★${M.bonus}`
     :t==='soccer'?(M.phase==='drib'?`${M.g.v==='rugby'?'🏉':M.g.v==='ice'?'🏒':'⚽'} 골대까지 ${Math.max(0,Math.round((1-M.dist/M.goalDist)*100))}%`:M.g.v==='rugby'?'🏉 트라이 존으로!':`🥅 슛 기회 ${M.shots}번`)
     :t==='rhythm'?`🎵 ${M.got}/${M.need||'?'} · 콤보 ${M.combo||0}`
-    :t==='stack'?`${M.item} ${M.got}/${M.need}층`:`${t==='aim'?'🎯':t==='sort'?'🗂️':M.item} ${M.got}/${M.need}`;
-  $('#mgHearts').textContent=t==='rhythm'?'':'❤️'.repeat(Math.max(0,M.hearts))+'🤍'.repeat(Math.max(0,M.maxH-M.hearts));
+    :t==='memo'?`🧠 짝 ${M.got}/${M.need}`:t==='dots'?`✏️ 그림 ${M.got}/${M.need}`:t==='stack'?`${M.item} ${M.got}/${M.need}층`:t==='cook'?`${M.g.dish} ${M.got}/${M.need}`:t==='safari'?`📸 ${M.got}/${M.need}`:t==='guide'?`🧭 ${M.got}/${M.need}명`:t==='clean'?`🧹 ${M.got}/${M.need} · 손에 ${M.carryN||0}`:t==='herd'?`${M.g.item} ${M.got}/${M.need}`:t==='plant'?`🌱 ${M.got}/${M.need}`:`${t==='aim'?'🎯':t==='sort'?'🗂️':M.item} ${M.got}/${M.need}`;
+  $('#mgHearts').textContent=(t==='rhythm'||t==='memo'||t==='dots')?'':'❤️'.repeat(Math.max(0,M.hearts))+'🤍'.repeat(Math.max(0,M.maxH-M.hearts));
   $('#mgTime').style.width=(t==='rhythm'?Math.max(0,1-M.time/(M.end||1))*100:left/M.tLimit*100)+'%';
   $('#mgTitle').textContent=gName(M.g);
 }
@@ -1529,7 +1711,7 @@ addEventListener('keydown',e=>{if($('#mg').hidden||!$('#mgIntro').hidden)return;
   else if(k===' '||k==='ArrowUp'||k==='w'){if(!e.repeat){jumpQ=true;tapQ.push('j')}}else return;e.preventDefault()});
 addEventListener('keyup',e=>{const k=e.key;if(k==='ArrowLeft'||k==='a')keys.l=false;if(k==='ArrowRight'||k==='d')keys.r=false;if(k==='ArrowUp')keys.u=false;if(k==='ArrowDown')keys.d=false});
 addEventListener('resize',()=>{if(!$('#mg').hidden){mgSize();if(M&&!M.started)mgDraw(0)}});
-mgc.addEventListener('pointerdown',e=>{if(M&&M.started&&M.t==='sort'){const r=mgc.getBoundingClientRect();const x=(e.clientX-r.left)/(r.height/LH);tapQ.push(x<LW/2?'l':'r');return}if(!M||!M.started||M.t!=='rhythm')return;const r=mgc.getBoundingClientRect();const x=(e.clientX-r.left)/(r.height/LH);
+mgc.addEventListener('pointerdown',e=>{if(M&&M.started&&(M.t==='memo'||M.t==='dots')){const r=mgc.getBoundingClientRect(),k=r.height/LH;M.clicks.push({x:(e.clientX-r.left)/k,y:(e.clientY-r.top)/k});e.preventDefault();return}if(M&&M.started&&M.t==='sort'){const r=mgc.getBoundingClientRect();const x=(e.clientX-r.left)/(r.height/LH);tapQ.push(x<LW/2?'l':'r');return}if(!M||!M.started||M.t!=='rhythm')return;const r=mgc.getBoundingClientRect();const x=(e.clientX-r.left)/(r.height/LH);
   let best=0,bd=1e9;M.lanesX.forEach((lx,i)=>{const d=Math.abs(lx-x);if(d<bd){bd=d;best=i}});if(bd<60){e.preventDefault();tapQ.push(['l','j','r'][best])}});
 
 /* ───────── 메이플식 마을 맵 (오른쪽으로 진행) ───────── */
@@ -1563,7 +1745,7 @@ function layoutMap(){
   const pool=[...DECOR[c.clim],...STAGEDECOR[stageObj().k]];
   W_.decor=[];for(let x=120;x<W_.len;x+=90+r()*120){if(S.npcs.some(np=>Math.abs(np.x-x)<70))continue;W_.decor.push({x,e:pool[Math.floor(r()*pool.length)],s:44+r()*34})}
   W_.plats=[];W_.coins=[];
-  for(let i=0;i<=n;i++){const x=(i===0?160:440+560*(i-1)+240);const y=WGY-84-(r()<.4?70:0);W_.plats.push({x,y,w:110});
+  for(let i=0;i<=n;i++){const x=(i===0?160:440+560*(i-1)+240);const y=WGY-80;W_.plats.push({x,y,w:110});
     for(let j=0;j<3;j++)W_.coins.push({x:x+20+j*35,y:y-14,got:false})}
   for(let x=300;x<W_.len-150;x+=180+r()*160)W_.coins.push({x,y:WGY-26,got:false});
   W_.P={x:S.wx||60,y:WGY,vy:0,ground:true};W_.cam=0;
@@ -1640,7 +1822,7 @@ function wLoop(ts){
   if($('#game').hidden||!S||!S.npcs){W_.last=ts;return}
   const busy=!$('#ov').hidden||!$('#mg').hidden;
   const dt=Math.min(.033,(ts-(W_.last||ts))/1000);W_.last=ts;
-  if(!busy)wUpdate(dt);else{jumpQ=false;tapQ=[];W_.talkQ=false}
+  if(!busy)wUpdate(dt);else W_.talkQ=false;
   wDraw(ts);
 }
 function wUpdate(dt){
@@ -1666,7 +1848,7 @@ function wUpdate(dt){
   for(const p of W_.pops)p.life-=dt;W_.pops=W_.pops.filter(p=>p.life>0);
   if(W_.bubble){W_.bubble.life-=dt;if(W_.bubble.life<=0)W_.bubble=null}
 }
-function wemo(e,x,y,size,alpha=1){wx.globalAlpha=alpha;wx.font=`${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;wx.textAlign='center';wx.textBaseline='bottom';wx.fillText(e,x,y);wx.globalAlpha=1}
+function wemo(e,x,y,size,alpha=1){wx.fillStyle='#000';wx.globalAlpha=alpha;wx.font=`${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;wx.textAlign='center';wx.textBaseline='bottom';wx.fillText(e,x,y);wx.globalAlpha=1}
 function wtxt(s,x,y,size,col,bg){wx.font=`${size}px Jua, sans-serif`;wx.textAlign='center';wx.textBaseline='middle';
   if(bg){const w=wx.measureText(s).width+14;wx.fillStyle=bg;wrr(x-w/2,y-size*.75,w,size*1.5,8);wx.fill()}
   else{wx.lineWidth=4;wx.strokeStyle='rgba(0,0,0,.45)';wx.strokeText(s,x,y)}wx.fillStyle=col||'#fff';wx.fillText(s,x,y)}
