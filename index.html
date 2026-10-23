@@ -1,0 +1,1746 @@
+<title>지구별 인생 RPG</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
+<style>
+/* Layout: 가로형 게임 HUD — 왼쪽 캐릭터 패널, 오른쪽 월드 화면 + 퀘스트 카드 3장 */
+:root{
+  color-scheme:dark;
+  --night:#151a2e; --panel:#222a4a; --panel-2:#2c3662; --edge:#46539a;
+  --paper:#fff6df; --paper-ink:#3b2d1c; --paper-edge:#e2c27f;
+  --accent:#ff8a1f; --accent-deep:#c45f06; --gold:#ffd23f; --good:#5fd47a; --bad:#ff5d73;
+  --text:#f3f1ff; --muted:#a9b1dc;
+  --st-s:#ff6b6b; --st-i:#4dabf7; --st-c:#f783ac; --st-d:#ffa94d; --st-j:#ffd43b; --st-m:#e0b739;
+  --t-cul:#e8590c; --t-wea:#1c7ed6; --t-env:#2f9e44; --t-grow:#7048e8; --t-job:#c2255c;
+  --display:'Jua','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --body:'Gowun Dodum','Apple SD Gothic Neo','Malgun Gothic',sans-serif;
+  --fs:clamp(11px,3.3vh,15px);
+}
+[hidden]{display:none!important}
+html{box-sizing:border-box;height:100%}
+*,*::before,*::after{box-sizing:inherit}
+body{height:100%;margin:0;background:var(--night);color:var(--text);font-family:var(--body);font-size:var(--fs);overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;
+  background-image:radial-gradient(circle at 12% 20%,#2a3360 0,transparent 40%),radial-gradient(circle at 88% 80%,#2b2550 0,transparent 45%)}
+button{font:inherit;color:inherit;cursor:pointer}
+button:focus-visible,input:focus-visible{outline:3px solid var(--gold);outline-offset:2px}
+#app{position:relative;height:100%;max-width:1280px;margin:0 auto}
+.screen{position:absolute;inset:0;padding-block:8px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance}
+
+/* 공통 게임 버튼 */
+.btn{border:0;border-radius:12px;padding:.6em 1.2em;font-family:var(--display);font-size:1.15em;background:var(--accent);color:#fff;
+  box-shadow:0 4px 0 var(--accent-deep);transition:transform .08s,box-shadow .08s;text-shadow:0 1px 0 rgba(0,0,0,.25)}
+.btn:active{transform:translateY(3px);box-shadow:0 1px 0 var(--accent-deep)}
+.btn.ghost{background:var(--panel-2);box-shadow:0 4px 0 #1a2042}
+.btn.ghost:active{box-shadow:0 1px 0 #1a2042}
+.btn.small{font-size:.95em;padding:.4em .8em}
+.chip{display:inline-flex;align-items:center;gap:2px;padding:1px 7px;border-radius:999px;font-size:.85em;font-weight:700;background:rgba(0,0,0,.08);white-space:nowrap}
+.chip.up{color:#1f7a37;background:#dcf5e2}.chip.down{color:#b3263a;background:#ffe0e5}
+.dark .chip.up{color:#8ff0a8;background:rgba(95,212,122,.18)}.dark .chip.down{color:#ff9aa9;background:rgba(255,93,115,.18)}
+
+/* ── 세로 안내 ── */
+#rotate{display:none;position:fixed;inset:0;z-index:100;background:var(--night);flex-direction:column;align-items:center;justify-content:center;gap:14px;text-align:center;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#rotate .phone{font-size:64px;animation:turn 2s ease-in-out infinite}
+#rotate h2{font-size:24px;color:var(--gold)}
+#rotate p{margin:0;color:var(--muted);font-size:15px}
+#rotate .skip{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:13px}
+@keyframes turn{0%,20%{transform:rotate(0)}50%,80%{transform:rotate(-90deg)}100%{transform:rotate(0)}}
+@media (orientation:portrait){body:not(.portrait-ok) #rotate{display:flex}}
+
+/* ── 타이틀 ── */
+#title{display:grid;grid-template-columns:1.1fr 1fr;gap:16px;align-items:center}
+.logo{display:flex;flex-direction:column;gap:6px;min-width:0}
+.logo .globe{font-size:clamp(40px,15vh,80px);animation:bob 3s ease-in-out infinite;width:max-content}
+.logo h1{font-size:clamp(28px,11vh,58px);line-height:1.05;color:#fff;text-shadow:0 3px 0 var(--accent-deep),0 0 18px rgba(255,138,31,.45);-webkit-text-stroke:1px var(--accent-deep)}
+.logo h1 span{color:var(--gold)}
+.logo p{margin:0;color:var(--muted);font-size:1.05em;line-height:1.5}
+.start-box{background:var(--panel);border:2px solid var(--edge);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
+.start-box label{font-family:var(--display);color:var(--gold)}
+.start-box input{width:100%;padding:.55em .8em;border-radius:10px;border:2px solid var(--edge);background:var(--night);color:var(--text);font:inherit;font-size:1.1em;-webkit-user-select:text;user-select:text}
+.start-row{display:flex;gap:8px;flex-wrap:wrap}
+.start-row .btn{flex:1}
+.dex h3{font-size:1em;color:var(--muted);margin-bottom:4px}
+.dex-row{display:flex;flex-wrap:wrap;gap:4px}
+.dex-row span{font-size:1.5em;filter:grayscale(1) opacity(.35);transition:filter .3s}
+.dex-row span.got{filter:none}
+@keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+/* ── 탄생 ── */
+#birth{display:grid;grid-template-columns:auto 1fr;gap:18px;align-items:center}
+.slot{width:clamp(110px,40vh,200px);aspect-ratio:1;max-width:100%;border-radius:24px;background:var(--panel);border:4px solid var(--gold);display:grid;place-items:center;font-size:clamp(60px,24vh,120px);
+  box-shadow:0 0 0 6px var(--panel-2),0 0 30px rgba(255,210,63,.35);position:relative}
+.slot.spin{animation:shake .12s infinite}
+@keyframes shake{50%{transform:translateY(-3px)}}
+.birth-info{display:flex;flex-direction:column;gap:8px;min-width:0}
+.birth-info .kick{font-family:var(--display);color:var(--gold);font-size:1.1em}
+.birth-info h2{font-size:clamp(24px,9vh,44px)}
+.facts{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.fact{background:var(--panel);border-radius:10px;padding:6px 9px;min-width:0}
+.fact b{display:block;font-family:var(--display);font-weight:400;color:var(--muted);font-size:.85em}
+.note{color:var(--muted);font-size:.9em;margin:0}
+#birth{overflow:auto}
+.nums{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+.num{background:var(--panel-2);border:2px solid var(--edge);border-radius:10px;padding:5px 8px;min-width:0}
+.num b{display:block;font-weight:400;color:var(--muted);font-size:.78em;line-height:1.25}
+.num span{font-family:var(--display);color:var(--gold);font-size:1.2em;font-variant-numeric:tabular-nums}
+.num small{color:var(--muted)}
+
+/* ── 게임 ── */
+#game{display:grid;grid-template-columns:clamp(160px,25vw,240px) minmax(0,1fr);gap:10px}
+.hud{background:var(--panel);border:2px solid var(--edge);border-radius:14px;padding:8px;display:flex;flex-direction:column;gap:6px;min-height:0;overflow:auto}
+.me{display:flex;gap:8px;align-items:center}
+.ava{position:relative;width:clamp(40px,14vh,58px);aspect-ratio:1;flex:none;border-radius:50%;background:var(--panel-2);border:2px solid var(--gold);display:grid;place-items:center;font-size:clamp(24px,8.5vh,36px)}
+.ava .jb{position:absolute;right:-6px;bottom:-4px;font-size:.5em;background:var(--night);border-radius:50%;padding:2px;line-height:1}
+.nm{font-family:var(--display);font-size:1.15em;line-height:1.1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sub{color:var(--muted);font-size:.85em;line-height:1.35}
+.sub.job{color:var(--gold)}
+.lv{display:inline-block;background:var(--accent);color:#fff;border-radius:6px;padding:0 5px;font-family:var(--display);font-size:.9em;margin-right:3px}
+.stats{display:flex;flex-direction:column;gap:3px}
+.srow{display:grid;grid-template-columns:1.4em 3.4em 1fr 2em;align-items:center;gap:4px;font-size:.9em}
+.srow .lab{color:var(--muted)}
+.srow .val{text-align:right;font-variant-numeric:tabular-nums;font-weight:700}
+.bar{height:7px;border-radius:9px;background:var(--night);overflow:hidden}
+.bar i{display:block;height:100%;border-radius:9px;transition:width .6s cubic-bezier(.2,1.4,.4,1)}
+.srow.bump .val{animation:bump .6s}
+@keyframes bump{30%{transform:scale(1.5);color:var(--gold)}}
+.hud-btns{display:flex;gap:6px;margin-top:auto}
+.hud-btns button{flex:1;background:var(--panel-2);border:0;border-radius:8px;padding:5px;font-size:.85em;color:var(--muted)}
+
+.main{display:grid;grid-template-rows:auto minmax(0,1fr) auto;gap:8px;min-width:0;min-height:0}
+.topbar{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.stages{display:flex;gap:3px;background:var(--panel);border-radius:999px;padding:3px}
+.stages span{width:1.9em;height:1.9em;border-radius:50%;display:grid;place-items:center;font-size:.95em;filter:grayscale(1) opacity(.45)}
+.stages span.done{filter:none;opacity:.7}
+.stages span.now{filter:none;background:var(--gold);box-shadow:0 0 0 2px #fff inset}
+.pill{background:var(--panel);border-radius:999px;padding:3px 10px;font-family:var(--display);white-space:nowrap}
+.pill.age{color:var(--gold)}
+.steps{display:flex;gap:3px;margin-left:auto;align-items:center;color:var(--muted);font-size:.85em}
+.steps i{width:9px;height:9px;border-radius:50%;background:var(--panel-2);display:inline-block}
+.steps i.on{background:var(--good)}
+
+.scene{position:relative;border-radius:14px;overflow:hidden;border:2px solid var(--edge);min-height:70px}
+.scene canvas{position:absolute;inset:0;width:100%;height:100%}
+.ground{position:absolute;left:0;right:0;bottom:0;height:24%;border-top:3px solid rgba(0,0,0,.15)}
+.landmark{position:absolute;right:7%;bottom:14%;font-size:clamp(40px,17vh,96px);filter:drop-shadow(0 4px 0 rgba(0,0,0,.15))}
+.hero{position:absolute;left:30%;bottom:14%;font-size:clamp(34px,13vh,70px);animation:bob 2.4s ease-in-out infinite}
+.hero .hj{position:absolute;top:-.25em;right:-.35em;font-size:.45em}
+.bubble{position:absolute;left:calc(30% + clamp(40px,15vh,80px));bottom:calc(14% + clamp(30px,11vh,60px));max-width:min(55%,320px);background:#fff;color:var(--paper-ink);border-radius:12px;padding:5px 10px;font-size:.92em;line-height:1.35;
+  box-shadow:0 3px 0 rgba(0,0,0,.18)}
+.bubble::before{content:"";position:absolute;left:-7px;bottom:8px;border:7px solid transparent;border-right-color:#fff;border-left:0}
+.flagtag{position:absolute;left:8px;top:8px;background:rgba(0,0,0,.35);border-radius:999px;padding:2px 9px;font-family:var(--display);font-size:.9em}
+.banner{position:absolute;inset:0;display:grid;place-items:center;pointer-events:none;z-index:3}
+.banner div{background:rgba(21,26,46,.88);border:3px solid var(--gold);border-radius:16px;padding:10px 22px;text-align:center;font-family:var(--display);font-size:clamp(18px,7vh,32px);color:var(--gold);animation:pop 2.2s forwards}
+.banner small{display:block;font-size:.55em;color:#fff;margin-top:2px}
+@keyframes pop{0%{transform:scale(.4);opacity:0}12%{transform:scale(1.08);opacity:1}20%{transform:scale(1)}80%{opacity:1}100%{opacity:0;transform:translateY(-10px)}}
+
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.card{background:var(--paper);color:var(--paper-ink);border:2px solid var(--paper-edge);border-bottom-width:5px;border-radius:12px;padding:6px 8px;text-align:left;display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:auto auto;column-gap:7px;align-items:center;
+  min-height:clamp(58px,22vh,96px);position:relative;transition:transform .12s;animation:deal .35s backwards}
+.card:nth-child(2){animation-delay:.07s}.card:nth-child(3){animation-delay:.14s}
+.card:hover{transform:translateY(-3px)}
+.card:active{transform:translateY(2px)}
+.card .ic{grid-row:1/3;font-size:clamp(24px,9vh,40px)}
+.card .tp{justify-self:start;color:#fff;border-radius:999px;padding:0 7px;font-size:.78em;font-weight:700}
+.card h4{margin:2px 0 0;font-family:var(--display);font-weight:400;font-size:1.1em;line-height:1.15}
+.card .fl{position:absolute;right:6px;top:4px;font-size:.95em}
+@keyframes deal{from{transform:translateY(16px) rotate(-3deg);opacity:0}}
+.tp.cul{background:var(--t-cul)}.tp.wea{background:var(--t-wea)}.tp.env{background:var(--t-env)}.tp.grow{background:var(--t-grow)}.tp.job{background:var(--t-job)}
+
+/* ── 모달 ── */
+.overlay{position:fixed;inset:0;z-index:20;background:rgba(10,12,25,.72);display:grid;place-items:center;
+  padding-block:max(10px,env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-bottom,0px));padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.modal{width:min(640px,100%);max-height:100%;overflow:auto;background:var(--paper);color:var(--paper-ink);border:3px solid var(--paper-edge);border-radius:18px;padding:12px 14px;display:flex;flex-direction:column;gap:8px;animation:rise .25s;font-size:1.05em}
+@keyframes rise{from{transform:translateY(20px) scale(.96);opacity:0}}
+.qhead{display:flex;gap:10px;align-items:center}
+.qhead .big{font-size:clamp(34px,13vh,54px);line-height:1}
+.qhead h3{font-size:1.45em;line-height:1.15}
+.qtext{margin:0;line-height:1.5}
+.choices{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.choice{background:#fff;border:2px solid var(--paper-edge);border-bottom-width:5px;border-radius:12px;padding:8px 10px;text-align:left;display:flex;flex-direction:column;gap:5px;color:var(--paper-ink)}
+.choice:hover{border-color:var(--accent)}
+.choice:active{transform:translateY(2px)}
+.choice b{font-family:var(--display);font-weight:400;font-size:1.1em;line-height:1.2}
+.chips{display:flex;flex-wrap:wrap;gap:3px}
+.tip{margin:0;background:#fff0c7;border-radius:10px;padding:7px 10px;line-height:1.45;font-size:.95em}
+.tip b{font-family:var(--display);font-weight:400;color:var(--accent-deep)}
+.res{font-family:var(--display);font-size:1.25em;line-height:1.3;margin:0}
+.mrow{display:flex;justify-content:flex-end;gap:8px;flex-wrap:wrap}
+
+/* 직업 선택 */
+.jobs{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:8px}
+.jobc{background:#fff;border:2px solid var(--paper-edge);border-bottom-width:5px;border-radius:12px;padding:8px;text-align:center;display:flex;flex-direction:column;align-items:center;gap:3px;color:var(--paper-ink);position:relative}
+.jobc:hover{border-color:var(--accent)}
+.jobc .je{font-size:clamp(28px,10vh,44px)}
+.jobc b{font-family:var(--display);font-weight:400;font-size:1.15em}
+.jobc .path{font-size:.8em;color:#7a6a52;line-height:1.35}
+.jobc .sp{position:absolute;top:-9px;left:50%;transform:translateX(-50%);background:var(--accent);color:#fff;border-radius:999px;padding:0 7px;font-size:.75em;white-space:nowrap}
+
+/* 전직 시험 */
+.test-bar{position:relative;height:clamp(34px,11vh,48px);border-radius:12px;background:#e9dcc0;overflow:hidden;border:3px solid var(--paper-ink);cursor:pointer}
+.test-zone{position:absolute;top:0;bottom:0;background:repeating-linear-gradient(45deg,#5fd47a 0 10px,#4bc067 10px 20px)}
+.test-mark{position:absolute;top:-2px;bottom:-2px;width:6px;margin-left:-3px;background:var(--paper-ink);border-radius:3px;box-shadow:0 0 0 2px #fff}
+.tries{display:flex;gap:6px;justify-content:center;font-size:1.4em}
+.test-msg{text-align:center;font-family:var(--display);font-size:1.2em;margin:0;min-height:1.3em}
+
+/* 엔딩 */
+#ending{display:grid;grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr);gap:12px;overflow:auto}
+.lifecard{background:var(--paper);color:var(--paper-ink);border:4px solid var(--gold);border-radius:18px;padding:12px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:4px;align-self:start}
+.lifecard .face{font-size:clamp(44px,17vh,80px);line-height:1}
+.lifecard h2{font-size:1.6em}
+.lifecard .ttl{background:var(--accent);color:#fff;border-radius:999px;padding:1px 12px;font-family:var(--display)}
+.lifecard p{margin:2px 0;line-height:1.45}
+.jpath{display:flex;flex-wrap:wrap;justify-content:center;gap:3px;font-size:.9em}
+.jpath span{background:#f3e3bd;border-radius:8px;padding:1px 6px}
+.album{display:flex;flex-wrap:wrap;gap:2px;justify-content:center;font-size:1.25em}
+.endside{display:flex;flex-direction:column;gap:8px;min-width:0}
+.endside .stats{background:var(--panel);border-radius:14px;padding:8px}
+.think{background:var(--panel);border:2px dashed var(--edge);border-radius:14px;padding:10px 12px}
+.think h3{color:var(--gold);font-size:1.15em;margin-bottom:4px}
+.think ol{margin:0;padding-left:1.3em;line-height:1.6}
+
+.toast{position:fixed;left:50%;top:max(12px,env(safe-area-inset-top,0px));transform:translateX(-50%);z-index:40;background:var(--panel-2);border:2px solid var(--gold);border-radius:999px;padding:6px 16px;font-family:var(--display);animation:pop 2.6s forwards;white-space:nowrap;max-width:calc(100% - 32px);overflow:hidden;text-overflow:ellipsis}
+
+
+/* 타이틀 추가 */
+.modes .lbl{font-family:var(--display);color:var(--gold);display:block;margin-bottom:4px}
+.modes small{color:var(--muted);font-family:var(--body)}
+.mode-row{display:flex;flex-wrap:wrap;gap:4px}
+.mode{border:2px solid var(--edge);background:var(--night);border-radius:999px;padding:2px 9px;font-size:.88em}
+.mode.on{background:var(--gold);color:var(--paper-ink);border-color:var(--gold)}
+.dex-cont{display:flex;flex-wrap:wrap;gap:4px 10px;font-size:.85em;color:var(--muted);margin-bottom:3px}
+.dex-cont b{color:var(--gold)}
+.dex-row em{color:var(--muted);font-size:.9em}
+.dex-row span{filter:none}
+.start-box{max-height:100%;overflow:auto}
+.unit{background:var(--panel);border-radius:12px;padding:7px 12px;font-family:var(--display)}
+.unit b{color:var(--gold);font-weight:400}
+.tp.clim{background:#0c8599}.tp.cont{background:#5c7cfa}
+.mtag{align-self:flex-start;background:var(--paper-ink);color:var(--gold);border-radius:999px;padding:0 8px;font-size:.8em;font-family:var(--display)}
+
+/* 액션 미션 */
+#mg{position:fixed;inset:0;z-index:30;background:#111;touch-action:none;-webkit-user-select:none;user-select:none}
+#mg canvas{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.mg-hud{position:absolute;top:max(8px,env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:6px;align-items:center;flex-wrap:wrap;pointer-events:none}
+.mg-pill{background:rgba(21,26,46,.82);border-radius:999px;padding:3px 11px;font-family:var(--display);white-space:nowrap}
+.mg-pill.gold{color:var(--gold)}
+.mg-timer{flex:1;min-width:60px;height:9px;background:rgba(21,26,46,.7);border-radius:9px;overflow:hidden}
+.mg-timer i{display:block;height:100%;background:var(--good);border-radius:9px}
+.mg-quit{pointer-events:auto;width:34px;height:34px;border-radius:50%;border:0;background:rgba(21,26,46,.82);color:#fff}
+.mg-ctrl{position:absolute;bottom:max(14px,env(safe-area-inset-bottom,0px));display:flex;gap:12px}
+.mg-ctrl.left{left:max(18px,env(safe-area-inset-left,0px))}
+.mg-ctrl.right{right:max(18px,env(safe-area-inset-right,0px))}
+.pad{width:clamp(58px,19vh,84px);height:clamp(58px,19vh,84px);border-radius:50%;border:3px solid rgba(255,255,255,.6);background:rgba(21,26,46,.42);color:#fff;font-size:clamp(22px,7vh,32px);touch-action:none;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+.pad.jump{width:clamp(70px,24vh,100px);height:clamp(70px,24vh,100px);background:rgba(255,138,31,.55)}
+.pad.on{background:rgba(255,210,63,.7);transform:scale(.94)}
+.mg-intro{position:absolute;inset:0;display:grid;place-items:center;background:rgba(10,12,25,.55);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mg-card{background:var(--paper);color:var(--paper-ink);border:3px solid var(--paper-edge);border-radius:18px;padding:12px 16px;max-width:520px;width:100%;display:flex;flex-direction:column;gap:6px;text-align:center;align-items:center}
+.mg-card h3{font-size:1.5em}
+.mg-card p{margin:0;line-height:1.5}
+.mg-card .hint{color:#7a6a52;font-size:.9em}
+.mg-msg{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--display);font-size:clamp(30px,13vh,64px);color:#fff;text-shadow:0 4px 0 var(--accent-deep),0 0 20px rgba(0,0,0,.5);pointer-events:none;animation:pop 1.3s forwards}
+
+
+/* 마을 맵 */
+#game{padding:0}
+#world{position:absolute;inset:0;width:100%;height:100%;touch-action:none}
+.w-top{position:absolute;top:max(6px,env(safe-area-inset-top,0px));left:max(16px,env(safe-area-inset-left,0px));right:max(16px,env(safe-area-inset-right,0px));display:flex;gap:8px;align-items:flex-start;pointer-events:none}
+.w-me{display:flex;gap:7px;align-items:center;background:rgba(21,26,46,.8);border:2px solid var(--edge);border-radius:14px;padding:5px 10px 5px 5px;max-width:42%;pointer-events:auto}
+.w-me .ava{width:clamp(36px,12vh,50px);font-size:clamp(20px,7vh,30px)}
+.w-mid{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;min-width:0}
+.w-row{display:flex;gap:4px;flex-wrap:wrap;justify-content:center}
+.w-btns{display:flex;gap:5px;pointer-events:auto}
+.w-btns button{width:36px;height:36px;border-radius:10px;border:0;background:rgba(21,26,46,.8);font-size:16px}
+.pad.talk{width:auto;height:clamp(46px,15vh,64px);border-radius:999px;padding:0 16px;font-family:var(--display);font-size:clamp(15px,5vh,20px);background:rgba(255,138,31,.9);align-self:center;animation:bob 1.2s ease-in-out infinite}
+.mg-ctrl.right{align-items:flex-end}
+.stats.light{background:#fff;border-radius:12px;padding:8px;color:var(--paper-ink)}
+.stats.light .lab{color:#7a6a52}
+.stats.light .bar{background:#eadfc6}
+
+/* 세로로 그냥 하기 */
+@media (orientation:portrait){
+  body.portrait-ok{overflow:auto;height:auto}
+  body.portrait-ok #app{height:auto;min-height:100%}
+  body.portrait-ok .screen{position:relative;min-height:100vh}
+  body.portrait-ok #title,body.portrait-ok #birth,body.portrait-ok #game,body.portrait-ok #ending{grid-template-columns:minmax(0,1fr)}
+  body.portrait-ok #game{min-height:100vh}
+  body.portrait-ok .cards{grid-template-columns:minmax(0,1fr)}
+  body.portrait-ok .choices{grid-template-columns:minmax(0,1fr)}
+  body.portrait-ok .slot{width:150px}
+  body.portrait-ok .nums,body.portrait-ok .facts{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;animation-iteration-count:1!important}}
+</style>
+
+<div id="rotate" role="dialog" aria-label="가로 모드 안내">
+  <div class="phone">📱</div>
+  <h2>핸드폰을 가로로 돌려 주세요!</h2>
+  <p>이 게임은 가로 화면에서 가장 재미있어요.<br>화면 자동 회전이 꺼져 있다면 켜 주세요.</p>
+  <button class="skip" id="skipRotate">그래도 세로로 할래요</button>
+</div>
+
+<div id="app">
+  <!-- 타이틀 -->
+  <section class="screen" id="title">
+    <div class="logo">
+      <div class="globe">🌏</div>
+      <h1>지구별<br><span>인생 RPG</span></h1>
+      <p>172개 나라 중 실제 출생 확률대로 태어나<br>기후와 문화가 다른 미션을 직접 깨고, 직업을 골라 전직해 보자!</p>
+    </div>
+    <div class="start-box">
+      <label for="nameIn">내 캐릭터 이름</label>
+      <input id="nameIn" maxlength="8" placeholder="예: 별빛모험가" autocomplete="off">
+      <div class="start-row">
+        <button class="btn" id="btnStart">🎲 태어나기</button>
+        <button class="btn ghost" id="btnCont" hidden>▶ 이어하기</button>
+      </div>
+      <div class="modes"><span class="lbl">어디에서 태어날까? <small>(수업 단원에 맞춰 고르기)</small></span><div class="mode-row" id="modeRow"></div></div>
+      <div class="dex">
+        <h3>내가 살아 본 나라 도감 <span id="dexCount"></span></h3>
+        <div class="dex-cont" id="dexCont"></div>
+        <div class="dex-row" id="dexRow"></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- 탄생 -->
+  <section class="screen" id="birth" hidden>
+    <div class="slot" id="slot">🌏</div>
+    <div class="birth-info" id="birthInfo">
+      <div class="kick">두구두구… 어디에서 태어날까?</div>
+    </div>
+  </section>
+
+  <!-- 게임 -->
+  <section class="screen" id="game" hidden>
+    <canvas id="world"></canvas>
+    <div class="w-top">
+      <div class="w-me">
+        <div class="ava" id="hAva">👶</div>
+        <div style="min-width:0">
+          <div class="nm" id="hName">이름</div>
+          <div class="sub" id="hSub"></div>
+          <div class="sub job" id="hJob"></div>
+          <div class="sub" id="hCoin"></div>
+        </div>
+      </div>
+      <div class="w-mid">
+        <div class="stages" id="tStages"></div>
+        <div class="w-row"><span class="pill age" id="tAge">0살</span><span class="pill" id="tSteps"></span></div>
+      </div>
+      <div class="w-btns">
+        <button id="btnStats" aria-label="능력치">📊</button>
+        <button id="btnFull" aria-label="전체 화면">⛶</button>
+        <button id="btnHome" aria-label="처음으로">🏠</button>
+      </div>
+    </div>
+    <div class="mg-ctrl left"><button class="pad" id="wL" aria-label="왼쪽">◀</button><button class="pad" id="wR" aria-label="오른쪽">▶</button></div>
+    <div class="mg-ctrl right"><button class="pad talk" id="wT" hidden>💬 대화</button><button class="pad jump" id="wJ" aria-label="점프">⤴</button></div>
+    <div class="banner" id="banner"></div>
+  </section>
+
+  <!-- 엔딩 -->
+  <section class="screen" id="ending" hidden></section>
+</div>
+
+
+<div id="mg" hidden>
+  <canvas id="mgCanvas"></canvas>
+  <div class="mg-hud">
+    <span class="mg-pill" id="mgTitle"></span>
+    <span class="mg-pill gold" id="mgCount"></span>
+    <span class="mg-pill" id="mgHearts"></span>
+    <span class="mg-timer"><i id="mgTime"></i></span>
+    <button class="mg-quit" id="bQuit" aria-label="미션 그만두기">✕</button>
+  </div>
+  <div class="mg-ctrl left"><button class="pad" id="bL" aria-label="왼쪽">◀</button><button class="pad" id="bR" aria-label="오른쪽">▶</button></div>
+  <div class="mg-ctrl right"><button class="pad jump" id="bJ" aria-label="점프">⤴</button></div>
+  <div class="mg-intro" id="mgIntro" hidden></div>
+  <div class="mg-msg" id="mgMsg" hidden></div>
+</div>
+<div class="overlay" id="ov" hidden><div class="modal" id="modal"></div></div>
+
+<script>
+/* ───────── 데이터 ───────── */
+const SM={s:{n:'체력',e:'💪',c:'var(--st-s)'},i:{n:'지혜',e:'🧠',c:'var(--st-i)'},c:{n:'매력',e:'💖',c:'var(--st-c)'},d:{n:'손재주',e:'🛠️',c:'var(--st-d)'},j:{n:'행복',e:'😊',c:'var(--st-j)'},m:{n:'코인',e:'🪙',c:'var(--st-m)'}};
+const TYPES={cul:'🎎 문화',wea:'⛅ 날씨',env:'🌱 환경',grow:'⭐ 성장',job:'💼 직업',clim:'🌡️ 기후 생활',cont:'🗺️ 지역 탐구'};
+function Q(id,t,ic,ti,tx,tip,w,a,b){return{id,t,ic,ti,tx,tip,w,ch:[{l:a[0],e:a[1],r:a[2],g:a[3]},{l:b[0],e:b[1],r:b[2],g:b[3]}]}}
+
+const FEAT={
+kr:{flag:'🇰🇷',name:'대한민국',region:'동아시아',climate:'봄·여름·가을·겨울 사계절이 뚜렷해요',per:'1000명 중 약 6명',greet:'안녕하세요',land:'⛰️',w:'leaves',sky:['#86ccff','#ffe7bf'],gr:'#79b85a',bonus:{i:2,d:1},
+ sp:{line:'d',p:['웹툰 작가 지망생','✏️','인기 웹툰 작가','📱','K-콘텐츠 거장','🎬']},
+ qs:[
+ Q('kr1','cul','🥟','추석 송편 빚기','보름달이 뜨는 추석! 온 가족이 모여 송편을 빚어요.','추석에는 햇곡식으로 음식을 만들어 조상과 이웃에게 감사해요.',null,['반달 모양으로 예쁘게',{d:3,j:3},'할머니가 엄지척! 손재주가 늘었어요.'],['보름달 보며 소원 빌기',{c:2,j:4},'가족 모두의 소원을 함께 빌었어요.']),
+ Q('kr2','cul','🙇','설날 세배','새해 첫날, 한복을 입고 어른들께 인사를 드려요.','설날에는 떡국을 먹고 세배를 하며 서로의 복을 빌어요.',null,['공손하게 세배하기',{c:3,m:5},'"새해 복 많이 받으렴!" 세뱃돈을 받았어요.'],['떡국 두 그릇 먹기',{s:2,j:3},'든든해요! 한 살 더 먹은 기분이에요.']),
+ Q('kr3','cul','🥬','이웃과 김장하기','겨울이 오기 전, 이웃이 모여 김치를 한가득 담가요.','한국의 김장 문화는 유네스코 인류무형문화유산이에요.',null,['배추 나르기',{s:3,c:1},'무거운 배추도 척척! 이웃 어른들이 칭찬해요.'],['양념 버무리기',{d:3,j:1},'매콤한 냄새… 손맛이 생겼어요.']),
+ Q('kr4','wea','🌧️','긴 장마','여름 장마가 시작됐어요. 며칠째 비가 와요.','한국은 여름 장마철에 1년 비의 많은 양이 한꺼번에 내려요.','rain',['배수구 낙엽 치우기 돕기',{s:2,c:2},'골목이 물에 잠기지 않았어요. 이웃이 고마워해요.'],['집에서 책 읽기',{i:3},'빗소리를 들으며 책 한 권을 다 읽었어요.']),
+ Q('kr5','wea','😷','미세먼지 나쁨','하늘이 뿌옇게 변했어요. 마스크를 챙겨야 해요.','미세먼지가 심한 날은 바깥 활동을 줄이고 손을 깨끗이 씻어요.','sand',['실내 체육으로 바꾸기',{s:2,j:1},'체육관에서 피구 한 판! 땀이 쏙 났어요.'],['미세먼지 원인 조사',{i:3},'자동차·공장·바람… 원인이 여러 가지였어요.'])]},
+jp:{flag:'🇯🇵',name:'일본',region:'동아시아 섬나라',climate:'사계절이 있고 태풍·지진이 잦아요',per:'1000명 중 약 15명',greet:'こんにちは(곤니치와)',land:'🗻',w:'petals',sky:['#9fd4ff','#ffd6e5'],gr:'#86c46b',bonus:{d:2,i:1},
+ sp:{line:'d',p:['스시 견습생','🍣','스시 장인','🔪','100년 가게 주인','🏮']},
+ qs:[
+ Q('jp1','cul','🌸','하나미(벚꽃놀이)','벚꽃이 활짝! 공원에 돗자리를 펴고 도시락을 먹어요.','일본에서는 봄마다 벚꽃 아래에 모이는 하나미를 즐겨요.','petals',['도시락 나눠 먹기',{c:3,j:3},'옆 돗자리 가족과도 친구가 됐어요.'],['벚꽃 그림 그리기',{d:3,j:2},'분홍빛 그림이 완성됐어요.']),
+ Q('jp2','cul','👟','현관에서 신발 벗기','친구 집에 놀러 갔어요. 현관(겐칸)에서 어떻게 할까요?','일본 집은 현관에서 신발을 벗고, 신발 앞코가 바깥을 향하게 정리해요.',null,['신발 벗고 가지런히 돌려놓기',{c:3,i:1},'"예의 바르구나!" 친구 부모님이 웃으셨어요.'],['친구에게 예절 물어보기',{i:2,c:2},'다른 문화의 예절을 묻는 건 멋진 일이에요.']),
+ Q('jp3','cul','🏮','오봉 축제','여름 명절 오봉. 조상을 맞이하고 다 함께 춤을 춰요.','오봉에는 고향에 모여 조상을 기리고 봉오도리라는 마을 춤을 춰요.',null,['봉오도리 춤추기',{s:2,c:2,j:2},'동네 사람들과 동그랗게 원을 그리며 춤췄어요.'],['종이 등불 만들기',{d:3,j:2},'내가 만든 등불이 밤길을 밝혀요.']),
+ Q('jp4','wea','🌀','태풍이 온대요','강한 태풍이 다가오고 있어요!','태풍 때는 창문을 단단히 닫고 바깥 물건을 안으로 들여놔요.','rain',['창문 점검·물건 들여놓기',{d:2,i:2},'준비 끝! 태풍이 지나가도 집이 무사해요.'],['이웃 할머니 안부 확인',{c:3,j:1},'할머니가 고맙다며 귤을 주셨어요.']),
+ Q('jp5','wea','🫨','지진 대피 훈련','따르릉! 학교에서 지진 대피 훈련이 시작됐어요.','흔들릴 땐 책상 아래로 몸을 숨기고, 멈추면 넓은 곳으로 대피해요.',null,['책상 아래로, 침착하게!',{s:2,i:2},'훈련 만점! 몸이 먼저 기억해요.'],['친구들 앞장서서 안내',{c:3},'반 친구들이 줄 맞춰 무사히 대피했어요.'])]},
+in:{flag:'🇮🇳',name:'인도',region:'남아시아',climate:'덥고, 여름엔 몬순 비가 쏟아져요',per:'1000명 중 약 178명',greet:'नमस्ते(나마스테)',land:'🛕',w:'sun',sky:['#ffd27a','#ffb15e'],gr:'#c99a52',bonus:{c:2,i:1},
+ sp:{line:'s',p:['요가 수련생','🧘','요가 마스터','✨','세계 요가 스승','🌏']},
+ qs:[
+ Q('in1','cul','🪔','디왈리 빛의 축제','어둠을 밝히는 디왈리! 집집마다 작은 등불 디야를 켜요.','디왈리는 빛이 어둠을 이긴다는 뜻을 담은 인도의 큰 명절이에요.',null,['디야 등불 켜기',{d:2,j:4},'온 동네가 반짝반짝 빛나요.'],['이웃에 단 과자 나누기',{c:3,j:2},'과자 접시가 오가며 웃음이 퍼졌어요.']),
+ Q('in2','cul','🎨','홀리 색깔 축제','봄맞이 축제 홀리! 모두가 색 가루를 뿌리며 웃어요.','홀리 날에는 나이와 상관없이 다 함께 색을 뿌리며 봄을 맞아요.',null,['색 가루 듬뿍 뿌리기',{s:1,c:2,j:4},'온몸이 무지개색! 모르는 사람과도 친구가 됐어요.'],['꽃으로 천연 물감 만들기',{d:2,i:2},'꽃잎을 빻아 부드러운 색 가루를 만들었어요.']),
+ Q('in3','cul','🍛','탈리 한 상','큰 접시에 여러 반찬이 담긴 탈리가 나왔어요.','인도의 많은 지역에서는 오른손으로 음식을 먹어요.',null,['오른손으로 맛있게',{d:2,j:2,c:1},'손으로 먹으니 더 맛있는 것 같아요!'],['향신료 이름 외우기',{i:3},'강황, 커민, 카다멈… 향신료 박사 등극!']),
+ Q('in4','wea','🌧️','몬순이 왔다!','6월, 몬순 비가 쏟아지기 시작했어요.','몬순 비는 농사에 꼭 필요하지만 홍수를 일으키기도 해요.','rain',['논에 모내기 돕기',{s:3,j:1},'진흙투성이지만 벼가 쑥쑥 자랄 거예요.'],['빗물 모으는 통 만들기',{d:2,i:2},'모은 빗물로 마당 화분에 물을 줘요.']),
+ Q('in5','wea','🔥','45도 폭염','너무 더워서 한낮엔 밖에 나갈 수가 없어요!','폭염 때는 한낮 외출을 피하고 물을 자주 마셔야 해요.','sun',['이웃에게 시원한 물 나누기',{c:3,j:1},'물 한 잔에 모두 웃음을 되찾았어요.'],['동네 그늘 지도 만들기',{i:2,d:2},'시원한 길을 친구들에게 알려 줬어요.'])]},
+ke:{flag:'🇰🇪',name:'케냐',region:'동아프리카',climate:'넓은 초원 사바나, 건기와 우기가 있어요',per:'1000명 중 약 7명',greet:'Jambo(잠보)',land:'🦒',w:'sun',sky:['#ffcf7a','#ff9a5a'],gr:'#c8a14d',bonus:{s:3},
+ sp:{line:'s',p:['레인저 견습생','🦒','사파리 레인저','🦁','국립공원 수호자','🌍']},
+ qs:[
+ Q('ke1','cul','🤝','하람베! 다 함께','마을 우물을 고칠 돈이 필요해요. 모두 모였어요.','케냐의 표어 하람베는 "모두 함께 힘을 모으자"라는 뜻이에요.',null,['우물 수리 직접 돕기',{s:3,c:1},'마을 사람들과 힘을 합쳐 우물을 고쳤어요!'],['모금 노래 부르기',{c:3,j:1},'노래에 힘을 얻은 사람들이 마음을 보탰어요.']),
+ Q('ke2','cul','🦘','마사이 점프 춤','마사이 사람들의 축하 춤! 누가 더 높이 뛸까요?','마사이 사람들은 아두무라는 점프 춤으로 기쁨을 나눠요.',null,['최고로 높이 점프!',{s:3,j:2},'구름까지 닿을 듯 높이 뛰었어요!'],['노래로 박자 맞추기',{c:2,d:1,j:2},'모두가 내 노래에 맞춰 뛰었어요.']),
+ Q('ke3','cul','🏃','달려서 등교하기','학교까지 몇 km! 오늘도 달려서 가요.','케냐 고원 지대는 세계적인 마라톤 선수를 많이 길러 냈어요.',null,['친구와 달리기 시합',{s:4},'숨이 차지만 기분은 최고!'],['달리며 단어 외우기',{s:1,i:2},'학교에 닿을 때쯤 단어 10개 완료!']),
+ Q('ke4','wea','💧','물 길어 오기','건기라 우물이 말랐어요. 먼 곳에서 물을 떠 와야 해요.','세계에는 아직 깨끗한 물을 얻기 힘든 사람들이 많아요.','sun',['물통 들고 다녀오기',{s:3,j:-1},'힘들었지만 가족이 마실 물을 구했어요.'],['물 아껴 쓰는 법 찾기',{i:3},'설거지 물을 화분에 주는 방법을 생각해 냈어요.']),
+ Q('ke5','env','🦁','사바나 동물 지키기','초원에 사는 동물들이 위험해요. 무엇을 할까요?','케냐 국립공원에서는 레인저들이 밤낮으로 야생 동물을 지켜요.',null,['레인저 따라 순찰',{s:2,i:1,j:2},'코끼리 가족을 멀리서 지켜봤어요.'],['동물 보호 포스터 만들기',{d:2,c:2},'마을 곳곳에 포스터를 붙였어요.'])]},
+br:{flag:'🇧🇷',name:'브라질',region:'남아메리카',climate:'덥고 비가 많아요. 아마존 열대우림이 있어요',per:'1000명 중 약 26명',greet:'Olá(올라)',land:'🌴',w:'sun',sky:['#6fd0ff','#c5f2c9'],gr:'#3fa45a',bonus:{s:1,c:2},
+ sp:{line:'s',p:['축구 유망주','⚽','프로 축구 선수','🏟️','월드컵 영웅','🏆']},
+ qs:[
+ Q('br1','cul','💃','카니발 삼바','카니발이다! 거리 가득 삼바 음악이 울려요.','브라질 카니발은 세계에서 가장 큰 축제 중 하나예요.',null,['삼바 춤추기',{s:2,c:2,j:3},'신나는 리듬에 발이 멈추질 않아요!'],['퍼레이드 의상 만들기',{d:3,j:2},'반짝이 깃털 의상이 완성됐어요.']),
+ Q('br2','cul','⚽','골목 축구','맨발로 공을 차는 골목 축구! 한 판 할래?','브라질은 월드컵에서 가장 많이(5번) 우승한 나라예요.',null,['드리블로 돌파!',{s:2,d:2,j:2},'골인! 골목이 들썩였어요.'],['팀 응원 단장 하기',{c:3,j:2},'내 응원 덕분에 우리 팀이 역전했어요.']),
+ Q('br3','cul','🍲','토요일 페이조아다','검은콩 스튜 페이조아다! 온 가족이 모여 먹어요.','페이조아다는 브라질 사람들이 가족과 즐겨 먹는 대표 음식이에요.',null,['요리 돕기',{d:3},'콩을 저으며 요리 비법을 배웠어요.'],['가족 이야기 듣기',{c:2,j:3},'할아버지의 젊은 시절 이야기가 재밌어요.']),
+ Q('br4','wea','⛈️','열대 소나기','맑다가 갑자기 쏴아! 열대 소나기예요.','열대 지역은 오후에 짧고 강한 소나기가 자주 내려요.','rain',['비 맞으며 신나게 놀기',{j:4,s:1},'금방 그치고 무지개가 떴어요!'],['처마 밑에서 구름 관찰',{i:3},'소나기 구름이 생기는 모습을 알았어요.']),
+ Q('br5','env','🌳','아마존 숲 지키기','아마존 열대우림의 나무가 베어지고 있대요.','아마존은 지구의 허파라고 불릴 만큼 수많은 생물을 품고 있어요.','rain',['나무 심기 봉사',{s:2,j:2,c:1},'내가 심은 나무가 언젠가 숲이 될 거예요.'],['원주민의 숲 지혜 배우기',{i:3,c:1},'숲을 아끼며 사는 법을 배웠어요.'])]},
+no:{flag:'🇳🇴',name:'노르웨이',region:'북유럽',climate:'춥고 눈이 많아요. 백야와 오로라가 있어요',per:'10000명 중 약 7명',greet:'Hei(하이)',land:'🏔️',w:'snow',sky:['#1b3463','#5d86b8'],gr:'#e8f1fb',bonus:{s:2,i:1},
+ sp:{line:'i',p:['극지 연구 조수','🧊','극지 과학자','🔭','북극 탐사대장','🧭']},
+ qs:[
+ Q('no1','cul','⛷️','스키 타고 등교','눈이 소복! 노르웨이 아이들은 스키를 일찍 배워요.','노르웨이에는 "스키를 신고 태어난다"는 말이 있을 정도예요.','snow',['크로스컨트리 스키',{s:4},'씽씽! 학교까지 스키로 도착!'],['눈 덮인 숲 탐험',{i:2,j:2},'눈 위에 찍힌 여우 발자국을 발견했어요.']),
+ Q('no2','cul','🎏','5월 17일 어린이 퍼레이드','제헌절! 아이들이 깃발을 들고 거리를 행진해요.','노르웨이 제헌절 행진의 주인공은 군대가 아니라 어린이들이에요.',null,['깃발 들고 행진',{c:3,j:3},'사람들의 박수 소리가 하늘까지 울렸어요.'],['전통 옷 부나드 입기',{d:1,c:2,j:2},'수놓은 전통 옷이 정말 예뻐요.']),
+ Q('no3','cul','🏕️','숲속 자연 생활','주말엔 숲으로! 자연 속에서 쉬는 시간이에요.','노르웨이 사람들은 자연 속에서 보내는 시간을 아주 소중히 여겨요.',null,['모닥불 피우기',{d:3,j:2},'모닥불에 소시지를 구워 먹었어요.'],['숲속 생물 관찰',{i:3,j:1},'이끼와 버섯 이름을 5개나 알게 됐어요.']),
+ Q('no4','wea','☀️','해가 지지 않는 밤','한여름, 밤 12시인데도 밝아요! 백야예요.','북극에 가까운 곳은 여름에 해가 지지 않는 백야가 있어요.','sun',['밤새 친구와 축구',{s:2,j:3},'시간 가는 줄 몰랐어요!'],['지구본으로 원리 탐구',{i:4},'지구가 기울어져 돌아서 생기는 일이었어요.']),
+ Q('no5','wea','🌌','극야와 오로라','겨울엔 낮에도 어두워요. 그런데 하늘에 초록빛 커튼이!','겨울 북쪽 지방엔 해가 뜨지 않는 극야가 있고, 오로라를 볼 수 있어요.','aurora',['오로라 사진 찍기',{d:2,j:4},'인생 사진 완성!'],['오로라 원리 공부',{i:3,j:1},'태양에서 온 입자가 만든 빛이래요.'])]},
+eg:{flag:'🇪🇬',name:'이집트',region:'북아프리카',climate:'비가 거의 없는 사막, 나일강이 흘러요',per:'1000명 중 약 14명',greet:'السلام عليكم(앗살라무 알라이쿰)',land:'🐪',w:'sun',sky:['#ffd98a','#f6b26b'],gr:'#e3bf7a',bonus:{i:2,c:1},
+ sp:{line:'i',p:['고고학 조수','🏺','고고학자','🔍','고대 무덤 발견자','🔺']},
+ qs:[
+ Q('eg1','cul','🌙','라마단 이프타르','해가 지면 가족과 이웃이 함께하는 저녁 식사, 이프타르!','라마단에는 낮에 금식하며 어려운 이웃을 생각하고 나눔을 실천해요.',null,['이웃에게 음식 나르기',{c:3,j:2},'골목마다 "고마워요!" 인사가 들려요.'],['대추야자로 식사 시작',{j:3,s:1},'달콤한 대추야자로 하루를 마무리했어요.']),
+ Q('eg2','cul','⛵','나일강 펠루카','나일강 위 하얀 돛단배 펠루카를 타 봐요.','나일강은 세계에서 가장 긴 강 중 하나로, 고대 이집트 문명을 키웠어요.',null,['돛 다루는 법 배우기',{d:3,s:1},'바람을 읽는 법을 배웠어요.'],['강가 마을 이야기 듣기',{c:2,i:2},'뱃사공 아저씨의 옛이야기가 흥미진진해요.']),
+ Q('eg3','cul','🔺','피라미드 탐험','4500년 전에 만든 거대한 피라미드 앞에 섰어요!','기자의 대피라미드는 고대 세계 7대 불가사의 중 유일하게 남아 있어요.',null,['상형문자 해독 도전',{i:4},'새 그림 = "아" 소리! 해독 성공!'],['관광객에게 길 안내',{c:3,m:3},'외국 관광객이 고맙다며 기념품을 줬어요.']),
+ Q('eg4','wea','🌪️','캄신 모래바람','봄철 뜨거운 모래바람 캄신이 불어와요!','캄신은 사하라 사막에서 불어오는 뜨겁고 건조한 바람이에요.','sand',['창문 틈 막기',{d:3},'집 안은 모래 없이 깨끗해요.'],['스카프 두르고 귀가',{s:2,i:1},'모래를 막는 지혜로 무사히 집에 왔어요.']),
+ Q('eg5','wea','🏜️','사막의 하루','낮엔 뜨겁고 밤엔 추운 사막 마을이에요.','사막은 낮과 밤의 기온 차이가 아주 커요.','sun',['흙벽돌 집 고치기',{s:2,d:2},'두꺼운 흙벽이 더위와 추위를 막아 줘요.'],['밤하늘 별자리 공부',{i:3,j:1},'사막의 밤하늘엔 별이 쏟아져요.'])]},
+mn:{flag:'🇲🇳',name:'몽골',region:'중앙아시아 초원',climate:'끝없는 초원, 겨울이 아주 추워요',per:'10000명 중 약 4명',greet:'Сайн байна уу(사인 바이노)',land:'⛺',w:'none',sky:['#8fd0ff','#e0f4d4'],gr:'#9cc96a',bonus:{s:2,d:1},
+ sp:{line:'s',p:['초원 목동','🐑','기마 챔피언','🐎','초원의 큰 어른','🦅']},
+ qs:[
+ Q('mn1','cul','🐎','나담 축제','말타기·씨름·활쏘기! 몽골 최대의 축제 나담이에요.','몽골의 나담 축제는 유네스코 인류무형문화유산이에요. 말 경주엔 어린이 기수도 나가요.',null,['어린이 말 경주 나가기',{s:3,j:2},'초원을 바람처럼 달렸어요!'],['활쏘기 도전',{d:3,i:1},'과녁 한가운데 명중!']),
+ Q('mn2','cul','⛺','게르 짓기','이사 가는 날! 접었다 펴는 집 게르를 함께 세워요.','유목민은 계절마다 가축과 함께 옮겨 다니며 게르를 몇 시간 만에 지어요.',null,['나무 뼈대 세우기',{s:2,d:2},'둥근 집이 금세 완성됐어요.'],['펠트 덮개 꿰매기',{d:3},'겨울바람도 막아 줄 튼튼한 덮개!']),
+ Q('mn3','cul','🍵','손님에게 수테차','멀리서 손님이 찾아왔어요. 따뜻하게 맞이해야죠!','몽골에서는 손님에게 우유차 수테차를 대접하는 것이 기본 예절이에요.',null,['두 손으로 차 대접',{c:4},'손님이 "예의 바른 아이구나" 하셨어요.'],['손님의 여행 이야기 듣기',{i:2,c:1,j:1},'먼 초원 너머 이야기에 귀가 쫑긋!']),
+ Q('mn4','wea','❄️','조드(혹한 재해)','영하 40도! 가축이 추위에 위험해요.','조드는 극심한 추위와 눈으로 가축이 큰 피해를 입는 몽골의 재해예요.','snow',['가축 우리 지키기',{s:3,c:1},'아기 양들을 게르 안으로 데려왔어요.'],['건초 모아 두기 계획',{i:3},'다음 겨울엔 더 잘 대비할 수 있어요.']),
+ Q('mn5','env','🌬️','사막으로 변하는 초원','초원이 점점 모래땅으로 변하고 있대요.','기후 변화와 지나친 방목으로 몽골 초원의 사막화가 진행되고 있어요.','sand',['나무 심어 숲 만들기',{s:2,j:2},'작은 묘목들이 바람을 막아 줄 거예요.'],['가축 수 조절 회의',{i:2,c:2},'마을 어른들과 초원을 지킬 약속을 했어요.'])]},
+mx:{flag:'🇲🇽',name:'멕시코',region:'북아메리카',climate:'따뜻하고, 사막·밀림·바다가 모두 있어요',per:'1000명 중 약 16명',greet:'¡Hola!(올라)',land:'🌵',w:'sun',sky:['#7fd0ff','#ffe39a'],gr:'#d9a05b',bonus:{c:2,d:1},
+ sp:{line:'c',p:['마리아치 연주자','🎺','마리아치 단장','🎻','국민 음악가','🎶']},
+ qs:[
+ Q('mx1','cul','🌼','죽은 자의 날','주황 마리골드 꽃으로 제단을 꾸미고 돌아가신 가족을 기억해요.','멕시코의 죽은 자의 날은 슬픔보다 즐거움으로 가족을 기리는 명절이에요.',null,['마리골드 꽃길 만들기',{d:3,j:2},'꽃길 따라 가족의 추억이 이어져요.'],['할아버지 추억 나누기',{c:2,i:1,j:3},'모두 웃으며 할아버지를 떠올렸어요.']),
+ Q('mx2','cul','🪅','피냐타 파티','생일 파티! 사탕이 든 피냐타를 막대로 쳐요.','피냐타는 멕시코 파티에서 빠지지 않는 인기 놀이예요.',null,['눈 가리고 힘껏!',{s:3,j:3},'펑! 사탕 비가 쏟아졌어요.'],['피냐타 직접 만들기',{d:4},'내가 만든 별 모양 피냐타가 최고 인기!']),
+ Q('mx3','cul','🌽','토르티야 굽기','옥수수 반죽을 동그랗게! 토르티야를 구워요.','옥수수는 수천 년 전 멕시코 지역에서 처음 기르기 시작했어요.',null,['동글동글 반죽 펴기',{d:3,j:1},'완벽한 동그라미 토르티야!'],['시장에서 팔아 보기',{c:2,m:5},'첫 장사 성공! 코인을 벌었어요.']),
+ Q('mx4','wea','🌀','허리케인 경보','바다에서 커다란 허리케인이 올라오고 있어요!','허리케인은 대서양과 동태평양에서 생기는 강한 열대 폭풍이에요.','rain',['가족을 대피소로 안내',{c:2,s:2},'모두 안전하게 대피했어요.'],['비상 가방 싸기',{i:2,d:2},'물·손전등·약… 준비 완료!']),
+ Q('mx5','env','🦋','제왕나비 숲','수백만 마리 제왕나비가 겨울을 나러 날아왔어요!','제왕나비는 북아메리카에서 멕시코 숲까지 수천 km를 날아와요.','petals',['숲 지킴이 활동',{s:2,j:3},'나비들이 쉴 숲을 지켰어요.'],['나비 이동 경로 조사',{i:4},'작은 나비의 엄청난 여행에 감탄!'])]},
+};
+
+const FAM=[
+ {n:'🏡 시골 농가',d:'논밭과 동물들 사이에서 자라요',b:{s:2,d:1},m:10},
+ {n:'🏙️ 도시 아파트',d:'버스와 도서관이 가까워요',b:{i:2,c:1},m:20},
+ {n:'🌊 바닷가 마을',d:'파도 소리를 들으며 자라요',b:{s:1,c:2},m:15},
+ {n:'👨‍👩‍👧‍👦 북적북적 대가족',d:'늘 누군가 곁에 있어요',b:{c:2,j:6},m:10},
+ {n:'🧶 작은 마을 공방',d:'가족이 물건을 만들어 팔아요',b:{d:3},m:12},
+];
+
+const STAGES=[
+ {k:'baby',n:'아기',e:'👶',from:0,to:6,q:2,after:null},
+ {k:'child',n:'어린이',e:'🧒',from:6,to:12,q:3,after:null},
+ {k:'teen',n:'청소년',e:'🧑‍🎓',from:12,to:19,q:3,after:'job1'},
+ {k:'young',n:'청년',e:'🧑',from:19,to:30,q:3,after:'job2'},
+ {k:'adult',n:'어른',e:'🧑',from:30,to:50,q:3,after:'job3'},
+ {k:'senior',n:'노년',e:'🧓',from:50,to:80,q:3,after:'end'},
+];
+
+const G={
+baby:[
+ Q('g_b1','grow','👣','첫 걸음마','뒤뚱뒤뚱… 첫 발을 떼려고 해요!','아기들은 보통 돌 무렵 첫걸음을 떼요. 어느 나라든 똑같아요.',null,['가족 품으로 걸어가기',{s:3,j:2},'모두가 박수를 쳤어요!'],['소파 잡고 천천히',{d:2,i:1},'조심조심, 차근차근 성공!']),
+ Q('g_b2','grow','🗣️','첫 마디','처음으로 말을 하려고 해요. 무슨 말일까요?','처음 배우는 말은 태어난 곳의 말이에요. 언어도 태어난 곳이 정해 줘요.',null,['"{greet}"',{c:3,j:2},'{country}말로 첫인사를 했어요!'],['"맘마!"',{s:1,j:3},'배고프다는 뜻은 어느 나라든 통해요.']),
+ Q('g_b3','grow','🧸','블록 쌓기','알록달록 블록 장난감이 생겼어요.','놀이는 아기의 가장 중요한 공부예요.',null,['높이높이 쌓기',{d:3},'내 키보다 높은 탑 완성!'],['와르르 무너뜨리기',{j:4},'깔깔깔! 무너지는 게 더 재밌어요.']),
+ Q('g_b4','grow','🎵','자장가','가족이 {country}의 자장가를 불러 줘요.','나라마다 자장가는 다르지만, 아이를 아끼는 마음은 같아요.',null,['따라 흥얼거리기',{c:2,j:2},'노래를 따라 하며 웃었어요.'],['새근새근 꿀잠',{s:2,j:2},'푹 자고 쑥쑥 자랐어요.'])],
+child:[
+ Q('g_c1','grow','🏫','학교 첫날','두근두근, 학교 가는 첫날이에요!','전 세계에는 아직 학교에 가지 못하는 어린이도 많아요.',null,['먼저 인사하기',{c:3},'첫 친구가 생겼어요!'],['교실 구석구석 구경',{i:2,j:1},'도서관을 발견했어요.']),
+ Q('g_c2','grow','😤','친구와 다툼','친구랑 장난감 때문에 싸웠어요.','갈등은 어디에나 있어요. 중요한 건 어떻게 푸는가예요.',null,['먼저 사과하기',{c:3,j:2},'다시 웃으며 같이 놀았어요.'],['왜 화났는지 생각하기',{i:3},'내 마음을 차분히 알게 됐어요.']),
+ Q('g_c3','grow','🖍️','장래희망 그리기','미래의 나는 어떤 모습일까요?','꿈은 자라면서 몇 번이고 바뀌어도 괜찮아요.',null,['멋진 운동선수!',{s:2,j:1},'금메달 목에 건 나를 그렸어요.'],['세상을 바꾸는 발명가!',{i:2,d:1},'하늘을 나는 자전거를 그렸어요.']),
+ Q('g_c4','grow','🛒','첫 심부름','시장에 가서 빵을 사 오래요.','나라마다 돈의 이름과 모양이 달라요.',null,['거스름돈까지 정확히',{i:2,m:3},'칭찬과 함께 용돈을 받았어요.'],['가게 주인과 수다',{c:3},'덤으로 빵 하나를 더 받았어요!'])],
+teen:[
+ Q('g_t1','grow','📝','시험 기간','다음 주가 시험이에요. 어떻게 준비할까요?','공부하는 방법은 사람마다 달라요. 나에게 맞는 방법을 찾는 게 중요해요.',null,['계획표 짜서 공부',{i:4,j:-2},'힘들었지만 성적이 올랐어요!'],['친구들과 스터디',{i:2,c:2},'서로 가르쳐 주니 더 잘 외워져요.']),
+ Q('g_t2','grow','🎸','동아리 고르기','어떤 동아리에 들어갈까요?','좋아하는 걸 해 보는 경험이 진로의 씨앗이 돼요.',null,['밴드부',{c:3,j:2},'축제 무대에 섰어요!'],['로봇 동아리',{d:3,i:1},'내 로봇이 대회에서 움직였어요!']),
+ Q('g_t3','grow','🧭','진로 고민','나는 뭘 좋아하지? 무엇을 잘하지?','곧 첫 직업을 고르게 돼요. 지금까지 키운 능력에 따라 고를 수 있는 직업이 달라져요.',null,['직업 체험 가기',{i:2,c:1,j:1},'일하는 어른들을 직접 만났어요.'],['좋아하는 것 일기 쓰기',{i:2,j:2},'내가 뭘 좋아하는지 조금 알게 됐어요.']),
+ Q('g_t4','grow','🤲','봉사활동','주말에 봉사활동을 하기로 했어요.','작은 도움도 누군가에겐 큰 힘이 돼요.',null,['어르신 돕기',{c:3,j:2},'어르신의 웃음에 마음이 따뜻해졌어요.'],['공원 청소',{s:2,j:2},'반짝반짝해진 공원을 보니 뿌듯해요.'])],
+young:[
+ Q('g_y1','grow','💰','첫 월급','첫 월급이 들어왔어요!','첫 월급으로 무엇을 할지는 나라마다, 사람마다 달라요.',null,['부모님께 선물',{c:2,j:4,m:-5},'가족이 정말 기뻐했어요.'],['차곡차곡 저축',{m:12,i:1},'통장에 코인이 쌓였어요.']),
+ Q('g_y2','grow','🏠','독립하기','처음으로 혼자 살게 됐어요.','혼자 사는 나이와 방식은 나라와 문화마다 달라요.',null,['혼자 요리 도전',{d:3},'첫 요리… 생각보다 맛있어요!'],['이웃과 인사 트기',{c:3},'옆집에 좋은 이웃이 살아요.']),
+ Q('g_y3','grow','✈️','해외여행','다른 나라 문화를 직접 보러 떠나요!','여행은 다른 문화를 이해하는 가장 좋은 방법 중 하나예요.',null,['현지 음식 도전',{j:4,c:1,m:-5},'처음 보는 음식이 너무 맛있어요!'],['현지어 배우기',{i:3,m:-3},'간단한 인사를 배워 현지 친구를 사귀었어요.']),
+ Q('g_y4','grow','🏋️','건강 챙기기','일이 바빠지니 몸이 피곤해요.','건강은 어디서 살든 가장 중요한 재산이에요.',null,['매일 운동',{s:4},'몸이 가벼워졌어요!'],['규칙적으로 잠자기',{s:1,j:3},'아침이 상쾌해요.'])],
+adult:[
+ Q('g_a1','grow','👨‍👩‍👧','가족과 저녁','일이 많은데, 가족이 저녁을 기다려요.','일과 삶의 균형을 어떻게 맞출지는 누구에게나 어려운 숙제예요.',null,['일찍 퇴근해 가족과 저녁',{j:5,c:1},'오늘 저녁은 웃음이 가득했어요.'],['야근해서 일 끝내기',{m:10,j:-2},'일은 끝냈지만 조금 쓸쓸했어요.']),
+ Q('g_a2','grow','🧑‍🏫','후배 가르치기','새로 온 후배가 일을 어려워해요.','배운 것을 나누면 공동체 전체가 성장해요.',null,['친절하게 알려 주기',{c:3,j:1},'후배가 "롤모델이에요!"라고 했어요.'],['노하우를 책으로 쓰기',{i:3,m:4},'내 책이 많은 사람에게 도움이 됐어요.']),
+ Q('g_a3','grow','🏡','고향 방문','오랜만에 태어난 고향에 왔어요.','태어난 곳은 고를 수 없지만, 고향을 아끼는 마음은 내가 키워요.',null,['어릴 적 친구 만나기',{c:2,j:4},'옛날이야기에 시간 가는 줄 몰랐어요.'],['마을 일 돕기',{s:2,c:2},'고향 사람들이 반겨 줬어요.']),
+ Q('g_a4','grow','🌱','새 취미','나만을 위한 새 취미를 시작해 볼까요?','취미는 삶에 행복을 더해 줘요.',null,['악기 배우기',{d:2,j:3},'첫 연주곡 완성!'],['마라톤 도전',{s:4},'42.195km 완주!'])],
+senior:[
+ Q('g_s1','grow','🧒','손주와 놀기','손주가 놀러 왔어요!','세대가 함께 어울리면 서로에게 배울 게 많아요.',null,['옛날이야기 들려주기',{c:3,j:4},'손주의 눈이 반짝반짝!'],['함께 텃밭 가꾸기',{d:2,j:3},'방울토마토가 주렁주렁 열렸어요.']),
+ Q('g_s2','grow','🌳','마을의 큰 어른','동네 사람들이 고민 상담을 하러 와요.','많은 문화에서 어르신의 지혜를 소중히 여겨요.',null,['지혜 나누기',{i:3,c:2},'"덕분에 길을 찾았어요!"'],['조용히 들어 주기',{c:4},'들어 주는 것만으로도 큰 힘이 됐대요.']),
+ Q('g_s3','grow','🗺️','꿈꾸던 여행','시간이 생겼어요. 어디로 떠날까요?','세상은 넓고 문화는 정말 다양해요.',null,['가 보고 싶던 나라로!',{j:5,m:-10},'평생 꿈이던 풍경 앞에 섰어요.'],['고향 구석구석 여행',{j:4,c:1},'몰랐던 고향의 아름다움을 발견했어요.']),
+ Q('g_s4','grow','📖','자서전 쓰기','내 인생을 돌아보며 글을 써요.','누구의 인생이든 한 권의 책이 될 만큼 소중해요.',null,['인생 이야기 쓰기',{i:3,j:3},'한 권의 책이 완성됐어요.'],['사진첩 정리',{d:2,j:3},'사진마다 추억이 가득해요.'])],
+};
+const ENV=[
+ Q('e1','env','🌳','나무 심는 날','오늘은 동네에 나무를 심는 날이에요.','나무는 이산화탄소를 흡수하고 그늘과 깨끗한 공기를 줘요.',null,['직접 심기',{s:2,j:2},'내 나무에 이름도 붙였어요.'],['나무 이름 조사',{i:3},'우리 동네 나무 박사가 됐어요.']),
+ Q('e2','env','🥤','플라스틱 줄이기','쓰레기통에 플라스틱 컵이 가득해요.','플라스틱은 분해되는 데 수백 년이 걸리기도 해요.',null,['텀블러 쓰기',{d:1,c:1,j:2},'오늘도 컵 하나를 아꼈어요.'],['캠페인 열기',{c:3},'친구들도 함께하기로 했어요.']),
+ Q('e3','env','🚿','물 아껴 쓰기','수도꼭지에서 물이 콸콸 흘러요.','세계 곳곳에는 물이 부족한 지역이 많아요.',null,['양치 컵 쓰기',{i:1,j:2},'작은 습관이 큰 물을 아껴요.'],['빗물 화분 만들기',{d:3},'빗물로 화분이 쑥쑥!']),
+ Q('e4','env','💡','지구를 위한 소등','지구의 날! 10분 동안 불을 꺼요.','전기를 아끼면 화석 연료 사용과 탄소 배출이 줄어요.',null,['불 끄고 별 보기',{j:3,i:1},'평소보다 별이 잘 보였어요.'],['가족 에너지 점검',{i:3},'안 쓰는 플러그를 다 뽑았어요.'])];
+const FREE=Q('free','grow','🎈','자유 시간','오늘은 하고 싶은 걸 할 수 있는 날!','쉬는 시간도 성장에 꼭 필요해요.',null,['친구와 놀기',{c:2,j:3},'신나게 놀고 왔어요.'],['혼자 공부하기',{i:3},'새로운 걸 배웠어요.']);
+
+const JOBS={
+ s:[['운동선수','🏃','국가대표 선수','🥇','전설의 감독','🏆'],['소방관','🧑‍🚒','119 구조대장','🚒','재난 구조 영웅','🦸']],
+ i:[['연구원','🔬','과학자','🧪','노벨상 박사','🎓'],['의대생','🩺','의사','👩‍⚕️','국경없는의사회 단장','🌍']],
+ c:[['버스킹 가수','🎤','인기 가수','🎶','월드투어 스타','🌟'],['새내기 선생님','🧑‍🏫','수석 교사','📘','존경받는 교육자','🍎']],
+ d:[['견습 요리사','🍳','셰프','👨‍🍳','세계 미식 명장','🍽️'],['목수','🪚','건축가','🏗️','친환경 도시 설계자','🏙️']],
+};
+const JQ={
+ s:[Q('j_s1','job','🏋️','{job}의 훈련','오늘은 강도 높은 훈련 날!','꾸준한 훈련이 실력을 만들어요.',null,['한계까지 도전',{s:4,j:-1,m:6},'근육이 불타요! 실력이 쑥!'],['동료와 함께 훈련',{s:2,c:2,m:6},'함께하니 덜 힘들었어요.']),
+    Q('j_s2','job','🚨','긴급 상황!','{job}의 힘이 필요한 일이 생겼어요!','위기의 순간엔 침착함과 협력이 중요해요.',null,['앞장서서 해결',{s:3,c:2,m:8},'모두가 박수를 보냈어요!'],['팀과 작전 짜기',{i:2,c:2,m:8},'팀워크로 깔끔하게 해결!'])],
+ i:[Q('j_i1','job','🧪','대발견의 기회?','실험 결과가 이상해요. 혹시 새로운 발견?','과학은 "왜?"라는 질문에서 시작해요.',null,['밤새 다시 실험',{i:4,s:-1,m:6},'새로운 사실을 발견했어요!'],['동료와 토론',{i:2,c:2,m:6},'함께 생각하니 답이 보였어요.']),
+    Q('j_i2','job','📚','어려운 문제','{job}로서 풀어야 할 어려운 문제가 생겼어요.','다른 분야의 생각이 해결의 열쇠가 되기도 해요.',null,['자료 조사',{i:4,m:8},'찾았다! 답은 책 속에 있었어요.'],['다른 분야 전문가에게 묻기',{i:2,c:2,m:8},'새로운 시각으로 해결했어요.'])],
+ c:[Q('j_c1','job','🎤','큰 무대','{job}로서 많은 사람 앞에 서는 날!','떨리는 건 자연스러운 일이에요. 연습이 자신감을 만들어요.',null,['자신감 있게!',{c:4,j:2,m:8},'박수갈채가 쏟아졌어요!'],['꼼꼼히 연습 또 연습',{c:2,d:2,m:8},'실수 하나 없는 완벽한 무대!']),
+    Q('j_c2','job','💌','사람들의 응원','{job}에게 응원 편지가 잔뜩 왔어요.','받은 마음을 나누면 더 커져요.',null,['한 장씩 답장 쓰기',{c:3,j:3,m:4},'답장을 받은 사람들이 감동했어요.'],['나눔 행사 열기',{c:3,j:4,m:-3},'모두가 함께 웃는 하루였어요.'])],
+ d:[Q('j_d1','job','🔨','주문 폭주!','{job}에게 일이 몰려왔어요!','빠름과 꼼꼼함 사이의 균형이 중요해요.',null,['빠르게 척척',{d:4,m:10,j:-1},'전부 끝냈어요! 조금 지쳤지만요.'],['하나하나 정성껏',{d:3,j:2,m:6},'손님들이 감동했어요.']),
+    Q('j_d2','job','💡','새 기술 배우기','{job}에게 필요한 새로운 기술이 나왔어요.','전통과 새 기술이 만나면 더 멋진 작품이 나와요.',null,['최신 기술 익히기',{d:2,i:2,m:5},'작업이 훨씬 빨라졌어요.'],['전통 기술 배우기',{d:3,c:1,m:5},'장인의 손맛을 이어받았어요.'])],
+};
+const LUCK=[['🍀 지갑을 주워 주인을 찾아 줬어요!',{c:2,j:2}],['🎁 깜짝 선물을 받았어요!',{j:3,m:3}],['🤧 감기에 걸려 푹 쉬었어요.',{s:-1,j:-1}],['⭐ 오늘 칭찬을 받았어요!',{j:3}],['🌈 무지개를 봤어요!',{j:2}]];
+
+/* ───────── 기후 지역 (사회① 각 대륙 단원의 '자연환경과 인간 생활') ───────── */
+const CLIM={
+ rain:{n:'열대 우림 기후',desc:'일 년 내내 덥고 비가 많이 와요',land:'🌴',w:'sun',sky:['#7fd4ff','#d4f7c4'],gr:'#3f9a4f',bonus:{s:1,d:2},obs:['🪵','🐸']},
+ sav:{n:'사바나 기후',desc:'덥고, 비 오는 우기와 메마른 건기가 번갈아 와요',land:'🌳',w:'sun',sky:['#ffd27a','#ffb15e'],gr:'#c8a14d',bonus:{s:2,c:1},obs:['🪨','🐢']},
+ des:{n:'사막 기후',desc:'비가 거의 오지 않고 낮과 밤의 기온 차가 커요',land:'🐪',w:'sun',sky:['#ffd98a','#f6b26b'],gr:'#e3bf7a',bonus:{s:1,i:2},obs:['🌵','🪨']},
+ ste:{n:'스텝 기후',desc:'비가 적어 짧은 풀이 자라는 넓은 초원이 있어요',land:'🐎',w:'none',sky:['#8fd0ff','#e0f4d4'],gr:'#a8c46a',bonus:{s:2,d:1},obs:['🪨','🐑']},
+ med:{n:'지중해성 기후',desc:'여름은 덥고 건조, 겨울은 따뜻하고 비가 와요',land:'🫒',w:'sun',sky:['#6fc8ff','#fff1c2'],gr:'#b7a75a',bonus:{c:2,d:1},obs:['🪨','🪴']},
+ mon:{n:'온대 계절풍 기후',desc:'사계절이 뚜렷하고 여름에 비가 많이 와요',land:'🌾',w:'leaves',sky:['#86ccff','#ffe7bf'],gr:'#79b85a',bonus:{i:2,d:1},obs:['🪨','🚧']},
+ oce:{n:'서안 해양성 기후',desc:'일 년 내내 비가 고르게 오고 여름과 겨울 기온 차가 작아요',land:'🐄',w:'rain',sky:['#a9c6e0','#dde8ef'],gr:'#6fae5c',bonus:{i:1,c:2},obs:['🪨','🐑']},
+ cold:{n:'냉대 기후',desc:'겨울이 길고 아주 추워요. 침엽수림(타이가)이 넓어요',land:'🌲',w:'snow',sky:['#9ec3e6','#e6f0f8'],gr:'#eef4fa',bonus:{s:2,i:1},obs:['⛄','🪵']},
+ high:{n:'고산 기후',desc:'높은 산지라서 적도 근처라도 일 년 내내 서늘해요',land:'🏔️',w:'none',sky:['#7cc0ff','#dcefff'],gr:'#8fae6a',bonus:{s:2,i:1},obs:['🪨','🐐']},
+};
+const CONT={AS:{n:'아시아',e:'🌏'},EU:{n:'유럽',e:'🏰'},AF:{n:'아프리카',e:'🌍'},AM:{n:'아메리카',e:'🌎'},OC:{n:'오세아니아',e:'🏝️'}};
+
+const CLIMQ={
+rain:[
+ Q('cr1','clim','🛖','고상 가옥 짓기','땅이 축축하고 벌레가 많아요. 집을 어떻게 지을까요?','열대 우림 지역에서는 습기와 벌레를 피하려고 바닥을 땅에서 띄운 고상 가옥을 지어요.',null,['튼튼한 기둥 세우기',{s:3,d:1},'기둥 위에 바람 잘 통하는 집이 생겼어요.'],['바닥과 벽 엮기',{d:3,i:1},'나무와 잎으로 시원한 집을 엮었어요.']),
+ Q('cr2','clim','⛈️','오후의 스콜','맑던 하늘에서 오후마다 소나기가 쏟아져요!','스콜은 강한 햇볕에 데워진 공기가 올라가 오후에 쏟아지는 소나기예요.','rain',['비 피해 재빨리 귀가',{s:3},'흠뻑 젖기 전에 도착!'],['빗물 받아 모으기',{d:2,i:1},'모은 빗물로 채소에 물을 줬어요.']),
+ Q('cr3','clim','🍌','플랜테이션 농장','큰 농장에서 바나나·카카오·기름야자를 수확해요.','열대 지역에는 넓은 땅에서 한 가지 작물을 대량으로 기르는 플랜테이션이 발달했어요.',null,['수확 바구니 나르기',{s:3,m:4},'오늘의 수확 목표 달성!'],['공정한 가격 알아보기',{i:3},'농부가 제값을 받는 공정 무역을 알게 됐어요.']),
+ Q('cr4','clim','🌳','숲을 지키는 농사','숲을 태워 밭을 만드는 사람들이 있어요.','열대 우림에서는 숲을 태워 농사짓는 이동식 화전 농업을 해 왔지만, 숲이 줄어드는 문제가 생겼어요.',null,['나무 사이에 작물 심기',{d:3,j:1},'숲을 살리면서 농사짓는 방법이에요.'],['숲 보호 회의 열기',{c:3},'마을 사람들이 숲을 지키기로 했어요.'])],
+sav:[
+ Q('cs1','clim','🌦️','우기와 건기','비가 오는 우기가 왔어요! 곧 건기도 올 거예요.','사바나 기후는 비가 많은 우기와 비가 거의 없는 건기가 뚜렷해요.','rain',['우기에 씨앗 심기',{s:2,d:2},'비를 맞고 싹이 쑥쑥 올라와요.'],['건기 대비 물 저장',{i:3},'물 항아리를 가득 채웠어요.']),
+ Q('cs2','clim','🦓','사파리 관광','야생 동물을 보러 세계 여행객이 찾아왔어요.','사바나의 넓은 초원과 야생 동물은 관광 산업의 중요한 자원이에요.',null,['관광객 안내하기',{c:3,m:4},'"Thank you!" 팁도 받았어요.'],['동물 이동 기록하기',{i:3},'얼룩말 떼가 물을 찾아 이동하는 걸 봤어요.']),
+ Q('cs3','clim','🌾','열대 계절풍과 벼농사','여름 계절풍이 비를 몰고 왔어요. 벼를 심을 때예요!','열대 계절풍의 영향을 받는 남·동남아시아에서는 비가 많은 여름에 벼농사를 지어요.','rain',['모내기 하기',{s:3,j:1},'논이 초록빛으로 물들었어요.'],['물길 정리하기',{d:2,i:1},'논에 물이 고르게 들어가요.']),
+ Q('cs4','clim','🏠','흙과 풀로 지은 집','뜨거운 햇볕을 막는 집이 필요해요.','사바나 지역의 전통 가옥은 흙벽과 풀 지붕으로 더위를 막아요.',null,['흙벽 바르기',{s:2,d:2},'안이 정말 시원해요!'],['풀 지붕 엮기',{d:3},'비가 와도 새지 않아요.'])],
+des:[
+ Q('cd1','clim','🌴','오아시스 마을','사막 한가운데 물이 솟는 오아시스가 있어요.','사막에서는 물을 얻을 수 있는 오아시스 주변에 마을이 생기고 대추야자를 길러요.',null,['대추야자 따기',{s:2,d:2},'달콤한 대추야자가 한가득!'],['물 나눠 쓰는 규칙 정하기',{i:2,c:2},'모두가 물을 공평하게 쓰게 됐어요.']),
+ Q('cd2','clim','🧕','온몸을 감싸는 옷','햇볕이 따갑고 모래바람이 불어요. 무엇을 입을까요?','사막 지역에서는 강한 햇볕과 모래를 막기 위해 온몸을 감싸는 헐렁한 옷을 입어요.','sand',['헐렁한 긴 옷 입기',{i:2,s:1},'오히려 시원하고 모래도 막아 줘요.'],['머리 두건 두르기',{d:2,s:1},'눈과 코에 모래가 안 들어가요.']),
+ Q('cd3','clim','🧱','흙벽돌 집','비가 거의 오지 않는 곳의 집은 어떻게 생겼을까요?','사막의 집은 벽이 두껍고 창문이 작으며, 비가 적어 지붕이 평평해요.','sun',['두꺼운 흙벽 쌓기',{s:2,d:2},'낮엔 시원하고 밤엔 따뜻해요.'],['평평한 지붕에서 별 보기',{i:2,j:2},'지붕 위가 최고의 전망대!']),
+ Q('cd4','clim','🐪','낙타와 함께 이동','풀과 물을 찾아 낙타와 길을 떠나요.','사막의 유목민은 물과 풀을 찾아 가축과 함께 옮겨 다녀요.','sand',['낙타 몰기',{s:3,c:1},'낙타가 내 말을 잘 들어요.'],['별로 길 찾기',{i:3},'밤하늘 별이 나침반이 됐어요.'])],
+ste:[
+ Q('ct1','clim','🐑','초원 유목','가축이 먹을 풀을 찾아 이동할 때예요.','스텝은 짧은 풀이 자라는 초원이라 가축을 기르는 유목이 발달했어요.',null,['양 떼 몰기',{s:3,j:1},'한 마리도 잃어버리지 않았어요!'],['좋은 풀밭 찾기',{i:3},'풀이 무성한 곳을 찾아냈어요.']),
+ Q('ct2','clim','🌾','끝없는 밀밭','스텝 주변의 기름진 땅에 밀이 가득해요.','스텝 주변의 비옥한 흑토 지대는 세계적인 밀 생산지예요.',null,['밀 수확 돕기',{s:3,m:3},'황금빛 밀을 거뒀어요.'],['수출 길 알아보기',{i:3},'이 밀이 세계로 팔려 나가요.']),
+ Q('ct3','clim','🌬️','건조한 바람','건조한 바람이 흙먼지를 일으켜요.','스텝은 비가 적어 바람이 불면 흙이 날리기 쉬워요.','sand',['방풍림 심기',{s:2,d:2},'나무가 바람을 막아 줄 거예요.'],['흙 덮개 만들기',{i:2,d:1},'밭의 흙이 날아가지 않아요.']),
+ Q('ct4','clim','🥛','가축 젖으로 만든 음식','가축의 젖으로 무엇을 만들까요?','초원 지역에서는 가축의 젖으로 치즈·요구르트·버터 같은 음식을 만들어 먹어요.',null,['치즈 만들기',{d:3},'쫄깃한 치즈 완성!'],['손님께 대접하기',{c:3},'손님이 엄지를 들었어요.'])],
+med:[
+ Q('cm1','clim','🫒','올리브·포도 수확','여름 햇볕을 받은 올리브와 포도가 익었어요.','지중해성 기후 지역은 여름이 건조해서 올리브·포도·오렌지 같은 나무 작물을 길러요.',null,['열매 따기',{s:2,d:2},'바구니가 금세 가득 찼어요.'],['올리브유 짜기',{d:3},'향긋한 올리브유 완성!']),
+ Q('cm2','clim','🏠','하얀 벽 집','여름 햇볕이 정말 강해요. 집을 어떻게 칠할까요?','지중해 지역에서는 강한 햇볕을 반사하려고 벽을 하얗게 칠한 집이 많아요.','sun',['벽을 하얗게 칠하기',{d:3},'집 안이 한결 시원해졌어요.'],['파란 창문 달기',{d:2,c:1},'하얀 벽에 파란 창이 예뻐요.']),
+ Q('cm3','clim','😴','한낮의 휴식','한낮이 너무 더워요. 가게들도 문을 닫았어요.','지중해 일부 지역에는 가장 더운 한낮에 쉬는 시에스타 같은 문화가 있어요.','sun',['낮잠 자고 저녁에 놀기',{j:4},'저녁에 동네 광장이 북적여요.'],['그늘에서 책 읽기',{i:3},'시원한 그늘이 최고의 도서관!']),
+ Q('cm4','clim','🏖️','관광객이 몰려와요','맑은 여름 날씨를 즐기러 관광객이 찾아왔어요.','지중해 연안은 맑고 건조한 여름 덕분에 관광 산업이 발달했어요.',null,['관광객 안내하기',{c:3,m:4},'여러 나라 말로 인사했어요.'],['해변 쓰레기 줍기',{s:2,j:2},'깨끗한 바다를 지켰어요.'])],
+mon:[
+ Q('cn1','clim','🌾','여름 벼농사','덥고 비가 많은 여름, 논에 벼가 자라요.','온대 계절풍 지역은 여름이 덥고 비가 많아 벼농사가 발달했어요.','rain',['모내기 하기',{s:3,j:1},'줄 맞춰 모를 심었어요.'],['허수아비 만들기',{d:3},'참새들이 도망갔어요!']),
+ Q('cn2','clim','🌀','태풍 대비','여름 끝 무렵, 태풍이 올라오고 있어요.','온대 계절풍 지역은 여름부터 가을 사이에 태풍 피해를 입기도 해요.','rain',['창문·화분 단단히',{d:2,i:2},'준비 끝! 집이 무사해요.'],['이웃 어르신 살피기',{c:3},'이웃이 고마워했어요.']),
+ Q('cn3','clim','🍂','사계절 옷 정리','계절이 바뀌어요. 옷장을 정리할 때예요!','계절 변화가 뚜렷한 곳에서는 계절마다 옷과 음식이 달라져요.','leaves',['여름옷 넣고 겨울옷 꺼내기',{d:2,i:1},'옷장이 깔끔해졌어요.'],['안 입는 옷 나누기',{c:3},'친척 동생이 좋아했어요.']),
+ Q('cn4','clim','❄️','겨울 계절풍','차가운 북서풍이 불어오는 겨울이에요.','겨울에는 대륙에서 차고 건조한 북서 계절풍이 불어와 추워요.','snow',['따뜻한 온돌방에서 쉬기',{j:3,s:1},'바닥이 따끈따끈해요.'],['눈사람 만들기',{d:2,j:2},'동네 최고의 눈사람!'])],
+oce:[
+ Q('co1','clim','🌦️','오늘도 흐리고 비','하루에도 몇 번씩 해가 났다 비가 와요.','편서풍과 바다의 영향으로 일 년 내내 비가 고르게 오고 기온 차가 작아요.','rain',['비옷 입고 나가기',{s:2,j:1},'비쯤이야 익숙해요!'],['날씨 관찰 일기',{i:3},'편서풍이 날씨를 바꾼다는 걸 알았어요.']),
+ Q('co2','clim','🐄','목장과 낙농','초록 풀밭에서 소들이 풀을 뜯어요.','서안 해양성 기후 지역은 목초가 잘 자라 소를 길러 우유·치즈를 만드는 낙농업이 발달했어요.',null,['소젖 짜기',{s:2,d:2},'신선한 우유 한 통!'],['치즈 공방 견학',{i:2,c:1},'숙성 창고의 치즈가 수백 개!']),
+ Q('co3','clim','🌬️','풍력 발전','바닷바람이 일정하게 불어요.','편서풍이 일정하게 부는 유럽 서쪽에서는 풍력 발전을 많이 해요.',null,['풍차 모형 만들기',{d:3,i:1},'바람에 날개가 빙글빙글!'],['재생 에너지 조사',{i:3},'바람으로 마을 전기를 만든대요.']),
+ Q('co4','clim','🧥','여름에도 겉옷','여름인데도 선선해요. 무엇을 챙길까요?','서안 해양성 기후는 여름이 서늘해서 여름에도 얇은 겉옷이 필요할 때가 많아요.',null,['겉옷 챙기기',{i:2,s:1},'준비성 만점!'],['공원 산책',{j:3},'선선한 여름이 좋아요.'])],
+cold:[
+ Q('cc1','clim','🌲','타이가 숲','끝없이 이어진 침엽수림이에요.','냉대 기후 지역에는 침엽수림(타이가)이 넓게 펼쳐져 목재와 종이 원료를 얻어요.','snow',['나무 옮기기',{s:3,m:3},'통나무를 차곡차곡 쌓았어요.'],['숲 지도 그리기',{i:3},'숲속 길을 다 외웠어요.']),
+ Q('cc2','clim','🪟','이중창 집','영하 30도! 집을 어떻게 따뜻하게 할까요?','추운 지역의 집은 창문을 이중·삼중으로 달고 벽을 두껍게 지어 열을 지켜요.','snow',['창문 틈 막기',{d:3},'방 안이 훈훈해요.'],['장작 패기',{s:3},'겨울 땔감 준비 완료!']),
+ Q('cc3','clim','🏗️','얼어붙은 땅 위의 집','땅이 일 년 내내 얼어 있어요(영구 동토층).','영구 동토층 지역에서는 집의 열로 땅이 녹지 않도록 기둥을 박아 집을 띄워 지어요.','snow',['기둥 박기',{s:2,d:2},'집이 기울지 않아요.'],['원리 공부하기',{i:3},'땅이 녹으면 집이 무너질 수 있대요.']),
+ Q('cc4','clim','🧖','추위를 이기는 방법','몸이 꽁꽁 얼었어요!','추운 지역에서는 사우나나 따뜻한 수프처럼 몸을 데우는 생활 문화가 발달했어요.','snow',['사우나로 몸 녹이기',{s:2,j:2},'몸이 사르르 녹아요.'],['따뜻한 수프 만들기',{d:2,c:1},'가족 모두 호호 불며 먹었어요.'])],
+high:[
+ Q('ch1','clim','🦙','고산 가축 기르기','높은 산에서 라마와 야크를 길러요.','고산 지역에서는 추위와 높은 고도에 강한 라마·알파카·야크 같은 가축을 길러요.',null,['가축 몰기',{s:3},'산길도 거뜬해요!'],['털로 옷 짜기',{d:3},'따뜻한 털옷이 생겼어요.']),
+ Q('ch2','clim','🥔','계단식 밭','산비탈에 밭을 만들어야 해요.','고산 지역에서는 경사진 땅에 계단식 밭을 만들어 감자·옥수수 등을 길러요.',null,['돌 쌓아 계단 만들기',{s:2,d:2},'비탈이 멋진 계단 밭이 됐어요.'],['감자 종류 알아보기',{i:3},'안데스에는 감자 종류가 수천 가지래요.']),
+ Q('ch3','clim','😮‍💨','숨이 차요','해발 3000m! 조금만 걸어도 숨이 차요.','고도가 높아질수록 공기가 희박해지고 기온이 낮아져요.',null,['천천히 몸 적응하기',{s:2,i:1},'몸이 높이에 적응했어요.'],['고도와 기온 공부',{i:3},'100m 오를 때마다 기온이 약 0.6도 내려가요.']),
+ Q('ch4','clim','🌸','적도인데 봄 날씨','적도 근처인데 일 년 내내 봄처럼 선선해요!','고산 기후 지역은 적도 근처라도 서늘해서 일찍부터 고산 도시가 발달했어요.',null,['꽃시장 구경',{c:2,j:2},'일 년 내내 꽃이 피어요.'],['고산 도시 지도 만들기',{i:3},'높은 곳에 큰 도시들이 있었어요.'])],
+};
+
+/* 대륙 단원 성취기준과 연결된 퀘스트 */
+const CONTQ={
+AS:[
+ Q('ka1','cont','🛕','종교 문화 경관','동네에 오래된 사원이 있어요.','아시아에서는 불교·힌두교·이슬람교 등이 생겨나고 퍼져, 사원·모스크 같은 다양한 종교 경관이 나타나요.',null,['예절 지키며 방문하기',{c:3,j:1},'조용히 둘러보며 문화를 존중했어요.'],['건축 특징 기록하기',{i:3},'지붕과 탑 모양이 종교마다 달라요.']),
+ Q('ka2','cont','👵','인구 구조가 달라요','이웃 나라엔 노인이 많고, 우리 마을엔 아이가 많대요.','아시아에는 고령화가 빠른 나라와 젊은 인구가 많은 나라가 함께 있어요.',null,['인구 피라미드 그려 보기',{i:3},'나라마다 모양이 달랐어요.'],['세대 교류 행사 돕기',{c:3},'할머니와 아이들이 함께 웃었어요.']),
+ Q('ka3','cont','🏭','공장이 들어왔어요','동네에 큰 공장이 생겼어요.','아시아 여러 나라는 산업 구조가 빠르게 바뀌며 세계의 생산 기지 역할을 해 왔어요.',null,['공장에서 일 배우기',{d:3,m:4},'첫 기술을 익혔어요.'],['환경 문제 살피기',{i:2,c:1},'공장 폐수를 감시하기로 했어요.'])],
+EU:[
+ Q('ke1x','cont','🚲','자전거 도시','도시에 자전거 도로가 쭉 생겼어요.','유럽의 많은 도시는 기후 위기에 대응하기 위해 자전거 도로와 대중교통을 늘리고 있어요.',null,['자전거로 출근하기',{s:3,j:1},'상쾌한 아침!'],['탄소 줄이기 계산',{i:3},'한 달에 탄소를 이만큼 줄였어요.']),
+ Q('ke2x','cont','🇪🇺','국경을 넘어요','옆 나라로 놀러 가요. 여권 검사가 없대요!','유럽 연합(EU)은 여러 나라가 국경 이동을 자유롭게 하고 많은 나라가 유로화를 함께 써요.',null,['옆 나라 시장 구경',{c:2,j:2},'같은 돈으로 쇼핑했어요.'],['통합의 좋은 점·문제점 조사',{i:3},'함께하면 좋지만 갈등도 있대요.']),
+ Q('ke3x','cont','🏛️','오래된 도시 탐방','수백 년 된 건물이 그대로 있는 도시예요.','유럽에는 역사 도시, 관광 도시, 생태 도시 등 다양한 유형의 도시가 있어요.',null,['관광 안내 봉사',{c:3},'세계 여행객과 친구가 됐어요.'],['도시 유형 조사',{i:3},'우리 도시는 어떤 유형일까?'])],
+AF:[
+ Q('kf1','cont','🥁','다양한 언어와 문화','옆 마을은 쓰는 말이 달라요!','아프리카에는 2000개가 넘는 언어가 있을 만큼 민족과 문화가 다양해요.',null,['옆 마을 말 배우기',{i:2,c:2},'새 친구와 인사를 나눴어요.'],['함께 북 치기 축제',{c:2,j:3},'리듬으로 하나가 됐어요.']),
+ Q('kf2','cont','📱','휴대폰으로 송금','은행이 멀어요. 그런데 휴대폰으로 돈을 보낼 수 있대요!','아프리카 일부 나라에서는 은행보다 휴대폰 송금이 먼저 퍼질 만큼 새로운 기술이 빠르게 확산됐어요.',null,['가족에게 송금하기',{i:2,m:3},'몇 초 만에 보냈어요!'],['동네 어르신께 사용법 알려 드리기',{c:3},'할아버지도 송금 성공!']),
+ Q('kf3','cont','🤝','국제 협력 학교','다른 나라와 힘을 합쳐 학교를 짓는대요.','아프리카의 지속가능한 발전을 위해 여러 나라와 국제기구가 함께 협력하고 있어요.',null,['벽돌 나르기',{s:3,c:1},'새 교실이 생겼어요!'],['선생님 돕기',{c:2,i:2},'동생들에게 글자를 가르쳤어요.']),
+ Q('kf4','cont','☀️','태양광 마을','전기가 없던 마을에 태양광 패널이 생겼어요.','햇볕이 강한 아프리카는 태양광 같은 재생 에너지 잠재력이 커요.','sun',['패널 설치 돕기',{d:3,s:1},'밤에도 불이 켜져요!'],['전기로 할 수 있는 일 찾기',{i:3},'밤에도 공부할 수 있게 됐어요.'])],
+AM:[
+ Q('km1','cont','🌮','섞여서 새로워진 음식','원주민·유럽·아프리카의 음식이 섞인 요리가 있어요.','아메리카는 원주민, 유럽계, 아프리카계, 아시아계 등이 함께 살며 문화가 섞인 문화 혼종성이 나타나요.',null,['퓨전 요리 만들기',{d:3,j:1},'처음 먹어 보는 맛인데 맛있어요!'],['음식의 뿌리 조사',{i:3},'재료마다 고향이 달랐어요.']),
+ Q('km2','cont','🎷','여러 문화가 섞인 음악','거리에서 신나는 음악이 들려요.','재즈·삼바·탱고처럼 아메리카의 음악은 여러 민족의 문화가 섞여 만들어졌어요.',null,['같이 춤추기',{s:1,c:2,j:3},'모르는 사람들과 함께 춤췄어요.'],['악기 배우기',{d:3},'첫 곡을 연주했어요.']),
+ Q('km3','cont','🏢','다국적 기업 공장','외국 기업이 우리 도시에 공장을 지었어요.','초국적 기업은 임금·시장·자원을 고려해 공장을 옮기고, 그 지역은 크게 변해요.',null,['공장에 취직하기',{d:2,m:6},'월급이 생겼어요.'],['도시 변화 조사',{i:3},'일자리는 늘었지만 교통이 복잡해졌어요.'])],
+OC:[
+ Q('ko1','cont','🌊','바닷물이 높아져요','해안가 집까지 바닷물이 들어와요.','태평양의 섬나라들은 해수면 상승으로 땅이 잠길 위험에 처해 있어요.','rain',['방파제 쌓기 돕기',{s:3,c:1},'마을을 지켰어요!'],['세계에 알리기',{c:3,i:1},'기후 위기를 함께 막자고 외쳤어요.']),
+ Q('ko2','cont','🧴','해양 쓰레기 줍기','해변에 플라스틱 쓰레기가 밀려왔어요.','태평양에는 해류를 따라 쓰레기가 모여 거대한 쓰레기 지대가 생겼어요.',null,['해변 청소',{s:2,j:2},'바다거북이 쉴 곳이 생겼어요.'],['쓰레기 어디서 왔나 조사',{i:3},'먼 나라에서 떠내려왔어요.']),
+ Q('ko3','cont','⛏️','자원 수출','이 땅에서 캔 광물이 배에 실려 가요.','오스트레일리아 등은 철광석·석탄 같은 자원을 수출하며, 우리나라와도 무역으로 연결돼 있어요.',null,['항구에서 일하기',{s:3,m:5},'거대한 배가 떠나요.'],['수출 지도 그리기',{i:3},'한국까지 화살표가 이어졌어요.']),
+ Q('ko4','cont','🐧','극지방 탐사','남극 연구 기지에 갈 기회가 생겼어요!','극지방은 기후 변화 연구에 중요하고, 자원 개발을 둘러싼 여러 나라의 이해관계가 얽혀 있어요.','snow',['얼음 시료 채취',{s:2,i:2},'수만 년 전 공기가 들어 있대요.'],['펭귄 관찰',{i:2,j:2},'펭귄 가족을 만났어요.'])],
+};
+
+/* ───────── 미니게임 지정 도우미 ───────── */
+const G_={soc:{t:'soccer'},ice:{t:'soccer',v:'ice'},rug:{t:'soccer',v:'rugby'},rh:{t:'rhythm'},
+  boat:s=>({t:'lane',v:'boat',skin:s}),ski:s=>({t:'lane',v:'ski',skin:s||'⛷️'}),road:{t:'lane',v:'road',skin:'🚶'},sky:s=>({t:'lane',v:'sky',skin:s||'🎈'}),
+  st:(item,col)=>({t:'stack',item,col}),aim:(target,shot)=>({t:'aim',target,shot}),run:(skin,o)=>({t:'run',skin,...(o||{})}),
+  cat:item=>({t:'catch',item}),col:item=>({t:'collect',item}),del:item=>({t:'deliver',item}),
+  so:(L,R)=>({t:'sort',L,R})};
+const SORTS={
+  recy:[{n:'재활용',e:'♻️',items:['🥤','🧴','🥫','📰','📦']},{n:'음식물',e:'🍂',items:['🍌','🍎','🦴','🥬','🍉']}],
+  beach:[{n:'쓰레기 줍기',e:'🗑️',items:['🧴','🥤','🛍️','🥫','👟']},{n:'바다로 보내기',e:'🌊',items:['🐚','🦀','🐢','🐠']}],
+  ripe:[{n:'바구니',e:'🧺',items:['🫒','🍇','🍊']},{n:'버리기',e:'🍃',items:['🍃','🐛','🪵']}],
+  toy:[{n:'장난감',e:'🧸',items:['🧸','🪀','🪁','🚗']},{n:'전자제품',e:'📱',items:['📱','💻','🎧','⌚']}],
+  shoe:[{n:'신발장',e:'👟',items:['👟','👞','🥾','👠']},{n:'옷걸이',e:'🧥',items:['🧥','👕','🧣']}],
+};
+const SO=k=>({t:'sort',L:SORTS[k][0],R:SORTS[k][1]});
+
+/* ───────── 학생들이 알 만한 나라 40개 ───────── */
+const KEEP=['KR','JP','CN','IN','VN','TH','PH','ID','MN','SA','TR','RU','GB','FR','DE','IT','ES','NL','CH','NO','FI','SE','DK','GR','EG','KE','ZA','NG','MA','ET','US','CA','MX','BR','AR','PE','CL','AU','NZ','FJ'];
+const XINFO={
+ CN:{greet:'你好(니하오)',land:'🐼',sp:{line:'i',p:['판다 사육 견습생','🎋','판다 사육사','🐼','판다 보전 연구가','🔬']}},
+ VN:{greet:'Xin chào(신 짜오)',land:'🛵'},TH:{greet:'สวัสดี(사와디)',land:'🐘'},PH:{greet:'Kumusta(쿠무스타)',land:'🏝️'},
+ ID:{greet:'Halo(할로)',land:'🌋'},SA:{greet:'مرحبا(마르하바)',land:'🐪'},TR:{greet:'Merhaba(메르하바)',land:'🎈'},
+ RU:{greet:'Привет(프리비엣)',land:'🪆'},GB:{greet:'Hello(헬로)',land:'💂',sp:{line:'s',p:['유소년 축구 선수','⚽','프리미어리그 선수','🏟️','축구 전설','🏆']}},
+ FR:{greet:'Bonjour(봉주르)',land:'🗼',sp:{line:'d',p:['제빵 견습생','🥖','파티시에','🥐','제과 명장','🎂']}},
+ DE:{greet:'Hallo(할로)',land:'🏰'},IT:{greet:'Ciao(차오)',land:'🏛️',sp:{line:'d',p:['피자 견습생','🍕','피자 장인','👨‍🍳','나폴리 피자 명장','🏅']}},
+ ES:{greet:'¡Hola!(올라)',land:'💃'},NL:{greet:'Hallo(할로)',land:'🌷'},CH:{greet:'Grüezi(그뤼에치)',land:'🏔️'},
+ FI:{greet:'Moi(모이)',land:'🦌'},SE:{greet:'Hej(헤이)',land:'🌲'},DK:{greet:'Hej(하이)',land:'🚲'},GR:{greet:'Γειά(야)',land:'🏛️'},
+ ZA:{greet:'Sawubona(사우보나)',land:'🦁'},NG:{greet:'Hello(헬로)',land:'🥁'},MA:{greet:'Salam(살람)',land:'🐪'},ET:{greet:'Selam(셀람)',land:'☕'},
+ US:{greet:'Hello(헬로)',land:'🗽',sp:{line:'i',p:['우주센터 인턴','🛰️','우주 엔지니어','🚀','화성 탐사 대장','🪐']}},
+ CA:{greet:'Hello / Bonjour',land:'🍁',sp:{line:'s',p:['아이스하키 유망주','🏒','프로 하키 선수','⛸️','하키 명예의 전당','🏆']}},
+ AR:{greet:'¡Hola!(올라)',land:'🐄',sp:{line:'c',p:['탱고 댄서','💃','탱고 스타','🌹','세계 탱고 챔피언','🏆']}},
+ PE:{greet:'¡Hola!(올라)',land:'🦙'},CL:{greet:'¡Hola!(올라)',land:'🗿'},
+ AU:{greet:"G'day(그다이)",land:'🦘',sp:{line:'s',p:['서핑 꿈나무','🏄','서핑 선수','🌊','바다 지킴이','🐠']}},
+ NZ:{greet:'Kia ora(키아 오라)',land:'🐑',sp:{line:'s',p:['럭비 유망주','🏉','국가대표 럭비 선수','🖤','럭비 레전드','🏆']}},
+ FJ:{greet:'Bula(불라)',land:'🏝️'},
+};
+
+/* 나라 전용 퀘스트 */
+const XQ={
+CN:[Q('xcn1','cul','🧧','춘절 대이동','설날(춘절)에 고향 가는 기차가 꽉 찼어요!','중국에서는 춘절에 수억 명이 고향으로 이동하고, 가족이 모여 만두를 빚어요.',null,['가족과 만두 빚기',{d:3,j:2},'만두 속을 꽉꽉 채웠어요.',G_.cat('🥟')],['할머니 짐 들어 드리기',{s:2,c:2},'할머니가 고맙다며 웃으셨어요.',G_.del('🧳')]),
+    Q('xcn2','cul','🏭','세계의 공장','우리 동네 공장에서 만든 물건이 전 세계로 팔려요.','중국은 많은 노동력과 공장을 바탕으로 세계의 공장이라 불려 왔어요.',null,['물건 분류 라인 일하기',{d:3,m:4},'하루에 수백 개를 분류했어요!',SO('toy')],['수출 상자 찾기',{i:3},'우리 물건이 한국에도 갔어요.',G_.col('📦')]),
+    Q('xcn3','cul','🐉','단오 용선 경주','용 머리 배를 타고 다 함께 노를 저어요!','중국에서는 단오절에 용선 경주를 하고 대나무 잎에 싼 찹쌀밥 쫑즈를 먹어요.',null,['힘껏 노 젓기!',{s:4},'우리 배가 1등으로 들어왔어요!',G_.boat('🚣')],['쫑즈 만들기',{d:3},'대나무 잎으로 꽁꽁 쌌어요.',G_.cat('🍙')]),
+    Q('xcn4','env','🐼','판다 지키기','판다가 사는 대나무 숲을 지켜야 해요.','중국은 판다가 사는 대나무 숲을 보호구역으로 정해 판다를 지키고 있어요.',null,['판다에게 대나무 가져다주기',{s:2,c:1},'판다가 냠냠 맛있게 먹어요.',G_.del('🎋')],['판다 관찰 기록하기',{i:3},'판다는 하루의 절반을 먹으며 보낸대요.',G_.col('🐼')])],
+VN:[Q('xvn1','cul','👒','논 라 모자','햇볕과 비를 한 번에 막는 모자가 있대요.','베트남의 원뿔 모양 모자 논 라는 강한 햇볕과 비를 막아 줘요.','rain',['야자잎 쌓아 모자 엮기',{d:3},'튼튼한 논 라 완성!',G_.st('🌿','#8fbf5a')],['논 라 쓰고 장보기',{c:2,j:2},'비가 와도 끄떡없어요.',G_.del('🥭')]),
+    Q('xvn2','cul','🍜','메콩강 수상 시장','메콩강 삼각주에서 배 위에 시장이 열려요.','베트남은 메콩강 삼각주에서 벼농사가 활발해 쌀을 많이 수출해요.',null,['배 타고 수상 시장 가기',{s:2,c:2},'과일을 싸게 샀어요!',G_.boat('🛶')],['쌀국수 재료 받기',{d:3,j:1},'국물 맛 최고!',G_.cat('🍜')]),
+    Q('xvn3','cul','🛵','오토바이 물결','출근길 도로가 오토바이로 가득!','베트남에서는 오토바이가 가장 많이 쓰이는 교통수단이에요.',null,['조심조심 길 건너기',{i:2,s:1},'천천히, 일정하게 걸어 무사히 건넜어요.',G_.road],['오토바이 정비 돕기',{d:3},'엔진 소리가 부드러워졌어요.',G_.cat('🔧')])],
+TH:[Q('xth1','cul','🙏','불교 사원 방문','반짝이는 지붕의 사원에 갔어요.','태국은 국민 대부분이 불교를 믿고, 사원이 생활의 중심 역할을 해요.',null,['꽃 공양 올리기',{c:3},'스님이 미소 지으셨어요.',G_.del('🌼')],['사원의 탑 찾기',{i:3},'탑 모양이 정말 다양해요.',G_.col('🛕')]),
+    Q('xth2','cul','💦','송끄란 물 축제','태국 설날! 모두가 서로에게 물을 뿌려요.','태국 설날 송끄란에는 서로 물을 뿌리며 새해 복을 빌어요.','sun',['친구들에게 물총 쏘기',{s:2,j:3},'다 함께 흠뻑 젖었어요!',G_.aim('🧒','💦')],['어르신 손에 물 부어 드리기',{c:3},'어르신이 복을 빌어 주셨어요.',G_.del('💧')]),
+    Q('xth3','cul','🛶','수상 시장','강과 운하 위에 배로 된 시장이 열려요.','강과 운하가 많은 태국에는 배 위에서 물건을 사고파는 수상 시장이 있어요.',null,['배 몰고 과일 팔러 가기',{s:2,m:4},'망고가 다 팔렸어요!',G_.boat('🛶')],['망고 받기',{d:3},'달콤한 망고가 한가득!',G_.cat('🥭')]),
+    Q('xth4','env','🐘','코끼리 보호소','다친 코끼리들이 쉬는 보호소에 왔어요.','코끼리는 태국을 상징하는 동물이에요.',null,['바나나 가져다주기',{c:2,j:2},'코로 쏙 받아 먹었어요.',G_.del('🍌')],['코끼리 목욕 물 받기',{s:2,d:1},'코끼리가 시원해해요.',G_.cat('💧')])],
+PH:[Q('xph1','wea','🌀','태풍의 길목','이번 해에만 태풍이 여러 번 왔어요.','필리핀은 태평양에서 생긴 태풍이 자주 지나가는 길목에 있어요.','rain',['대피소에 구호품 나르기',{c:3,s:1},'모두 무사했어요.',G_.del('🥫')],['라디오로 정보 모으기',{i:3},'마을에 태풍 소식을 알렸어요.',G_.col('📻')]),
+    Q('xph2','cul','🌾','하늘까지 닿는 계단식 논','산비탈에 수천 년 된 계단식 논이 있어요.','필리핀 코르디예라의 계단식 논은 유네스코 세계유산이에요.',null,['돌 쌓아 논둑 만들기',{s:2,d:2},'논둑이 튼튼해졌어요.',G_.st('🪨','#9a8a6a')],['모 심기',{s:2,j:1},'초록빛 논이 됐어요.',G_.col('🌱')]),
+    Q('xph3','cul','🏝️','7천 개의 섬','필리핀은 섬이 정말 많아요!','필리핀은 7천여 개의 섬으로 이루어진 나라예요.',null,['방카 배 타고 섬 건너기',{s:2,j:2},'바다가 투명해요!',G_.boat('🛶')],['섬 이름 찾기',{i:3},'우리 반 친구 수보다 섬이 많아요.',G_.col('🏝️')])],
+ID:[Q('xid1','cul','🕌','르바란 명절','라마단이 끝나는 명절, 온 가족이 모여요.','인도네시아는 세계에서 이슬람교를 믿는 사람이 가장 많은 나라예요.',null,['이웃에게 명절 음식 나누기',{c:3,j:2},'서로 용서하며 새 마음을 다져요.',G_.del('🍲')],['야자잎으로 크투팟 엮기',{d:3},'쌀을 담을 바구니가 완성됐어요.',G_.st('🌿','#9bbf5a')]),
+    Q('xid2','wea','🌋','화산섬의 생활','화산재가 쌓인 기름진 땅에서 농사를 지어요.','인도네시아는 화산이 많고, 화산재로 비옥해진 땅에서 벼농사를 지어요.',null,['화산 대피 훈련',{s:2,i:1},'떨어지는 돌을 피해 무사히 대피!',G_.run(null,{haz:'🪨'})],['논에 모 심기',{s:2,d:2},'계단식 논에 초록빛이 가득!',G_.col('🌱')]),
+    Q('xid3','cul','🎭','와양 그림자 인형극','등불 뒤에서 가죽 인형이 춤을 춰요.','인도네시아 전통 그림자 인형극 와양은 유네스코 인류무형문화유산이에요.',null,['음악에 맞춰 인형 움직이기',{d:3,c:1},'관객들이 박수를 쳤어요!',G_.rh],['인형 조각 모으기',{i:2,d:1},'멋진 인형을 완성했어요.',G_.col('🎭')])],
+SA:[Q('xsa1','cul','🛢️','사막 위의 도시','사막 위에 높은 빌딩이 늘어서 있어요.','사우디아라비아는 석유 수출로 큰 부를 쌓았고, 석유 이후를 준비하고 있어요.','sun',['석유 시설 견학',{i:2,m:4},'석유가 어디로 가는지 봤어요.',G_.col('🛢️')],['태양광 패널 쌓아 올리기',{d:2,i:2},'햇빛으로 도시에 전기를!',G_.st('🔆','#3b6fb6')]),
+    Q('xsa2','cul','🐪','낙타 경주','사막에서 낙타 경주가 열려요!','아라비아반도에서는 전통적으로 낙타 경주를 즐겨요.','sand',['낙타 타고 달리기',{s:3,j:2},'모래바람을 가르며 질주!',G_.run('🐪')],['낙타에게 먹이 주기',{c:3},'낙타가 고개를 끄덕였어요.',G_.del('🌾')]),
+    Q('xsa3','cul','🕌','모스크와 예배','예배 시간을 알리는 소리가 울려요.','이슬람교를 믿는 사람들은 하루 다섯 번 메카를 향해 예배를 드려요.',null,['모스크 건축 특징 찾기',{i:3},'둥근 지붕과 첨탑의 의미를 알았어요.',G_.col('🕌')],['이웃과 음식 나누기',{c:3},'나눔은 이슬람 문화의 중요한 가치예요.',G_.del('🍲')])],
+TR:[Q('xtr1','cul','⛴️','두 대륙에 걸친 도시','이스탄불은 바다를 사이에 두고 아시아와 유럽에 걸쳐 있어요.','튀르키예는 아시아와 유럽을 잇는 위치라 두 문화가 어우러져 있어요.',null,['배로 대륙 건너기',{j:3,i:1},'10분 만에 다른 대륙!',G_.boat('⛴️')],['바자르 시장에서 물건 받기',{c:2,m:2},'향신료 냄새가 가득해요.',G_.cat('🧿')]),
+    Q('xtr2','cul','🎈','카파도키아 열기구','기암괴석 위로 열기구가 두둥실!','카파도키아는 화산재가 굳어 생긴 독특한 바위 지형으로 유명해요.',null,['열기구 몰기',{d:2,j:3},'새들을 피해 하늘을 날았어요!',G_.sky('🎈')],['바위 동굴 집 탐험',{i:3},'바위를 파서 만든 집이에요.',G_.col('🪨')]),
+    Q('xtr3','cul','🍢','케밥 굽기','고기를 꼬치에 꿰어 구워요.','케밥은 튀르키예를 대표하는 음식이에요.',null,['재료 받아 꼬치 만들기',{d:3},'노릇노릇 맛있게 구웠어요.',G_.cat('🍢')],['손님에게 배달',{c:3,m:3},'따끈할 때 배달 완료!',G_.del('🥙')])],
+RU:[Q('xru1','cul','🚂','시베리아 횡단 철도','기차로 일주일을 달려 나라를 가로질러요!','러시아의 시베리아 횡단 철도는 세계에서 가장 긴 철도 중 하나예요.','snow',['창밖 풍경 기록하기',{i:3},'끝없는 타이가 숲!',G_.col('🌲')],['옆 칸 승객에게 차 나르기',{c:3},'일주일 동안 단짝이 됐어요.',G_.del('🍵')]),
+    Q('xru2','cul','🪆','마트료시카','큰 인형 속에 작은 인형이 겹겹이 들어 있어요!','마트료시카는 러시아의 전통 인형이에요.',null,['인형 겹겹이 쌓기',{d:3},'7층 인형 탑 완성!',G_.st('🪆','#c0392b')],['물감 받아 색칠하기',{d:2,j:2},'세상에 하나뿐인 인형!',G_.cat('🎨')]),
+    Q('xru3','cul','🥶','영하 40도 등교','오늘도 학교에 가요. 기온은 영하 40도!','러시아 일부 지역은 겨울이 매우 길고 추워 기온이 아주 낮아야 휴교해요.','snow',['꽁꽁 싸매고 등교',{s:3},'속눈썹까지 얼었지만 도착!',G_.run(null,{snow:1})],['얼음 구멍 낚시',{d:2,j:2},'물고기를 낚았어요!',G_.aim('🐟','🪝')])],
+GB:[Q('xgb1','cul','🇪🇺','브렉시트','우리나라가 유럽 연합을 떠난대요.','영국은 2020년 유럽 연합에서 탈퇴했어요(브렉시트).',null,['찬반 의견 전하기',{c:2,i:2},'서로 다른 생각을 들었어요.',G_.del('💬')],['생활 변화 조사',{i:3},'여행·무역 규칙이 바뀌었어요.',G_.col('📰')]),
+    Q('xgb2','wea','☂️','하루에도 몇 번 비','해가 났다가 비가 왔다가!','영국은 서안 해양성 기후라 비가 자주 오지만 기온 차는 크지 않아요.','rain',['비 맞으며 골목 축구',{s:3},'진흙투성이 골!',G_.soc],['우산 받기',{i:2,j:1},'역시 챙기길 잘했어!',G_.cat('☂️')]),
+    Q('xgb3','cul','💂','근위병 교대식','궁전 앞에서 근위병 교대식이 열려요.','런던 버킹엄 궁전의 근위병 교대식은 유명한 볼거리예요.',null,['발맞춰 행진하기',{s:2,c:2},'한 박자도 틀리지 않았어요!',G_.rh],['관광객 안내하기',{c:3},'길 잃은 관광객을 도왔어요.',G_.del('🗺️')])],
+FR:[Q('xfr1','cul','🗼','세계 도시 파리','국제기구와 세계적인 기업이 모인 도시예요.','파리처럼 세계 경제·문화의 중심 역할을 하는 도시를 세계 도시라고 해요.',null,['국제회의 통역 돕기',{c:3,i:1},'여러 나라 사람이 대화했어요.',G_.del('💬')],['미술관 그림 찾기',{i:2,j:2},'유명한 그림을 직접 봤어요.',G_.col('🖼️')]),
+    Q('xfr2','cul','🥖','아침 바게트','아침마다 갓 구운 바게트를 사러 가요.','프랑스의 바게트 빵 문화는 유네스코 인류무형문화유산이에요.',null,['빵집까지 달려가기',{s:2,j:2},'아직 따끈해요!',G_.run()],['바게트 받기',{d:3},'겉바속촉 성공!',G_.cat('🥖')]),
+    Q('xfr3','cul','🚴','투르 드 프랑스','세계적인 자전거 대회가 우리 마을을 지나가요!','투르 드 프랑스는 프랑스 전국을 도는 세계적인 자전거 경주예요.',null,['자전거 경주 참가',{s:4},'언덕길도 거뜬히!',G_.run('🚴')],['박자 맞춰 응원',{c:3,j:1},'선수들이 손을 흔들었어요.',G_.rh])],
+DE:[Q('xde1','cul','☀️','생태 도시','지붕마다 태양광, 길에는 트램과 자전거가 다녀요.','독일 프라이부르크는 환경을 생각한 생태 도시로 유명해요.',null,['태양광 주택 찾기',{i:3},'집이 쓰고 남은 전기를 팔아요.',G_.col('☀️')],['자전거로 통학',{s:3},'차 없는 거리가 상쾌해요.',G_.run('🚴')]),
+    Q('xde2','env','♻️','분리배출 왕','분리배출을 정말 꼼꼼히 하는 나라예요.','독일은 분리배출이 철저하고, 빈 병을 돌려주면 돈을 돌려받는 보증금 제도가 있어요.',null,['쓰레기 분리배출하기',{i:2,d:2},'완벽하게 분리했어요!',SO('recy')],['빈 병 반납하러 가기',{c:1,m:4},'보증금을 돌려받았어요.',G_.del('🍾')]),
+    Q('xde3','cul','🏰','동화 속 성','그림 형제의 동화가 태어난 나라예요.','독일에는 중세의 성이 많고, 그림 형제가 옛이야기를 모아 동화집을 냈어요.',null,['성벽 쌓기',{s:2,d:2},'멋진 성이 완성됐어요!',G_.st('🧱','#a1866f')],['동화책 전해 주기',{c:3},'동생들이 이야기에 푹 빠졌어요.',G_.del('📖')])],
+IT:[Q('xit1','cul','🛶','물의 도시 베네치아','운하 위로 배가 다니는 도시예요.','베네치아는 관광객이 너무 많이 몰려 주민 생활이 어려워지는 문제(오버투어리즘)를 겪고 있어요.',null,['곤돌라 노 젓기',{s:3},'좁은 운하도 척척!',G_.boat('🛶')],['관광 문제 해결 아이디어 모으기',{i:3,c:1},'예약제 아이디어를 냈어요.',G_.col('💡')]),
+    Q('xit2','cul','🍕','나폴리 피자','화덕에서 피자가 구워져요!','나폴리 피자 장인의 기술은 유네스코 인류무형문화유산이에요.',null,['토핑 받아 올리기',{d:3},'토마토·치즈·바질 완벽!',G_.cat('🍅')],['손님에게 피자 배달',{c:3,m:3},'따끈할 때 도착!',G_.del('🍕')]),
+    Q('xit3','cul','🏛️','콜로세움','2천 년 전 로마 사람들이 지은 경기장이에요.','이탈리아에는 고대 로마 제국의 유적이 많이 남아 있어요.',null,['유적 조각 찾기',{i:3},'옛 동전을 발견했어요!',G_.col('🏺')],['관광객 안내하기',{c:3},'고대 로마 이야기를 들려줬어요.',G_.del('🗺️')])],
+ES:[Q('xes1','cul','🍊','오렌지 과수원','여름 햇볕을 받은 오렌지가 주렁주렁!','스페인은 지중해성 기후 덕분에 오렌지·올리브 생산이 많아요.',null,['잘 익은 열매 골라 따기',{s:2,d:2},'상큼한 향기가 가득해요.',SO('ripe')],['시장에 오렌지 나르기',{c:2,m:4},'오렌지가 다 팔렸어요!',G_.del('🍊')]),
+    Q('xes2','cul','🍅','토마토 축제','온 마을이 토마토를 던지는 축제예요!','스페인 부뇰에서는 매년 여름 토마토를 던지는 라 토마티나 축제가 열려요.',null,['토마토 던지기',{s:2,j:4},'온몸이 빨개졌어요!',G_.aim('🧑','🍅')],['축제 뒤 거리 청소',{c:2,s:1},'거리가 다시 반짝반짝!',G_.col('🧽')]),
+    Q('xes3','cul','💃','플라멩코','기타 소리에 맞춰 발을 구르는 춤이에요.','플라멩코는 스페인 남부 안달루시아의 전통 춤과 음악이에요.',null,['플라멩코 춤추기',{c:3,j:2},'올레! 박수가 쏟아졌어요.',G_.rh],['장미 장식 받기',{d:3},'화려한 의상 완성!',G_.cat('🌹')])],
+NL:[Q('xnl1','cul','🌷','간척지와 풍차','우리 땅의 많은 부분이 바다보다 낮대요!','네덜란드는 둑을 쌓아 바다를 막고 간척지(폴더)를 만들어 살아왔어요.',null,['둑 쌓기',{s:2,i:2},'바닷물을 막아 냈어요!',G_.st('🧱','#7b8a9a')],['튤립 심기',{d:3,j:1},'알록달록 꽃밭이 됐어요.',G_.col('🌷')]),
+    Q('xnl2','cul','🚲','자전거 천국','사람보다 자전거가 많은 나라예요.','네덜란드는 평평한 땅과 잘 갖춰진 자전거 도로 덕분에 자전거 이용이 많아요.',null,['자전거로 통학',{s:3},'씽씽 달려요.',G_.run('🚴')],['자전거 부품 받기',{d:3},'펑크 수리 완료!',G_.cat('🔧')]),
+    Q('xnl3','wea','⛸️','얼어붙은 운하','추운 겨울, 운하가 꽁꽁 얼었어요!','네덜란드 사람들은 운하가 얼면 스케이트를 즐겨요.','snow',['운하 스케이트',{s:3,j:2},'얼음 위를 쌩쌩!',G_.ski('⛸️')],['따뜻한 코코아 나르기',{c:3},'친구들 손이 녹았어요.',G_.del('☕')])],
+CH:[Q('xch1','cul','🗣️','네 개의 공용어','반 친구들이 서로 다른 말을 해요!','스위스는 독일어·프랑스어·이탈리아어·로망슈어 네 개의 공용어를 써요.',null,['여러 말로 인사 전하기',{c:3,i:1},'Bonjour, Hallo, Ciao!',G_.del('👋')],['언어 지도 조각 찾기',{i:3},'지역마다 쓰는 말이 달라요.',G_.col('🗺️')]),
+    Q('xch2','cul','🐄','알프스 이목','여름엔 소를 몰고 높은 초원으로 올라가요.','알프스 지역에서는 여름에 가축을 높은 목초지로 옮겨 기르는 이목을 해요.',null,['소를 목초지로 데려가기',{s:3},'소 방울 소리가 딸랑딸랑.',G_.del('🐄')],['치즈 쌓기',{d:3},'산장 치즈 창고가 가득!',G_.st('🧀','#e8b84a')]),
+    Q('xch3','cul','⛷️','알프스 스키','눈 덮인 알프스에서 스키를 타요!','스위스는 국토의 많은 부분이 알프스산맥이에요.','snow',['깃발 사이로 활강',{s:4},'깃발을 모두 통과!',G_.ski()],['산악 구조대 돕기',{c:3},'다친 스키어를 구했어요.',G_.del('🧰')])],
+FI:[Q('xfi1','cul','🧖','사우나의 나라','집집마다 사우나가 있대요!','핀란드의 사우나 문화는 유네스코 인류무형문화유산이에요.','snow',['사우나 후 눈밭 달리기',{s:3,j:2},'으아! 시원해요!',G_.run(null,{snow:1})],['사우나 돌 쌓기',{d:3},'따끈한 사우나 완성!',G_.st('🪨','#7a6f66')]),
+    Q('xfi2','cul','🎅','산타 마을','북극권에 산타 마을이 있어요!','핀란드 라플란드의 로바니에미에는 북극권 위에 산타 마을이 있어요.','snow',['선물 배달하기',{c:3,j:2},'아이들이 환호했어요!',G_.del('🎁')],['순록 썰매 타기',{s:2,j:2},'눈길을 쌩쌩!',G_.ski('🦌')])],
+SE:[Q('xse1','cul','🌲','숲의 나라','국토의 대부분이 숲이에요.','스웨덴 등 북유럽 냉대 지역은 침엽수림이 넓어 목재·종이 산업이 발달했어요.','snow',['나무 심기',{s:2,j:2},'숲을 다시 채워요.',G_.col('🌱')],['통나무 쌓아 가구 만들기',{d:3},'나무 의자 완성!',G_.st('🪵','#9c6b3f')]),
+    Q('xse2','cul','🌼','하지 축제','낮이 가장 긴 날, 꽃 장식 기둥을 돌며 춤춰요.','스웨덴에서는 하지 무렵 미드소마르 축제를 열어 여름을 반겨요.',null,['기둥 돌며 춤추기',{c:3,j:2},'개구리 춤까지 췄어요!',G_.rh],['꽃 받아 화관 만들기',{d:3},'예쁜 화관 완성!',G_.cat('🌼')])],
+DK:[Q('xdk1','cul','🌀','풍력 발전 나라','바다 위에 거대한 바람개비가 줄지어 있어요.','덴마크는 전기의 많은 부분을 풍력 발전으로 만들어요.',null,['풍력 단지 탐험',{i:3},'날개 하나가 버스보다 길어요.',G_.col('🌀')],['자전거로 출근',{s:2,j:1},'자전거 도로가 정말 넓어요.',G_.run('🚴')]),
+    Q('xdk2','cul','🧱','블록 장난감의 나라','작은 블록으로 무엇이든 만들어요!','덴마크는 세계적으로 유명한 조립 블록 장난감이 태어난 나라예요.',null,['블록 높이 쌓기',{d:4},'7층 블록 탑!',G_.st('🧱','#e03131')],['작품 전시하러 나르기',{c:3},'모두가 감탄했어요.',G_.del('🏗️')])],
+GR:[Q('xgr1','cul','🏛️','올림픽의 고향','고대 올림픽이 시작된 곳이에요!','고대 올림픽은 그리스 올림피아에서 시작됐어요.',null,['성화 들고 달리기',{s:4},'성화를 무사히 전달했어요!',G_.run('🏃')],['신화 이야기 전하기',{c:3},'제우스 이야기에 모두 귀 기울였어요.',G_.del('📜')]),
+    Q('xgr2','cul','🏠','하얀 집 파란 지붕','바닷가 언덕에 하얀 집들이 가득해요.','그리스의 지중해 섬마을은 강한 햇볕을 반사하려고 집을 하얗게 칠해요.','sun',['하얀 벽돌 쌓아 집 짓기',{d:3},'반짝이는 하얀 집!',G_.st('⬜','#e9eef5')],['관광객 안내',{c:3},'바다 전망 명소를 알려 줬어요.',G_.del('🗺️')]),
+    Q('xgr3','cul','🫒','올리브 수확','올리브 나무에 열매가 주렁주렁!','그리스는 지중해성 기후라 올리브를 많이 길러요.',null,['익은 올리브만 골라 담기',{d:3},'바구니 가득!',SO('ripe')],['올리브유 병 나르기',{s:2,m:3},'시장으로 출발!',G_.del('🫙')])],
+ZA:[Q('xza1','cul','🌈','무지개 나라','여러 인종이 함께 사는 나라예요.','남아프리카 공화국은 인종 차별 정책(아파르트헤이트)을 끝내고 무지개 나라를 꿈꿔요.',null,['여러 언어로 함께 노래',{c:3,j:2},'목소리가 하나가 됐어요.',G_.rh],['차별의 역사 찾기',{i:3},'다시는 차별이 없어야 해요.',G_.col('📜')]),
+    Q('xza2','cul','💎','광물 자원','땅속에 금과 다이아몬드가 있대요.','남아프리카 공화국은 금·다이아몬드 등 광물 자원이 풍부해요.',null,['광산 박물관 탐험',{i:2,j:1},'반짝이는 원석을 찾았어요.',G_.col('💎')],['광부에게 안전모 전하기',{c:3},'안전이 제일!',G_.del('⛑️')]),
+    Q('xza3','env','🐧','펭귄 해변','따뜻한 아프리카 바닷가에 펭귄이 살아요!','남아프리카 공화국 해안에는 아프리카펭귄이 살아요.',null,['해변 쓰레기 분류하기',{s:2,j:2},'펭귄 집이 깨끗해졌어요.',SO('beach')],['펭귄 수 세기',{i:3},'아기 펭귄도 찾았어요!',G_.col('🐧')])],
+NG:[Q('xng1','cul','🎬','놀리우드','우리 동네에서 영화 촬영을 한대요!','나이지리아의 영화 산업 놀리우드는 세계에서 손꼽히게 많은 영화를 만들어요.',null,['춤추는 장면 엑스트라',{c:3,j:2},'화면에 내가 나왔어요!',G_.rh],['소품 쌓아 세트 만들기',{d:3},'감독님이 칭찬했어요.',G_.st('📦','#b9894b')]),
+    Q('xng2','cul','👶','젊은 대륙','우리 반 친구들이 정말 많아요.','아프리카는 세계에서 가장 젊은 대륙으로, 인구가 빠르게 늘고 있어요.',null,['친구들에게 공책 나눠 주기',{c:3},'반장 역할 성공!',G_.del('📒')],['인구 자료 찾기',{i:3},'아이가 어른보다 많아요.',G_.col('📊')]),
+    Q('xng3','cul','🥁','말하는 북','북소리로 말을 전할 수 있대요!','서아프리카의 토킹 드럼은 소리 높낮이로 말처럼 뜻을 전해요.',null,['북 치기',{c:2,d:2},'둥둥! 메시지가 전해졌어요.',G_.rh],['북 가죽 받기',{d:3},'나만의 북 완성!',G_.cat('🥁')])],
+MA:[Q('xma1','cul','🫖','민트차와 메디나','좁은 골목길 구시가지 메디나에서 민트차를 마셔요.','북부 아프리카는 이슬람 문화가 강하고, 오래된 구시가지 메디나가 있어요.',null,['손님께 민트차 대접',{c:3,d:1},'높이 따르는 게 비법!',G_.del('🫖')],['미로 골목 지도 조각 찾기',{i:3},'미로 같은 골목을 정복!',G_.col('🗺️')]),
+    Q('xma2','cul','🐪','사하라 사막 투어','모래 언덕 위로 낙타 행렬이 지나가요.','모로코 남쪽은 사하라 사막과 맞닿아 있어요.','sand',['낙타 타고 달리기',{s:3},'모래 언덕을 넘었어요!',G_.run('🐪')],['사막 밤하늘 별 찾기',{i:3,j:1},'별이 쏟아져요.',G_.col('⭐')])],
+ET:[Q('xet1','cul','☕','커피 세리머니','손님이 오면 커피를 볶고 내리는 의식을 해요.','에티오피아는 커피의 고향으로, 손님에게 커피를 대접하는 의식이 있어요.',null,['커피콩 받아 볶기',{d:3},'고소한 향이 가득!',G_.cat('🫘')],['손님께 커피 대접',{c:3},'세 잔을 나누며 이야기꽃을 피웠어요.',G_.del('☕')]),
+    Q('xet2','cul','🏃','고원 마라톤','높은 고원에서 달리기 연습을 해요.','에티오피아 고원 지대는 세계적인 장거리 선수를 많이 길러 냈어요.',null,['고원 달리기',{s:4},'숨이 차지만 끝까지!',G_.run('🏃')],['선수들에게 물 나르기',{c:3},'선수들이 힘을 냈어요.',G_.del('💧')])],
+US:[Q('xus1','cul','🗽','다양한 이민자 동네','한 동네에 여러 나라에서 온 이웃이 살아요.','미국은 세계 여러 대륙에서 온 이민자들이 함께 사는 다민족 국가예요.',null,['이웃 음식 축제에 음식 나르기',{c:3,j:2},'세계 음식이 한 상에!',G_.del('🌮')],['이웃 고향 찾기',{i:3},'한 반에 10개 나라 출신이!',G_.col('🌍')]),
+    Q('xus2','cul','💻','실리콘밸리','유명한 IT 기업들이 모인 곳에 견학 왔어요.','미국에는 세계적인 초국적 기업의 본사가 많이 있어요.',null,['코드 조각 모으기',{i:3,d:1},'첫 앱을 만들었어요.',G_.col('💾')],['서버 블록 쌓기',{d:3},'데이터 센터 완성!',G_.st('🖥️','#4a5568')]),
+    Q('xus3','cul','🥧','추수감사절','온 가족이 모여 감사 인사를 나눠요.','미국에서는 11월 넷째 목요일 추수감사절에 가족이 모여 식사해요.',null,['파이 재료 받기',{d:3,j:1},'호박 파이 완성!',G_.cat('🎃')],['가족에게 음식 나르기',{c:3},'모두가 감사 인사를 나눴어요.',G_.del('🥧')]),
+    Q('xus4','cul','🚀','우주 센터','로켓 발사를 보러 왔어요!','미국은 우주 탐사를 이끌어 온 나라 중 하나예요.',null,['로켓 조립하기',{d:3,i:1},'발사 준비 완료!',G_.st('🚀','#cfd8e3')],['행성 카드 찾기',{i:3},'태양계 박사!',G_.col('🪐')])],
+CA:[Q('xca1','cul','🍁','메이플 시럽','단풍나무 수액을 모아 시럽을 만들어요.','캐나다는 냉대 기후의 단풍나무 숲에서 메이플 시럽을 많이 생산해요.','snow',['수액 받기',{d:3},'한 방울 한 방울 모았어요.',G_.cat('🍯')],['팬케이크 배달',{c:2,j:2},'세상에서 제일 달콤해!',G_.del('🥞')]),
+    Q('xca2','cul','🏒','아이스하키','꽁꽁 언 호수가 하키장이 됐어요!','캐나다는 아이스하키를 가장 사랑하는 나라 중 하나예요.','snow',['퍽 몰고 골!',{s:4},'골리를 제치고 골!',G_.ice],['응원 박자 맞추기',{c:3},'경기장이 들썩!',G_.rh]),
+    Q('xca3','cul','🗣️','영어와 프랑스어','우리 동네는 프랑스어를 써요.','캐나다는 영어와 프랑스어를 함께 공용어로 써요.',null,['두 언어로 인사 전하기',{c:3,i:1},'Hello! Bonjour!',G_.del('👋')],['이민 역사 찾기',{i:3},'여러 나라 이민자가 만든 나라예요.',G_.col('📜')])],
+AR:[Q('xar1','cul','💃','탱고','항구 도시에 탱고 음악이 흘러요.','탱고는 유럽 이민자와 여러 문화가 섞인 아르헨티나 부에노스아이레스에서 탄생했어요.',null,['탱고 춤추기',{c:3,j:3},'박수가 쏟아졌어요!',G_.rh],['악보 받기',{d:3},'애틋한 반도네온 곡!',G_.cat('🎵')]),
+    Q('xar2','cul','🐄','팜파스 목축','끝없는 초원 팜파스에서 소를 키워요.','아르헨티나의 팜파스는 넓은 초원으로 소 목축과 밀 농사가 발달했어요.',null,['말 타고 달리기',{s:3},'가우초(목동)처럼!',G_.run('🏇')],['소를 우리로 데려가기',{c:2,s:1},'소들이 무사히 돌아왔어요.',G_.del('🐄')]),
+    Q('xar3','cul','⚽','축구의 나라','골목마다 아이들이 공을 차요.','아르헨티나는 월드컵에서 세 번 우승한 축구 강국이에요.',null,['드리블로 제치고 골!',{s:3,d:1},'수비수를 다 제쳤어요!',G_.soc],['응원가 박자 맞추기',{c:3},'경기장이 노래로 가득!',G_.rh])],
+PE:[Q('xpe1','cul','🏛️','마추픽추','구름 위의 잉카 유적에 왔어요!','안데스산맥의 고산 지역에는 잉카 문명의 유적 마추픽추가 있어요.',null,['돌계단 오르며 유물 찾기',{s:2,i:2},'정상에서 본 풍경 최고!',G_.col('🏺')],['잉카식 돌 쌓기',{d:3},'틈 하나 없이 쌓았어요!',G_.st('🪨','#8d8173')]),
+    Q('xpe2','cul','🦙','알파카 털','알파카 털로 따뜻한 옷을 만들어요.','안데스 고산 지역에서는 라마·알파카를 길러 털과 짐 운반에 써요.',null,['알파카 데려오기',{c:2,s:1},'알파카가 졸졸 따라와요.',G_.del('🦙')],['털실 쌓아 옷감 짜기',{d:3},'알록달록 판초 완성!',G_.st('🧶','#d9480f')]),
+    Q('xpe3','cul','🥔','감자의 고향','안데스에는 감자 종류가 수천 가지래요!','감자는 안데스 지역이 원산지예요.',null,['감자 캐기',{s:2,i:1},'알록달록 감자가 가득!',G_.col('🥔')],['감자 받기',{d:3},'감자 요리 완성!',G_.cat('🥔')])],
+CL:[Q('xcl1','cul','🗿','모아이 석상','먼 섬에 거대한 석상이 서 있어요.','칠레의 이스터섬(라파누이)에는 모아이 석상이 있어요.',null,['석상 받침돌 쌓기',{s:2,d:2},'석상이 우뚝!',G_.st('🪨','#6b6b6b')],['섬 탐험하기',{i:3},'석상이 바다를 등지고 서 있어요.',G_.col('🗿')]),
+    Q('xcl2','cul','🔭','가장 건조한 사막','비가 거의 안 와서 별이 정말 잘 보여요.','칠레 아타카마 사막은 세계에서 가장 건조한 곳 중 하나라 큰 천문대가 많아요.','sand',['별똥별 관측',{i:3},'소원을 빌었어요!',G_.aim('🌠','🔭')],['안개 그물로 물 받기',{d:3},'안개에서 물을 모았어요!',G_.cat('💧')]),
+    Q('xcl3','cul','🍇','길쭉한 나라','남북으로 정말 길어요. 북은 사막, 남은 빙하!','칠레는 남북으로 약 4300km나 길게 뻗어 있어 지역마다 기후가 달라요.',null,['남북 종단 달리기',{s:3},'사막에서 빙하까지!',G_.run()],['포도 받기',{d:3},'달콤한 칠레 포도!',G_.cat('🍇')])],
+AU:[Q('xau1','cul','🎄','한여름 크리스마스','12월인데 해변에서 크리스마스를 보내요!','오스트레일리아는 남반구에 있어 우리와 계절이 반대예요.','sun',['서핑하는 산타',{s:3,j:3},'파도를 탔어요!',G_.boat('🏄')],['계절 비밀 찾기',{i:3},'지구가 기울어져 있기 때문이에요.',G_.col('🌏')]),
+    Q('xau2','cul','🦘','건조한 내륙','내륙은 메마른 사막인데 사람들은 바닷가 도시에 몰려 살아요.','오스트레일리아는 내륙이 건조해 인구 대부분이 해안 도시에 살아요.','sand',['캥거루처럼 점프!',{s:3},'붉은 사막이 끝이 없어요.',G_.run('🦘')],['인구 지도 조각 찾기',{i:3},'해안에 점이 몰려 있어요.',G_.col('📍')]),
+    Q('xau3','env','🐨','코알라 지키기','산불로 코알라 집이 위험해요.','오스트레일리아는 건조한 기후 때문에 큰 산불이 나기도 해요.',null,['유칼립투스 잎 가져다주기',{c:3},'코알라가 냠냠!',G_.del('🌿')],['산불 끄는 물 받기',{d:3},'불길을 잡았어요!',G_.cat('💧')]),
+    Q('xau4','env','🐠','산호초 바다','세계에서 가장 큰 산호초에 왔어요.','오스트레일리아의 대보초(그레이트배리어리프)는 바닷물 온도가 오르며 산호가 하얗게 죽는 백화 현상을 겪고 있어요.',null,['스노클링으로 탐험',{s:2,j:3},'형형색색 물고기!',G_.boat('🤿')],['바다 쓰레기 분류',{i:3},'산호초가 깨끗해졌어요.',SO('beach')])],
+NZ:[Q('xnz1','cul','🐑','양이 사람보다 많아요','초원에 양이 끝도 없이 있어요.','뉴질랜드는 목축과 낙농이 발달해 양털·유제품을 수출해요.',null,['양 떼 데려오기',{s:2,c:1},'한 마리도 안 잃었어요!',G_.del('🐑')],['양털 받기',{d:3},'폭신한 양털이 한가득!',G_.cat('☁️')]),
+    Q('xnz2','cul','🙌','마오리 하카','원주민 마오리의 힘찬 춤 하카를 배워요.','뉴질랜드는 원주민 마오리 문화를 존중하며 함께 이어 가고 있어요.',null,['하카 따라 하기',{s:2,c:2},'우렁찬 기합!',G_.rh],['마오리 말 카드 찾기',{i:2,c:1},'Kia ora! (안녕)',G_.col('💬')]),
+    Q('xnz3','cul','🏉','럭비','뉴질랜드 사람들은 럭비를 정말 좋아해요.','뉴질랜드는 럭비 강국으로, 대표팀은 경기 전에 하카를 춰요.',null,['수비 뚫고 트라이!',{s:4},'트라이 성공!',G_.rug],['응원 박자 맞추기',{c:3},'경기장이 쩌렁쩌렁!',G_.rh])],
+FJ:[Q('xfj1','cul','🏝️','섬마을의 걱정','해안 마을을 높은 곳으로 옮겨야 할지도 몰라요.','피지를 비롯한 태평양 섬나라에서는 해수면 상승으로 마을을 옮기는 일까지 생기고 있어요.','rain',['이웃 이삿짐 나르기',{s:2,c:2},'모두 함께 짐을 날랐어요.',G_.del('📦')],['맹그로브 심기',{d:2,j:2},'파도를 막아 줄 숲!',G_.col('🌱')]),
+    Q('xfj2','env','🐠','산호초 바다','투명한 바다에 산호초가 펼쳐져 있어요.','태평양 섬나라는 해양 쓰레기와 바다 온도 상승으로 산호초가 위협받고 있어요.',null,['스노클링 탐험',{s:2,j:3},'거북이를 만났어요!',G_.boat('🤿')],['바다 쓰레기 분류',{i:3},'바다가 깨끗해졌어요.',SO('beach')])],
+};
+
+/* 기존 퀘스트 선택지에 딱 맞는 미니게임 지정 (id:선택지번호) */
+const GMAP={
+ 'kr1:0':G_.cat('🥟'),'kr1:1':G_.cat('⭐'),'kr2:0':G_.del('🙇'),'kr2:1':G_.cat('🍲'),'kr3:0':G_.del('🥬'),'kr3:1':G_.cat('🌶️'),'kr4:0':G_.col('🍂'),'kr4:1':G_.col('📚'),'kr5:0':G_.run(null,{haz:'🌫️'}),'kr5:1':G_.col('🔎'),
+ 'jp1:0':G_.del('🍱'),'jp1:1':G_.cat('🌸'),'jp2:0':SO('shoe'),'jp2:1':G_.col('❓'),'jp3:0':G_.rh,'jp3:1':G_.st('🏮','#e8590c'),'jp4:0':G_.col('🪴'),'jp4:1':G_.del('🍊'),'jp5:0':G_.run(null,{haz:'📚'}),'jp5:1':G_.del('🧒'),
+ 'in1:0':G_.col('🪔'),'in1:1':G_.del('🍬'),'in2:0':G_.aim('🧒','🎨'),'in2:1':G_.cat('🌸'),'in3:0':G_.cat('🍛'),'in3:1':G_.col('🌶️'),'in4:0':G_.col('🌱'),'in4:1':G_.cat('💧'),'in5:0':G_.del('💧'),'in5:1':G_.col('🌳'),
+ 'ke1:0':G_.st('🪨','#8a7a66'),'ke1:1':G_.rh,'ke2:0':G_.rh,'ke2:1':G_.rh,'ke3:0':G_.run('🏃'),'ke3:1':G_.run('🏃'),'ke4:0':G_.del('💧'),'ke4:1':G_.col('💡'),'ke5:0':G_.col('🐾'),'ke5:1':G_.del('📜'),
+ 'br1:0':G_.rh,'br1:1':G_.cat('🪶'),'br2:0':G_.soc,'br2:1':G_.rh,'br3:0':G_.cat('🫘'),'br3:1':G_.del('🍲'),'br4:0':G_.cat('💧'),'br4:1':G_.col('☁️'),'br5:0':G_.col('🌱'),'br5:1':G_.del('🌿'),
+ 'no1:0':G_.ski(),'no1:1':G_.col('🐾'),'no2:0':G_.rh,'no2:1':G_.cat('🧵'),'no3:0':G_.st('🪵','#8b5a2b'),'no3:1':G_.col('🍄'),'no4:0':G_.soc,'no4:1':G_.col('🌍'),'no5:0':G_.aim('✨','📸'),'no5:1':G_.col('🌌'),
+ 'eg1:0':G_.del('🍲'),'eg1:1':G_.cat('🌴'),'eg2:0':G_.boat('⛵'),'eg2:1':G_.col('💬'),'eg3:0':G_.col('𓂀'),'eg3:1':G_.del('🗺️'),'eg4:0':G_.st('🧱','#c9a26b'),'eg4:1':G_.run(null,{haz:'🌪️'}),'eg5:0':G_.st('🧱','#b8875a'),'eg5:1':G_.col('⭐'),
+ 'mn1:0':G_.run('🏇'),'mn1:1':G_.aim('🎯','🏹'),'mn2:0':G_.st('🪵','#a07a4a'),'mn2:1':G_.st('🧶','#d8c3a5'),'mn3:0':G_.del('🍵'),'mn3:1':G_.col('💬'),'mn4:0':G_.del('🐑'),'mn4:1':G_.cat('🌾'),'mn5:0':G_.col('🌱'),'mn5:1':G_.del('📋'),
+ 'mx1:0':G_.col('🌼'),'mx1:1':G_.del('📷'),'mx2:0':G_.aim('🪅','🏏'),'mx2:1':G_.st('🎨','#f08c00'),'mx3:0':G_.cat('🌽'),'mx3:1':G_.del('🌮'),'mx4:0':G_.del('👪'),'mx4:1':G_.cat('🔦'),'mx5:0':G_.col('🦋'),'mx5:1':G_.col('🗺️'),
+ /* 성장 */
+ 'g_b1:0':G_.run('👶'),'g_b1:1':G_.col('🧸'),'g_b2:0':G_.del('👋'),'g_b2:1':G_.cat('🍼'),'g_b3:0':G_.st('🧸','#ff8787'),'g_b3:1':G_.cat('🧱'),'g_b4:0':G_.rh,'g_b4:1':G_.cat('⭐'),
+ 'g_c1:0':G_.del('👋'),'g_c1:1':G_.col('📚'),'g_c2:0':G_.del('💌'),'g_c2:1':G_.col('💭'),'g_c3:0':G_.cat('🎨'),'g_c3:1':G_.cat('🖍️'),'g_c4:0':G_.del('🍞'),'g_c4:1':G_.del('💬'),
+ 'g_t1:0':G_.col('📘'),'g_t1:1':G_.del('📝'),'g_t2:0':G_.rh,'g_t2:1':G_.st('🤖','#748ffc'),'g_t3:0':G_.col('💼'),'g_t3:1':G_.col('📔'),'g_t4:0':G_.del('🍱'),'g_t4:1':G_.col('🗑️'),
+ 'g_y1:0':G_.del('🎁'),'g_y1:1':G_.cat('🪙'),'g_y2:0':G_.cat('🍳'),'g_y2:1':G_.del('🍰'),'g_y3:0':G_.cat('🍜'),'g_y3:1':G_.col('🗣️'),'g_y4:0':G_.run(),'g_y4:1':G_.cat('💤'),
+ 'g_a1:0':G_.del('🍲'),'g_a1:1':G_.cat('📄'),'g_a2:0':G_.del('📗'),'g_a2:1':G_.st('📚','#5c7cfa'),'g_a3:0':G_.del('🎁'),'g_a3:1':G_.del('🧰'),'g_a4:0':G_.rh,'g_a4:1':G_.run(),
+ 'g_s1:0':G_.del('📖'),'g_s1:1':G_.col('🍅'),'g_s2:0':G_.del('💡'),'g_s2:1':G_.del('🍵'),'g_s3:0':G_.boat('⛵'),'g_s3:1':G_.col('📸'),'g_s4:0':G_.col('📝'),'g_s4:1':G_.col('🖼️'),
+ 'e1:0':G_.col('🌱'),'e1:1':G_.col('🍃'),'e2:0':SO('recy'),'e2:1':G_.del('📢'),'e3:0':G_.cat('💧'),'e3:1':G_.cat('🌧️'),'e4:0':G_.col('🔌'),'e4:1':G_.col('💡'),
+ 'free:0':G_.soc,'free:1':G_.col('📚'),
+ /* 직업 */
+ 'j_s1:0':G_.run(),'j_s1:1':G_.run(),'j_s2:0':G_.del('🧯'),'j_s2:1':G_.col('📋'),
+ 'j_i1:0':G_.col('🧪'),'j_i1:1':G_.del('💬'),'j_i2:0':G_.col('📚'),'j_i2:1':G_.del('❓'),
+ 'j_c1:0':G_.rh,'j_c1:1':G_.rh,'j_c2:0':G_.del('💌'),'j_c2:1':G_.del('🎁'),
+ 'j_d1:0':G_.cat('📦'),'j_d1:1':G_.st('📦','#c48a4a'),'j_d2:0':G_.col('💡'),'j_d2:1':G_.st('🧱','#a07a4a'),
+ /* 기후 */
+ 'cr1:0':G_.st('🪵','#8b5a2b'),'cr1:1':G_.st('🌿','#7cae4a'),'cr2:0':G_.run(null,{haz:'💧'}),'cr2:1':G_.cat('💧'),'cr3:0':G_.cat('🍌'),'cr3:1':G_.col('🏷️'),'cr4:0':G_.col('🌱'),'cr4:1':G_.del('📢'),
+ 'cs1:0':G_.col('🌱'),'cs1:1':G_.cat('💧'),'cs2:0':G_.del('📸'),'cs2:1':G_.col('🦓'),'cs3:0':G_.col('🌱'),'cs3:1':G_.st('🪨','#8a7a66'),'cs4:0':G_.st('🧱','#b07a4a'),'cs4:1':G_.st('🌾','#d4b45a'),
+ 'cd1:0':G_.cat('🌴'),'cd1:1':G_.del('💧'),'cd2:0':G_.run(null,{haz:'🌪️'}),'cd2:1':G_.cat('🧣'),'cd3:0':G_.st('🧱','#c9a26b'),'cd3:1':G_.col('⭐'),'cd4:0':G_.run('🐪'),'cd4:1':G_.col('⭐'),
+ 'ct1:0':G_.del('🐑'),'ct1:1':G_.col('🌿'),'ct2:0':G_.cat('🌾'),'ct2:1':G_.col('🚢'),'ct3:0':G_.col('🌱'),'ct3:1':G_.st('🟫','#8a6a4a'),'ct4:0':G_.cat('🧀'),'ct4:1':G_.del('🥛'),
+ 'cm1:0':SO('ripe'),'cm1:1':G_.cat('🫒'),'cm2:0':G_.st('⬜','#e9eef5'),'cm2:1':G_.st('🟦','#3b6fb6'),'cm3:0':G_.cat('💤'),'cm3:1':G_.col('📚'),'cm4:0':G_.del('🗺️'),'cm4:1':SO('beach'),
+ 'cn1:0':G_.col('🌱'),'cn1:1':G_.st('🌾','#d4b45a'),'cn2:0':G_.col('🪴'),'cn2:1':G_.del('🍲'),'cn3:0':SO('shoe'),'cn3:1':G_.del('🧥'),'cn4:0':G_.cat('🔥'),'cn4:1':G_.st('⛄','#e9eef5'),
+ 'co1:0':G_.run(null,{haz:'💧'}),'co1:1':G_.col('🌬️'),'co2:0':G_.cat('🥛'),'co2:1':G_.col('🧀'),'co3:0':G_.st('🌀','#74c0fc'),'co3:1':G_.col('💨'),'co4:0':G_.cat('🧥'),'co4:1':G_.col('🌳'),
+ 'cc1:0':G_.del('🪵'),'cc1:1':G_.col('🌲'),'cc2:0':G_.st('🧱','#a07a6a'),'cc2:1':G_.st('🪵','#8b5a2b'),'cc3:0':G_.st('🪵','#6b4a2b'),'cc3:1':G_.col('🧊'),'cc4:0':G_.cat('♨️'),'cc4:1':G_.del('🥣'),
+ 'ch1:0':G_.del('🦙'),'ch1:1':G_.st('🧶','#d9480f'),'ch2:0':G_.st('🪨','#8d8173'),'ch2:1':G_.col('🥔'),'ch3:0':G_.run(),'ch3:1':G_.col('🌡️'),'ch4:0':G_.cat('🌸'),'ch4:1':G_.col('🏙️'),
+ /* 대륙 */
+ 'ka1:0':G_.del('🌼'),'ka1:1':G_.col('🛕'),'ka2:0':G_.col('📊'),'ka2:1':G_.del('🍵'),'ka3:0':SO('toy'),'ka3:1':G_.col('🧪'),
+ 'ke1x:0':G_.run('🚴'),'ke1x:1':G_.col('🌱'),'ke2x:0':G_.boat('⛴️'),'ke2x:1':G_.col('📰'),'ke3x:0':G_.del('🗺️'),'ke3x:1':G_.col('🏛️'),
+ 'kf1:0':G_.col('💬'),'kf1:1':G_.rh,'kf2:0':G_.del('📱'),'kf2:1':G_.del('📱'),'kf3:0':G_.st('🧱','#b07a4a'),'kf3:1':G_.del('✏️'),'kf4:0':G_.st('🔆','#3b6fb6'),'kf4:1':G_.col('💡'),
+ 'km1:0':G_.cat('🌮'),'km1:1':G_.col('🌎'),'km2:0':G_.rh,'km2:1':G_.rh,'km3:0':SO('toy'),'km3:1':G_.col('🏙️'),
+ 'ko1:0':G_.st('🪨','#6b7a8a'),'ko1:1':G_.del('📢'),'ko2:0':SO('beach'),'ko2:1':G_.col('🧴'),'ko3:0':G_.del('⛏️'),'ko3:1':G_.col('🚢'),'ko4:0':G_.col('🧊'),'ko4:1':G_.col('🐧'),
+};
+
+/* ───────── 172개 나라 (1in8b.life: UN 세계인구전망 2024 출생, UN IGME, 세계은행) ─────────
+   iso, 출생 확률 1/N, 기대수명, 5세 미만 사망률%, 1인당 소득 PPP$, 대륙, 기후 */
+const ROWS=`IN,6,72.0,2.8,8871,AS,sav
+CN,15,77.9,0.6,22687,AS,mon
+NG,18,54.5,11.7,7843,AF,sav
+PK,19,67.6,5.8,5419,AS,des
+ID,29,71.1,1.8,13890,AS,rain
+CD,30,61.9,9.1,1559,AF,rain
+ET,32,67.3,5.2,2758,AF,high
+US,36,79.3,0.7,74352,AM,mon
+BD,38,74.7,3.1,8242,AS,sav
+BR,51,75.8,1.4,19080,AM,rain
+EG,55,71.6,2.3,16691,AF,des
+TZ,56,67.0,3.9,3621,AF,sav
+MX,65,75.1,1.3,21865,AM,ste
+PH,72,69.8,2.7,9899,AS,rain
+UG,77,68.3,4.9,2791,AF,sav
+SD,78,66.3,6.3,2181,AF,des
+KE,88,63.6,4.0,5692,AF,sav
+AF,90,66.0,5.5,1984,AS,ste
+VN,95,74.6,1.8,13535,AS,rain
+YE,95,69.3,4.0,2000,AS,des
+AO,96,64.6,5.0,8598,AF,sav
+RU,102,73.2,0.5,39881,EU,cold
+MZ,105,63.6,6.2,1513,AF,sav
+ZA,111,66.1,3.5,13695,AF,ste
+IR,112,77.7,1.2,17045,AS,des
+IQ,114,72.3,2.2,13202,AS,des
+NE,120,61.2,11.3,1713,AF,des
+TR,123,77.2,1.4,35069,AS,med
+MG,132,63.6,6.4,1630,AF,sav
+CI,132,61.9,6.7,6521,AF,sav
+CM,138,64.0,6.7,4875,AF,rain
+ML,139,60.4,7.6,2861,AF,des
+UZ,140,72.4,1.4,10514,AS,des
+DZ,146,76.3,2.2,15159,AF,des
+MM,146,66.9,3.8,5364,AS,sav
+GH,148,65.5,3.7,6809,AF,sav
+TD,161,55.1,10.1,2434,AF,des
+SO,167,58.8,10.4,1402,AF,des
+JP,176,84.7,0.2,47387,AS,mon
+BF,181,61.1,7.7,2486,AF,sav
+DE,183,81.4,0.4,63140,EU,oce
+CO,187,77.7,1.2,18407,AM,high
+GB,192,81.3,0.5,53423,EU,oce
+ZM,192,66.3,4.9,3673,AF,sav
+MW,199,67.4,5.0,1649,AF,sav
+FR,207,83.3,0.4,54297,EU,oce
+MA,209,75.3,1.6,8915,AF,med
+TH,223,76.4,0.9,21245,AS,sav
+NP,230,70.4,2.6,4861,AS,high
+SA,242,78.7,0.6,64482,AS,des
+PE,244,77.7,1.3,15342,AM,high
+SN,248,68.7,3.8,4305,AF,ste
+SY,253,72.1,2.0,4579,AS,ste
+AR,262,77.4,1.0,27230,AM,mon
+ZW,266,62.8,6.4,5218,AF,sav
+GN,271,60.7,9.5,3905,AF,sav
+BJ,276,60.8,7.7,3721,AF,sav
+BI,286,63.7,4.9,1033,AF,sav
+MY,303,76.7,0.8,32858,AS,rain
+VE,309,72.5,2.4,7500,AM,sav
+KZ,322,74.4,1.0,34703,AS,ste
+RW,334,67.8,3.9,3168,AF,high
+IT,343,83.7,0.3,52843,EU,med
+GT,350,72.6,2.1,12380,AM,rain
+KH,365,70.7,1.9,6695,AS,sav
+CA,370,82.6,0.5,58088,AM,cold
+KP,386,73.6,1.8,1700,AS,cold
+ES,392,83.7,0.3,47323,EU,med
+SS,402,57.6,9.7,900,AF,sav
+LK,407,77.5,0.6,13065,AS,rain
+PL,415,78.6,0.4,43673,EU,cold
+AU,434,83.9,0.4,60685,OC,des
+TJ,486,71.8,2.9,4472,AS,high
+EC,488,77.4,1.3,14321,AM,high
+TG,491,62.7,5.8,3216,AF,sav
+BO,507,68.6,1.6,11616,AM,high
+SL,510,61.8,9.4,3035,AF,rain
+HT,511,64.9,5.4,2939,AM,sav
+PG,517,66.1,4.1,4206,OC,rain
+CF,552,57.4,9.3,1133,AF,sav
+KR,558,84.3,0.3,54029,AS,mon
+JO,560,77.8,1.3,10309,AS,des
+HN,564,72.9,1.6,6468,AM,sav
+UA,622,73.4,0.8,15917,EU,cold
+DO,649,73.7,3.1,23282,AM,sav
+CG,697,65.8,4.0,6172,AF,rain
+RO,718,75.9,0.7,40117,EU,cold
+CL,749,81.2,0.7,29600,AM,med
+MR,763,68.5,3.8,6276,AF,des
+IL,766,82.4,0.3,47671,AS,med
+LR,776,62.2,8.7,1617,AF,rain
+NL,786,82.2,0.4,70199,EU,oce
+TN,787,76.5,1.3,12651,AF,med
+LA,809,69.0,3.0,8372,AS,sav
+TM,824,70.1,4.0,17686,AS,des
+KG,875,71.7,1.7,6576,AS,high
+PS,901,65.2,4.2,5562,AS,med
+PY,965,73.8,1.7,15832,AM,mon
+TW,996,80.6,0.5,70000,AS,mon
+NI,998,74.9,1.4,7497,AM,sav
+AZ,1054,74.4,1.9,21311,AS,ste
+LY,1061,69.3,3.2,12477,AF,des
+AE,1268,82.9,0.5,70240,AS,des
+BE,1297,82.1,0.4,63042,EU,oce
+SV,1327,72.1,1.0,11404,AM,sav
+ER,1332,68.6,3.5,1800,AF,des
+SE,1347,83.3,0.2,62123,EU,cold
+CU,1375,78.1,0.8,12000,AM,sav
+LB,1416,77.8,1.7,11330,AS,med
+CZ,1436,79.8,0.3,47558,EU,oce
+PT,1523,82.4,0.3,41768,EU,med
+HU,1545,77.0,0.4,40333,EU,cold
+OM,1551,80.0,1.0,37794,AS,des
+CH,1576,83.9,0.4,85383,EU,high
+GM,1607,65.9,4.4,2964,AF,sav
+AT,1712,82.0,0.3,64536,EU,high
+NA,1720,67.4,4.1,10126,AF,des
+GR,1791,81.9,0.4,36701,EU,med
+PA,1846,79.6,1.5,35873,AM,rain
+GA,1919,68.3,3.4,18701,AF,rain
+BY,2028,74.4,0.2,27782,EU,cold
+MN,2029,71.7,1.4,16223,AS,ste
+GW,2040,64.1,7.0,2661,AF,sav
+BG,2106,75.6,0.6,33074,EU,cold
+BW,2152,69.2,3.5,18932,AF,ste
+RS,2205,76.8,0.5,25735,EU,cold
+NZ,2227,82.1,0.5,49593,OC,oce
+DK,2282,81.9,0.4,68994,EU,oce
+LS,2367,57.4,6.1,2592,AF,high
+GQ,2412,63.7,7.0,15302,AF,rain
+IE,2477,82.4,0.4,117660,EU,oce
+SK,2524,78.3,0.6,39502,EU,cold
+CR,2539,80.8,1.0,26379,AM,rain
+NO,2560,83.3,0.2,94365,EU,cold
+KW,2674,80.4,0.8,47790,AS,des
+SG,2779,83.7,0.3,130297,AS,rain
+GE,3015,74.5,0.9,22591,AS,mon
+FI,3029,81.9,0.2,56052,EU,cold
+HK,3195,85.5,0.2,64435,AS,mon
+AM,3806,75.7,1.0,19403,AS,high
+UY,3945,78.1,0.7,31101,AM,mon
+JM,3997,71.5,1.8,11399,AM,sav
+MD,4000,71.2,1.6,15990,EU,cold
+HR,4196,78.6,0.5,41320,EU,med
+TL,4317,67.7,4.9,4331,AS,sav
+SZ,4454,64.1,4.6,10182,AF,sav
+QA,4470,82.4,0.6,116159,AS,des
+AL,4581,79.6,0.9,20481,EU,med
+BA,5370,77.9,0.6,19805,EU,oce
+KM,5415,66.8,4.0,3434,AF,rain
+DJ,5510,66.0,5.0,6511,AF,des
+SB,6123,70.5,2.1,2340,OC,rain
+LT,6155,76.0,0.3,46160,EU,cold
+XK,6431,78.0,0.9,14240,EU,cold
+BH,6746,81.3,0.9,57820,AS,des
+SI,7370,81.6,0.2,47977,EU,oce
+MK,7817,77.4,0.3,23455,EU,cold
+GY,7870,70.2,2.6,49312,AM,rain
+FJ,7933,67.3,2.9,13195,OC,rain
+TT,8198,73.5,1.9,31197,AM,sav
+CY,9084,81.6,0.5,51454,EU,med
+LV,9258,76.2,0.3,37278,EU,cold
+MU,11177,74.9,1.5,26635,AF,rain
+EE,11955,79.2,0.2,41289,EU,cold
+SR,12127,73.6,1.6,19021,AM,rain
+BT,13249,73.0,1.8,14610,AS,high
+ME,18899,77.1,0.2,27244,EU,med
+LU,18994,82.2,0.2,130049,EU,oce
+CV,20486,76.1,1.2,9228,AF,des
+MV,22767,81.0,0.6,22333,AS,rain
+MO,29221,83.1,0.3,104815,AS,mon
+MT,31316,83.3,0.6,60418,EU,med`;
+const NAMEFIX={HK:'홍콩',MO:'마카오',XK:'코소보',PS:'팔레스타인',CD:'콩고민주공화국',CG:'콩고공화국',KP:'북한',TW:'대만',CI:'코트디부아르',GB:'영국',US:'미국',AE:'아랍에미리트',CF:'중앙아프리카공화국',DO:'도미니카공화국',SZ:'에스와티니',TL:'동티모르',CV:'카보베르데',GQ:'적도기니',GW:'기니비사우',BA:'보스니아 헤르체고비나',MK:'북마케도니아',TT:'트리니다드 토바고',SB:'솔로몬 제도',PG:'파푸아뉴기니',KM:'코모로',CZ:'체코',TR:'튀르키예',ZA:'남아프리카 공화국'};
+let DN=null;try{DN=new Intl.DisplayNames(['ko'],{type:'region'})}catch(e){}
+const flagOf=iso=>String.fromCodePoint(...[...iso].map(ch=>0x1F1E6+ch.charCodeAt(0)-65));
+const C={};
+ROWS.trim().split('\n').forEach(l=>{
+  const[iso,odds,le,u5,inc,cont,clim]=l.trim().split(',');if(!KEEP.includes(iso))return;const f=FEAT[iso.toLowerCase()]||XINFO[iso]&&{...XINFO[iso],qs:[]},K=CLIM[clim];const isF=!!FEAT[iso.toLowerCase()];
+  let nm=NAMEFIX[iso]||(isF&&f.name);if(!nm){try{nm=DN?DN.of(iso):iso}catch(e){nm=iso}}
+  C[iso]={iso,odds:+odds,le:+le,u5:+u5,inc:+inc,cont,clim,flag:flagOf(iso),name:nm,
+    region:isF?f.region:CONT[cont].n,climate:isF?f.climate:K.desc,greet:f?f.greet:'(이 나라 말로) 안녕!',
+    land:f?f.land:K.land,w:isF?f.w:K.w,sky:isF?f.sky:K.sky,gr:isF?f.gr:K.gr,bonus:isF?f.bonus:K.bonus,sp:f&&f.sp||null,
+    qs:[...(f?f.qs:[]),...(XQ[iso]||[])]};
+});
+const CIDS=Object.keys(C);
+const coinRate=cid=>Math.min(2.5,Math.max(.3,C[cid].inc/20000));   /* 같은 일을 해도 버는 코인이 나라마다 달라요 */
+const wealthLv=inc=>inc<5000?1:inc<15000?2:inc<40000?3:4;
+function adj(e){const o={...e};if(o.m>0)o.m=Math.max(1,Math.round(o.m*coinRate(S.cid)));return o}
+
+/* ───────── 상태 ───────── */
+const $=s=>document.querySelector(s);
+let S=null;
+const LS={get(k){try{return JSON.parse(localStorage.getItem(k))}catch(e){return null}},set(k,v){try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}},del(k){try{localStorage.removeItem(k)}catch(e){}}};
+const rnd=a=>a[Math.floor(Math.random()*a.length)];
+const allQ={},SRC={};
+CIDS.forEach(k=>C[k].qs.forEach(q=>{allQ[q.id]=q;SRC[q.id]='own'}));
+Object.values(CLIMQ).flat().forEach(q=>{allQ[q.id]=q;SRC[q.id]='clim'});
+Object.values(CONTQ).flat().forEach(q=>{allQ[q.id]=q;SRC[q.id]='cont'});
+[...Object.values(G).flat(),...ENV,...Object.values(JQ).flat(),FREE].forEach(q=>allQ[q.id]=q);
+Object.entries(GMAP).forEach(([key,g])=>{const[id,k]=key.split(':');if(allQ[id]&&allQ[id].ch[+k]&&!allQ[id].ch[+k].g)allQ[id].ch[+k].g=g});
+
+function fresh(name){return{name:name||'모험가',cid:null,fam:0,age:0,stage:0,step:0,lv:1,st:{s:5,i:5,c:5,d:5,j:40,m:0},job:null,life:80,done:[],album:[],cards:[],weather:null,phase:'play'}}
+function save(){if(S)LS.set('lifeRPG3.save',S)}
+function jobName(){return S.job?S.job.p[(S.job.tier-1)*2]:''}
+function jobEmoji(){return S.job?S.job.p[(S.job.tier-1)*2+1]:''}
+function fill(t){const c=C[S.cid];return t.replace(/\{greet\}/g,c.greet).replace(/\{country\}/g,c.name).replace(/\{job\}/g,jobName()||'나').replace(/\{name\}/g,S.name)}
+function chips(e){return Object.entries(e).map(([k,v])=>`<span class="chip ${v>=0?'up':'down'}">${v>0?'+':''}${v} ${SM[k].e}</span>`).join('')}
+function applyE(e){W_.lastE=e;const b=[];for(const k in e){S.st[k]=Math.max(0,S.st[k]+e[k]);if(k==='j')S.st.j=Math.min(100,S.st.j);b.push(k)}renderHUD(b)}
+
+/* ───────── 화면 전환 ───────── */
+function show(id){['title','birth','game','ending'].forEach(x=>$('#'+x).hidden=x!==id);if(id==='game'){wSize()}}
+
+/* 타이틀 */
+let bornMode=LS.get('lifeRPG3.mode')||'ALL';
+function renderTitle(){
+  const dex=LS.get('lifeRPG3.dex')||{};const got=Object.keys(dex).filter(k=>C[k]);
+  const per={};got.forEach(k=>per[C[k].cont]=(per[C[k].cont]||0)+1);
+  $('#dexCount').textContent=`${got.length} / ${CIDS.length}개 나라`;
+  $('#dexCont').innerHTML=Object.entries(CONT).map(([k,v])=>`<span>${v.e} ${v.n} <b>${per[k]||0}</b></span>`).join('');
+  $('#dexRow').innerHTML=got.length?got.slice(-40).map(k=>`<span title="${C[k].name} · ${dex[k]}">${C[k].flag}</span>`).join(''):'<em>아직 살아 본 나라가 없어요</em>';
+  $('#modeRow').innerHTML=[['ALL','🌐 전 세계'],...Object.entries(CONT).map(([k,v])=>[k,`${v.e} ${v.n}`])].map(([k,n])=>`<button class="mode${k===bornMode?' on':''}" data-m="${k}">${n}</button>`).join('');
+  $('#modeRow').querySelectorAll('.mode').forEach(b=>b.onclick=()=>{bornMode=b.dataset.m;LS.set('lifeRPG3.mode',bornMode);renderTitle()});
+  const sv=LS.get('lifeRPG3.save');$('#btnCont').hidden=!(sv&&sv.cid&&C[sv.cid]&&sv.phase!=='end');
+  show('title');
+}
+function tryLandscape(){
+  const el=document.documentElement;
+  try{const p=el.requestFullscreen&&el.requestFullscreen();if(p&&p.then)p.then(()=>{try{screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}).catch(()=>{})}catch(e){}
+}
+$('#btnStart').onclick=()=>{tryLandscape();S=fresh($('#nameIn').value.trim());startBirth()};
+$('#btnCont').onclick=()=>{tryLandscape();S=LS.get('lifeRPG3.save');enterGame(false)};
+$('#skipRotate').onclick=()=>document.body.classList.add('portrait-ok');
+$('#btnHome').onclick=()=>{save();renderTitle()};
+$('#btnFull').onclick=tryLandscape;
+
+/* 탄생: 실제 출생 비율대로 뽑기 */
+function pickCountry(){
+  const pool=CIDS.filter(k=>bornMode==='ALL'||C[k].cont===bornMode);
+  let sum=0;pool.forEach(k=>sum+=1/C[k].odds);let r=Math.random()*sum;
+  for(const k of pool){r-=1/C[k].odds;if(r<=0)return k}return pool[pool.length-1];
+}
+function startBirth(){
+  show('birth');
+  const slot=$('#slot'),info=$('#birthInfo');
+  info.innerHTML=`<div class="kick">두구두구… 어디에서 태어날까?</div><p class="note">${bornMode==='ALL'?'전 세계':CONT[bornMode].n} 아기들의 실제 출생 비율대로 뽑아요. 태어날 곳은 아무도 고를 수 없어요.</p>`;
+  slot.classList.add('spin');
+  const cid=pickCountry(),fam=Math.floor(Math.random()*FAM.length);
+  let delay=60;
+  const tick=()=>{slot.textContent=C[rnd(CIDS)].flag;delay*=1.12;
+    if(delay<420)setTimeout(tick,delay);else{slot.classList.remove('spin');slot.textContent=C[cid].flag;reveal(cid,fam)}};
+  tick();
+}
+function reveal(cid,fam){
+  const c=C[cid],f=FAM[fam],K=CLIM[c.clim];S.cid=cid;S.fam=fam;S.life=Math.round(c.le);
+  const bonus={...c.bonus};for(const k in f.b)bonus[k]=(bonus[k]||0)+f.b[k];
+  const coin=Math.max(3,Math.round(f.m*coinRate(cid)));
+  const wl=wealthLv(c.inc);
+  $('#birthInfo').innerHTML=`
+    <div class="kick">🎉 응애! ${S.name}, 태어났어요!</div>
+    <h2>${c.flag} ${c.name}</h2>
+    <div class="facts">
+      <div class="fact"><b>${CONT[c.cont].e} 대륙</b>${CONT[c.cont].n}</div>
+      <div class="fact"><b>🌡️ 기후 지역</b>${K.n}</div>
+      <div class="fact"><b>⛅ 기후 특징</b>${c.climate}</div>
+      <div class="fact"><b>🏠 우리 집</b>${f.n}</div>
+    </div>
+    <div class="nums">
+      <div class="num"><b>🎲 이 나라에서 태어날 확률</b><span>${c.odds.toLocaleString()}명 중 1명</span></div>
+      <div class="num"><b>⏳ 평균 수명</b><span>${c.le}세</span></div>
+      <div class="num"><b>🍼 5살까지 자랄 확률</b><span>${(100-c.u5).toFixed(1)}%</span></div>
+      <div class="num"><b>💰 1인당 소득 수준</b><span>${'💰'.repeat(wl)}<small>${'·'.repeat(4-wl)}</small></span></div>
+    </div>
+    <p class="note">같은 일을 해도 버는 코인이 나라마다 달라요 (이 나라 ×${coinRate(cid).toFixed(1)}). 모든 수치는 실제 통계예요.</p>
+    <div class="chips dark">타고난 능력 ${chips(bonus)}<span class="chip up">+${coin} 🪙</span></div>
+    <div><button class="btn" id="btnLife">이 삶을 시작하기 ▶</button></div>`;
+  $('#btnLife').onclick=()=>{for(const k in bonus)S.st[k]+=bonus[k];S.st.m+=coin;enterGame(true)};
+}
+
+/* 1차 직업 선택 */
+function jobPick(){
+  const order=['s','i','c','d'].sort((a,b)=>S.st[b]-S.st[a]);
+  const sp=C[S.cid].sp;
+  const opts=[{line:order[0],p:JOBS[order[0]][0]},{line:order[0],p:JOBS[order[0]][1]},{line:order[1],p:JOBS[order[1]][0]}];
+  if(sp)opts.push({line:sp.line,p:sp.p,sp:true});else opts.push({line:order[1],p:JOBS[order[1]][1]});
+  const m=$('#modal');
+  m.innerHTML=`<div class="qhead"><span class="big">🎓</span><div><h3>첫 직업을 골라요! (1차 전직)</h3><p class="qtext">지금까지 키운 능력에 맞는 직업들이 나타났어요. 가장 높은 능력: ${SM[order[0]].e} ${SM[order[0]].n}</p></div></div>
+   <div class="jobs">${opts.map((o,i)=>`<button class="jobc" data-i="${i}">${o.sp?`<span class="sp">${C[S.cid].flag} 이 나라 특별 직업</span>`:''}<span class="je">${o.p[1]}</span><b>${o.p[0]}</b><span class="chip">${SM[o.line].e} ${SM[o.line].n} 계열</span><span class="path">→ ${o.p[2]} ${o.p[3]}<br>→ ${o.p[4]} ${o.p[5]}</span></button>`).join('')}</div>`;
+  $('#ov').hidden=false;
+  m.querySelectorAll('.jobc').forEach(b=>b.onclick=()=>{const o=opts[+b.dataset.i];S.job={line:o.line,p:o.p,tier:1};applyE({[o.line]:3,j:3});$('#ov').hidden=true;nextStage();banner(`${o.p[1]} ${o.p[0]}(이)가 되었어요!`,'청년 시절 시작');say(`오늘부터 나는 ${o.p[0]}!`)});
+}
+
+/* 2·3차 전직 시험 (타이밍) */
+let testRAF=0;
+function testIntro(){
+  const tier=S.job.tier+1,nm=S.job.p[(tier-1)*2],em=S.job.p[(tier-1)*2+1],line=S.job.line,stat=S.st[line];
+  const zone=Math.min(46,16+stat*0.7);
+  let tries=3,hits=0,zs=0,pos=0,dir=1,last=0,locked=false;const res=[];
+  const speed=55+tier*12;
+  const m=$('#modal');
+  m.innerHTML=`<div class="qhead"><span class="big">${em}</span><div><span class="chip" style="background:var(--t-job);color:#fff">${tier}차 전직 시험</span><h3>${jobName()} → ${nm}</h3><p class="qtext">막대가 <b style="color:#2f9e44">초록 칸</b>에 올 때 "멈춰!"를 눌러요. 3번 중 2번 성공하면 전직! (${SM[line].e} ${SM[line].n}이 높을수록 초록 칸이 넓어요)</p></div></div>
+   <div class="test-bar" id="tbar"><div class="test-zone" id="tzone"></div><div class="test-mark" id="tmark"></div></div>
+   <div class="tries" id="ttries"></div><p class="test-msg" id="tmsg">준비… 시작!</p>
+   <div class="mrow"><button class="btn" id="tStop">✋ 멈춰!</button></div>`;
+  $('#ov').hidden=false;
+  const placeZone=()=>{zs=8+Math.random()*(84-zone);const z=$('#tzone');z.style.left=zs+'%';z.style.width=zone+'%'};
+  const drawT=()=>{$('#ttries').innerHTML=Array.from({length:3},(_,i)=>res[i]===undefined?'⚪':res[i]?'⭐':'💨').join('')};
+  placeZone();drawT();
+  const loop=t=>{if(!last)last=t;const dt=(t-last)/1000;last=t;
+    if(!locked){pos+=dir*speed*dt;if(pos>=100){pos=100;dir=-1}if(pos<=0){pos=0;dir=1}const mk=$('#tmark');if(mk)mk.style.left=pos+'%'}
+    testRAF=requestAnimationFrame(loop)};
+  cancelAnimationFrame(testRAF);testRAF=requestAnimationFrame(loop);
+  const press=()=>{if(locked||tries<=0)return;locked=true;tries--;
+    const ok=pos>=zs&&pos<=zs+zone;res.push(ok);if(ok)hits++;drawT();
+    $('#tmsg').textContent=ok?'⭐ 성공!':'💨 아깝다!';
+    setTimeout(()=>{
+      if(hits>=2){cancelAnimationFrame(testRAF);passTest(tier,nm,em);return}
+      if(tries===0||tries+hits<2){cancelAnimationFrame(testRAF);failTest();return}
+      placeZone();locked=false;$('#tmsg').textContent='한 번 더!'},700)};
+  $('#tStop').onclick=press;$('#tbar').onclick=press;$('#tStop').focus();
+}
+function failTest(){
+  $('#modal').innerHTML=`<div class="qhead"><span class="big">😵</span><div><h3>아쉽게 실패!</h3><p class="qtext">괜찮아요. 누구나 실패할 수 있어요. 다시 도전해 볼까요?</p></div></div>
+   <div class="mrow"><button class="btn" id="tRetry">🔁 다시 도전</button></div>`;
+  $('#tRetry').onclick=testIntro;
+}
+function passTest(tier,nm,em){
+  S.job.tier=tier;const pe=adj({[S.job.line]:4,j:5,m:15});applyE(pe);
+  $('#modal').innerHTML=`<div class="qhead"><span class="big">${em}</span><div><span class="chip" style="background:var(--gold)">✨ 전직 성공</span><h3>${nm}(이)가 되었어요!</h3><span class="chips">${chips(pe)}</span></div></div>
+   <div class="mrow"><button class="btn" id="tGo">다음 인생으로 ▶</button></div>`;
+  $('#tGo').onclick=()=>{$('#ov').hidden=true;nextStage();say(`드디어 ${nm}!`)};
+}
+
+/* 엔딩 */
+const TITLES={s:'튼튼한 모험가',i:'지혜로운 탐구자',c:'모두의 친구',d:'금손 장인'};
+function ending(){
+  S.phase='end';S.age=S.life;
+  const c=C[S.cid],K=CLIM[c.clim],ct=CONT[c.cont],top=['s','i','c','d'].sort((a,b)=>S.st[b]-S.st[a])[0];
+  const j=S.st.j,happy=j>=80?'아주 행복한 삶 🌈':j>=55?'행복한 삶 😊':'조금 고단했지만 의미 있던 삶 🌱';
+  const dex=LS.get('lifeRPG3.dex')||{};dex[S.cid]=jobName();LS.set('lifeRPG3.dex',dex);LS.del('lifeRPG3.save');
+  const p=S.job.p;
+  $('#ending').innerHTML=`
+   <div class="lifecard">
+     <div class="face">🧓<span style="font-size:.5em">${jobEmoji()}</span></div>
+     <span class="ttl">${TITLES[top]}</span>
+     <h2>${S.name}의 인생</h2>
+     <p>${c.flag} <b>${c.name}</b>의 ${FAM[S.fam].n}에서 태어나<br>${S.life}살까지 살며 (이 나라 평균 수명 ${c.le}세)<br>미션 ${S.album.length}개를 깨고 <b>${jobName()}</b>(이)가 되었어요.</p>
+     <div class="jpath"><span>${p[1]} ${p[0]}</span>→<span>${p[3]} ${p[2]}</span>→<span>${p[5]} ${p[4]}</span></div>
+     <p style="font-family:var(--display);color:var(--accent-deep)">${happy}</p>
+     <div class="album">${S.album.join('')}</div>
+   </div>
+   <div class="endside">
+     <div class="unit">📘 사회① 연결 <b>${ct.e} ${ct.n} 단원</b> · <b>🌡️ ${K.n}</b></div>
+     <div class="stats">${statRows()}</div>
+     <div class="think"><h3>🤔 탐구해 보기</h3><ol>
+       <li>${c.name}은(는) <b>${ct.n}</b>의 <b>${K.n}</b> 지역이에요. 이 기후가 사람들의 옷·음식·집·하는 일에 어떤 영향을 주었나요?</li>
+       <li>${c.name}의 문화 중 우리와 다른 점은 무엇이었나요? 그 문화를 어떤 태도로 바라봐야 할까요?</li>
+       <li>평균 수명(${c.le}세)과 소득 수준이 나라마다 다른 까닭은 무엇일까요? 차이를 줄이려면 어떤 국제 협력이 필요할까요?</li>
+       <li>우리 반 친구들은 어느 대륙에서 가장 많이 태어났나요? 왜 그런 결과가 나왔을까요?</li></ol></div>
+     <div class="start-row"><button class="btn" id="eAgain">🎲 다시 태어나기</button><button class="btn ghost" id="eHome">🏠 처음 화면</button></div>
+   </div>`;
+  show('ending');
+  $('#eAgain').onclick=()=>{S=fresh(S.name);startBirth()};
+  $('#eHome').onclick=renderTitle;
+}
+
+function toast(t){const d=document.createElement('div');d.className='toast';d.textContent=t;document.body.appendChild(d);setTimeout(()=>d.remove(),2700)}
+const reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
+/* ───────── 퀘스트 모달 ───────── */
+const GN={run:'🏃 달리기 미션',collect:'🔍 찾기 미션',deliver:'🎁 전달 미션',catch:'🧺 받기 미션',soccer:'⚽ 드리블 & 슛',rhythm:'🎵 리듬 미션',stack:'🧱 쌓기 미션',sort:'🗂️ 분류 미션',aim:'🎯 조준 미션'};
+const GSTAT={run:'s',collect:'i',deliver:'c',catch:'d',soccer:'s',lane:'s',rhythm:'c',stack:'d',sort:'i',aim:'d'};
+function specOf(c){if(c.g)return c.g;let b=null,v=0;for(const k of['s','i','c','d'])if((c.e[k]||0)>v){v=c.e[k];b=k}return{t:({s:'run',i:'collect',c:'deliver',d:'catch'})[b]||'catch'}}
+function gName(g){if(g.t==='lane')return({ski:g.skin==='⛸️'?'⛸️ 스케이트 미션':g.skin==='🦌'?'🛷 썰매 미션':'⛷️ 활강 미션',road:'🚸 안전하게 건너기',sky:'🎈 하늘 비행 미션',boat:g.skin==='🤿'?'🤿 바닷속 탐험':g.skin==='🏄'?'🏄 서핑 미션':'🚣 노 젓기 미션'})[g.v];
+  if(g.t==='soccer')return g.v==='ice'?'🏒 하키 드리블 & 슛':g.v==='rugby'?'🏉 럭비 돌파':GN.soccer;return GN[g.t]}
+function openQuest(id,np){
+  const q=allQ[id];
+  const m=$('#modal');
+  m.innerHTML=`<div class="qhead"><span class="big">${np?np.e:q.ic}</span><div><span class="chip" style="background:var(--t-${q.t});color:#fff">${q.ic} ${TYPES[q.t]} 퀘스트</span><h3>${fill(q.ti)}</h3></div></div>
+    <p class="qtext">${fill(q.tx)}</p>
+    <div class="choices">${q.ch.map((c,i)=>`<button class="choice" data-k="${i}"><span class="mtag">${gName(specOf(c))}</span><b>${fill(c.l)}</b><span class="chips">${chips(adj(c.e))}</span></button>`).join('')}</div>
+    <div class="mrow"><button class="btn ghost small" id="qBack">나중에 할게요</button></div>`;
+  $('#ov').hidden=false;
+  m.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{$('#ov').hidden=true;if(np){np.k=+b.dataset.k;save();say('고마워! 옆에 열린 🌀 포털로 들어가 봐!')}else startMission(q,+b.dataset.k)});
+  $('#qBack').onclick=()=>{$('#ov').hidden=true;say('준비되면 다시 말 걸어 줘!')};
+}
+function half(e){const o={};for(const k in e){const v=e[k]>0?Math.floor(e[k]/2):e[k];if(v)o[k]=v}return o}
+function showResult(q,k,ok,perfect){
+  const c=q.ch[k];let e=adj(c.e);if(!ok)e=half(e);else if(perfect)e={...e,j:(e.j||0)+2};
+  const m=$('#modal');
+  m.innerHTML=`<div class="qhead"><span class="big">${ok?(perfect?'🌟':'🎉'):'😅'}</span><div><h3>${ok?(perfect?'퍼펙트 클리어!':'미션 성공!'):'아쉽게 실패…'}</h3><span class="chips">${chips(e)}${ok?'':'<span class="chip">보상 절반</span>'}</span></div></div>
+    <p class="res">${ok?fill(c.r):'다시 도전하면 보상을 모두 받을 수 있어요!'}</p>
+    <p class="tip"><b>💡 알고 있었나요?</b> ${fill(q.tip)}</p>
+    <div class="mrow">${ok?'<button class="btn" id="qNext">계속하기 ▶</button>':'<button class="btn" id="qRetry">🔁 다시 도전</button><button class="btn ghost" id="qNext">보상 절반 받고 계속</button>'}</div>`;
+  $('#ov').hidden=false;
+  if($('#qRetry'))$('#qRetry').onclick=()=>{$('#ov').hidden=true;startMission(q,k)};
+  $('#qNext').onclick=()=>{
+    applyE(e);if(q.id!=='free'&&q.t!=='job')S.done.push(q.id);S.album.push(q.ic);
+    say(ok?fill(c.r):'다음엔 꼭 성공할 거야!');$('#ov').hidden=true;questDone(q)};
+}
+
+/* ───────── 액션 미션 엔진 ───────── */
+const mgc=$('#mgCanvas'),mx=mgc.getContext('2d');
+const LH=360;let LW=640,MSC=1,GY=LH-92;
+const keys={l:false,r:false,u:false,d:false};let jumpQ=false,tapQ=[];
+let M=null,mgRAF=0,AC=null;
+const HAZ={rain:'⚡',sand:'🌪️',snow:'🧊',sun:'🔥'};
+const PEOPLE=['🧑','👵','👴','👩','🧔','👧','👦','🧑‍🦱','👩‍🦳'];
+function mgSize(){const r=mgc.getBoundingClientRect();const d=Math.min(2,devicePixelRatio||1);MSC=r.height/LH;LW=r.width/MSC;mgc.width=Math.round(r.width*d);mgc.height=Math.round(r.height*d);mx.setTransform(d*MSC,0,0,d*MSC,0,0)}
+function beep(f,dur,type,vol){if(!AC)return;try{const o=AC.createOscillator(),g=AC.createGain();o.type=type||'sine';o.frequency.value=f;g.gain.setValueAtTime(vol||.15,AC.currentTime);g.gain.exponentialRampToValueAtTime(.001,AC.currentTime+dur);o.connect(g);g.connect(AC.destination);o.start();o.stop(AC.currentTime+dur)}catch(e){}}
+function setPads(L,R,J){const s=(id,t)=>{const b=$(id);b.style.visibility=t?'visible':'hidden';if(t)b.textContent=t};s('#bL',L);s('#bR',R);s('#bJ',J)}
+function isLane(){return M&&(M.g.t==='lane'||M.g.t==='soccer')}
+
+function startMission(q,k){
+  const c=q.ch[k],g=specOf(c),cc=C[S.cid],K=CLIM[cc.clim],t=g.t;
+  const haz=g.haz||(q.w&&HAZ[q.w]&&['wea','clim','cont'].includes(q.t)&&['run','collect','catch','deliver'].includes(t)?HAZ[q.w]:null);
+  const stat=S.st[GSTAT[t]];
+  const item=g.item||q.ic;
+  const need={collect:6,catch:10,deliver:4,run:0,soccer:1,lane:0,rhythm:0,stack:7,sort:10,aim:5}[t];
+  const ctrl=isLaneT(t)?'▲ ▼ 위아래 이동 · 오른쪽 버튼 = '+(t==='soccer'?'⚡개인기 / 골대 앞에서 슛':'💨 가속')+' (키보드: ↑↓, 스페이스)'
+    :t==='rhythm'?'화면의 동그라미를 직접 눌러도 되고, ◀ ● ▶ 버튼도 돼요 (키보드: ←, 스페이스, →)'
+    :t==='stack'?'⬇ 버튼으로 블록을 떨어뜨려요 (키보드: 스페이스)'
+    :t==='sort'?`왼쪽 버튼 ${g.L.e} ${g.L.n} · 오른쪽 버튼 ${g.R.e} ${g.R.n} (통을 직접 눌러도 돼요 · 키보드: ← →)`
+    :t==='aim'?'◀ ▶ 이동 · 오른쪽 버튼으로 발사 (키보드: ← → 스페이스)':'◀ ▶ 이동 · ⤴ 점프 (키보드: 방향키·스페이스)';
+  const text={
+    collect:`${item} ${need}개를 모두 찾아 모아요! 발판 위로 점프!`,
+    catch:`하늘에서 떨어지는 ${item}을(를) ${need}개 받아요! 🪨는 피하기`,
+    deliver:`📦에서 ${item}을(를) 들고 💭 표시한 사람 ${need}명에게 전해 줘요!`,
+    run:`장애물을 점프로 넘으며 끝까지 달려요!`,
+    soccer:g.v==='rugby'?'태클하는 수비수를 피해 달리고, 끝까지 가서 트라이 존에 공을 찍어요!':`수비수를 피해 드리블하고, 골키퍼를 피해 슛! 기회는 2번`,
+    lane:g.v==='ski'?(g.skin==='⛷️'?'깃발 🚩 사이를 통과하며 나무를 피해 내려가요!':'장애물을 피해 끝까지 미끄러져 가요!'):g.v==='road'?'달려오는 오토바이와 차를 피해 길을 건너요!':g.v==='sky'?'새와 번개를 피해 하늘을 날아요!':'바위와 장애물을 피해 끝까지! ⭐을 모으면 보너스',
+    rhythm:'내려오는 음표가 선에 닿을 때 같은 칸 버튼을 눌러요! 60% 이상 맞히면 성공',
+    stack:`움직이는 ${item} 블록을 딱 맞춰 떨어뜨려 ${need}층까지 쌓아요!`,
+    sort:`내려오는 물건을 알맞은 쪽으로 분류해요! ${need}개 성공하면 클리어`,
+    aim:`${g.target||'🎯'}이(가) 머리 위에 올 때 발사! ${need}번 맞히기`}[t];
+  M={q,k,g,t,item,haz,need,got:0,bonus:0,hearts:3+(stat>=25?1:0),maxH:3+(stat>=25?1:0),t0:0,time:0,
+     tLimit:{collect:30,catch:25,deliver:35,run:20,soccer:45,lane:18,rhythm:99,stack:45,sort:40,aim:25}[t],
+     obs:K.obs,over:false,started:false,inv:0,carry:false,items:[],hz:[],plats:[],npcs:[],pops:[],sp:{a:0,b:0,h:1,o:1,c:2},scroll:0,
+     sky:cc.sky,gr:g.snow?'#eef4fa':cc.gr,land:cc.land,w:q.w||cc.w,P:{x:70,y:0,vy:0,ground:true}};
+  if(t==='soccer'||t==='lane'||t==='stack'||t==='rhythm'||t==='sort'||t==='aim')M.w='none';
+  $('#mg').hidden=false;$('#mgIntro').hidden=false;
+  $('#mgIntro').innerHTML=`<div class="mg-card"><span class="mtag">${gName(g)}</span><h3>${fill(c.l)}</h3><p>${text}${haz?`<br><b>${haz} 날씨 방해물</b>도 피해야 해요!`:''}</p>
+    <p class="hint">${ctrl}</p><div class="mrow" style="justify-content:center"><button class="btn" id="mgGo">▶ 시작!</button></div></div>`;
+  $('#mgGo').onclick=()=>{try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume&&AC.resume()}catch(e){}$('#mgIntro').hidden=true;mgInit()};
+  $('#mgGo').focus();
+  if(isLaneT(t))setPads('▲','▼',t==='soccer'?'⚡':'💨');
+  else if(t==='rhythm')setPads(null,null,null);
+  else if(t==='stack')setPads(null,null,'⬇');
+  else if(t==='sort')setPads(g.L.e,null,g.R.e);
+  else if(t==='aim')setPads('◀','▶',g.shot||'🏹');
+  else setPads('◀','▶','⤴');
+  mgSize();M.P.y=GY;mgDraw(0);
+}
+function isLaneT(t){return t==='lane'||t==='soccer'}
+function mgInit(){
+  mgSize();GY=LH-92;const W=LW,t=M.t;
+  M.P={x:60,y:GY,vy:0,ground:true};M.started=true;M.time=0;tapQ=[];jumpQ=false;
+  if(t==='collect'){
+    M.plats=[{x:W*.12,y:GY-88,w:120},{x:W*.42,y:GY-172,w:110},{x:W*.68,y:GY-88,w:120}];const p=M.plats;
+    M.items=[[W*.3,GY],[W*.58,GY],[W-36,GY],[p[0].x+60,p[0].y],[p[1].x+55,p[1].y],[p[2].x+60,p[2].y]].map(([x,y])=>({x,y,e:M.item}));
+  }else if(t==='deliver'){
+    M.plats=[{x:W*.24,y:GY-88,w:120},{x:W*.62,y:GY-88,w:130}];const p=M.plats;M.src={x:30,y:GY};
+    M.npcs=[[p[0].x+60,p[0].y],[W*.47,GY],[p[1].x+65,p[1].y],[W-34,GY]].map(([x,y])=>({x,y,e:rnd(PEOPLE),done:false}));
+  }else if(isLaneT(t)){
+    M.top=60;M.bot=LH-96;M.P={x:W*.22,y:(60+LH-96)/2};M.dash=0;M.cd=0;M.dist=0;M.goalDist=1500;M.phase='drib';M.shots=2;M.ball=null;M.kp={y:LH/2,t:0};
+  }else if(t==='rhythm'){
+    M.lanesX=[W*.36,W*.5,W*.64];M.hitY=LH-80;const beat=60/104;M.notes=[];let tt=1.4;
+    for(let i=0;i<32;i++){if(Math.random()<.85)M.notes.push({t:tt,lane:Math.floor(Math.random()*3),hit:false,miss:false});tt+=beat*(Math.random()<.2?.5:1)}
+    M.need=Math.ceil(M.notes.length*.6);M.end=tt+1.2;M.combo=0;M.fb='';M.fbT=0;M.nextBeat=0;M.beat=beat;M.travel=1.7;
+  }else if(t==='stack'){
+    M.bh=24;M.stack=[{x:W/2-80,w:160}];M.cur={x:20,w:160,dir:1};M.cam=0;M.debris=[];
+  }else if(t==='sort'){M.queue=[];M.sp.a=.3}
+  else if(t==='aim'){M.tg={x:W*.5,y:110,vx:120};M.shotsF=[];M.cd=0;M.P={x:W/2,y:GY,vy:0,ground:true}}
+  cancelAnimationFrame(mgRAF);let last=0;
+  const loop=ts=>{if(!last)last=ts;const dt=Math.min(.033,(ts-last)/1000);last=ts;mgUpdate(dt);mgDraw(ts);if(M&&!M.done)mgRAF=requestAnimationFrame(loop)};
+  mgRAF=requestAnimationFrame(loop);
+}
+const dist=(ax,ay,bx,by)=>Math.hypot(ax-bx,ay-by);
+function hurt(msg){if(M.inv>0)return false;M.hearts--;M.inv=1.2;pop(M.P.x,M.P.y-50,msg||'💥');beep(140,.2,'square',.12);if(navigator.vibrate)try{navigator.vibrate(80)}catch(e){}return true}
+function pop(x,y,t){M.pops.push({x,y,t,life:.9})}
+function platformMove(dt,maxX){
+  const P=M.P,dir=(keys.r?1:0)-(keys.l?1:0);P.x+=dir*240*dt;P.x=Math.max(24,Math.min(maxX,P.x));
+  if(jumpQ&&P.ground){P.vy=-570;P.ground=false;beep(520,.08,'triangle',.06)}jumpQ=false;
+  P.vy+=1500*dt;let ny=P.y+P.vy*dt;P.ground=false;
+  if(P.vy>=0){for(const pl of M.plats){if(P.x>pl.x-8&&P.x<pl.x+pl.w+8&&P.y<=pl.y+1&&ny>=pl.y){ny=pl.y;P.vy=0;P.ground=true}}if(ny>=GY){ny=GY;P.vy=0;P.ground=true}}
+  P.y=ny;
+}
+function mgUpdate(dt){
+  if(!M||M.over)return;
+  const P=M.P,W=LW,t=M.t;M.time+=dt;M.inv=Math.max(0,M.inv-dt);
+  const taps=tapQ;tapQ=[];
+  if(['run','collect','catch','deliver'].includes(t))platformMove(dt,t==='run'?W*.6:W-24);
+  const px=P.x,py=P.y-20;
+  if(M.haz&&['run','collect','catch','deliver'].includes(t)){M.sp.h-=dt;if(M.sp.h<=0){M.sp.h=1.1;M.hz.push({x:Math.max(20,Math.min(W-20,P.x+(Math.random()-.5)*320)),y:-20,vy:170+Math.random()*80})}
+    for(const h of M.hz){h.y+=h.vy*dt;if(!h.hit&&dist(px,py,h.x,h.y-14)<28){h.hit=true;hurt()}}M.hz=M.hz.filter(h=>!h.hit&&h.y<GY+20)}
+  if(t==='collect'){for(const it of M.items)if(!it.got&&dist(px,py,it.x,it.y-18)<30){it.got=true;M.got++;pop(it.x,it.y-40,'+1');beep(880,.1)}}
+  else if(t==='catch'){M.sp.a-=dt;M.sp.b-=dt;
+    if(M.sp.a<=0){M.sp.a=.6;M.items.push({x:30+Math.random()*(W-60),y:-20,vy:120+Math.random()*80+S.stage*6,e:M.item,good:true})}
+    if(M.sp.b<=0){M.sp.b=1.5;M.items.push({x:30+Math.random()*(W-60),y:-20,vy:150+Math.random()*80,e:'🪨',good:false})}
+    for(const it of M.items){it.y+=it.vy*dt;if(!it.hit&&dist(px,py,it.x,it.y-16)<30){it.hit=true;if(it.good){M.got++;pop(it.x,it.y-30,'+1');beep(880,.08)}else hurt()}}
+    M.items=M.items.filter(it=>!it.hit&&it.y<GY+30)}
+  else if(t==='deliver'){
+    if(!M.carry&&dist(px,py,M.src.x,M.src.y-18)<38){M.carry=true;pop(M.src.x,M.src.y-50,'들었다!');beep(600,.08)}
+    if(M.carry)for(const n of M.npcs)if(!n.done&&dist(px,py,n.x,n.y-18)<36){n.done=true;M.carry=false;M.got++;pop(n.x,n.y-60,'💖');beep(990,.15)}}
+  else if(t==='run'){const sp=230+S.stage*14;M.scroll+=sp*dt;M.sp.o-=dt;M.sp.c-=dt;
+    if(M.sp.o<=0){M.sp.o=.85+Math.random()*.8;M.items.push({x:W+30,y:GY,e:rnd(M.g.snow?['⛄','🪵']:M.obs),ob:true})}
+    if(M.sp.c<=0){M.sp.c=1.6+Math.random();M.items.push({x:W+30,y:GY-95,e:'⭐',ob:false})}
+    for(const it of M.items){it.x-=sp*dt;if(it.ob){if(!it.hit&&Math.abs(px-it.x)<24&&P.y>GY-30){it.hit=true;hurt()}}else if(!it.hit&&dist(px,py,it.x,it.y-16)<30){it.hit=true;M.bonus++;pop(it.x,it.y-30,'+★');beep(990,.08)}}
+    M.items=M.items.filter(it=>it.x>-40&&!(it.hit&&!it.ob))}
+  else if(isLaneT(t))updLane(dt,taps);
+  else if(t==='rhythm')updRhythm(dt,taps);
+  else if(t==='stack')updStack(dt,taps);
+  else if(t==='sort')updSort(dt,taps);
+  else if(t==='aim')updAim(dt,taps);
+  for(const p of M.pops)p.life-=dt;M.pops=M.pops.filter(p=>p.life>0);
+  if(M.over)return;
+  if(M.hearts<=0)return mgEnd(false);
+  if(['collect','catch','deliver','stack','sort','aim'].includes(t)&&M.got>=M.need)return mgEnd(true);
+  if(t==='rhythm'&&M.time>=M.end)return mgEnd(M.got>=M.need);
+  if(M.time>=M.tLimit)return mgEnd(t==='run'||t==='lane');
+}
+/* ── 축구·보트·스키 등 (위에서 본 화면, 오른쪽으로 전진) ── */
+function updLane(dt,taps){
+  const P=M.P,W=LW,g=M.g,soccer=M.t==='soccer';
+  const vy=((keys.d||keys.r)?1:0)-((keys.u||keys.l)?1:0);P.y=Math.max(M.top+16,Math.min(M.bot-6,P.y+vy*240*dt));
+  M.cd=Math.max(0,M.cd-dt);M.dash=Math.max(0,M.dash-dt);
+  const act=taps.includes('j');
+  if(M.phase==='drib'){
+    if(act&&M.cd<=0){M.dash=.55;M.cd=1.4;pop(P.x,P.y-30,soccer?'개인기!':'💨');beep(700,.1,'triangle')}
+    const sp=(soccer?200:220+S.stage*10)*(M.dash>0?1.7:1);M.scroll+=sp*dt;M.dist+=sp*dt;
+    M.sp.o-=dt;M.sp.c-=dt;
+    if(M.sp.o<=0){
+      M.sp.o=soccer?.95+Math.random()*.5:.7+Math.random()*.6;
+      const y=M.top+20+Math.random()*(M.bot-M.top-30);
+      if(g.v==='ski'&&g.skin==='⛷️'&&Math.random()<.5){M.items.push({x:W+30,y,gate:true,gap:96})}
+      else M.items.push({x:W+30,y,e:soccer?(g.v==='ice'?'⛸️':'🏃'):rnd({boat:['🪨','🪵','🐊'],ski:['🌲','🪨'],road:['🛵','🚗','🛵'],sky:['🦅','⚡']}[g.v]),ob:true,track:soccer});
+    }
+    if(M.sp.c<=0){M.sp.c=1.3+Math.random();M.items.push({x:W+30,y:M.top+20+Math.random()*(M.bot-M.top-30),e:'⭐',ob:false})}
+    for(const it of M.items){it.x-=sp*dt+(it.track?40*dt:0);
+      if(it.track&&it.x>P.x)it.y+=Math.sign(P.y-it.y)*Math.min(Math.abs(P.y-it.y),70*dt);
+      if(it.gate){if(!it.done&&it.x<P.x){it.done=true;if(Math.abs(P.y-it.y)<it.gap/2){M.got++;pop(P.x,P.y-30,'통과!');beep(880,.1)}else hurt('깃발 놓침!')}}
+      else if(it.ob){if(!it.hit&&M.dash<=0&&dist(P.x,P.y,it.x,it.y)<30){it.hit=true;hurt(soccer?'공 뺏김!':'💥')}}
+      else if(!it.hit&&dist(P.x,P.y,it.x,it.y)<30){it.hit=true;M.bonus++;pop(it.x,it.y-20,'+★');beep(990,.08)}}
+    M.items=M.items.filter(it=>it.x>-50&&!(it.hit&&!it.ob));
+    if(soccer&&M.dist>=M.goalDist){M.phase='shoot';M.items=[];pop(W/2,LH/2,g.v==='rugby'?'트라이 존!':'골대 앞!');setPads('▲','▼',g.v==='rugby'?'🏉':'🥅')}
+  }else{ /* 슛 단계 */
+    const gx=W-46,gTop=LH/2-74,gBot=LH/2+74;M.kp.t+=dt;
+    if(g.v==='rugby'){ /* 트라이: 끝선까지 수비 1명을 피해 달려가 찍기 */
+      P.x=Math.min(gx,P.x+150*dt);M.kp.y=LH/2+Math.sin(M.kp.t*2.2)*80;
+      if(dist(P.x,P.y,W*.7,M.kp.y)<32&&hurt('태클!')){P.x=W*.22}
+      if(P.x>=gx-4){M.got=1;mgEnd(true)}return}
+    M.kp.y=LH/2+Math.sin(M.kp.t*(1.8+S.stage*.15))*58;
+    if(act&&!M.ball&&M.shots>0){M.ball={x:P.x+20,y:P.y};M.shots--;beep(300,.12,'square',.1)}
+    if(M.ball){M.ball.x+=560*dt;
+      if(M.ball.x>=gx-14){const b=M.ball;M.ball=null;
+        if(Math.abs(b.y-M.kp.y)<30){pop(gx-30,b.y-20,'막혔다!');beep(200,.2,'sawtooth',.1)}
+        else if(b.y>gTop&&b.y<gBot){M.got=1;pop(gx-40,b.y-20,'골~인!');beep(660,.15);beep(990,.3);return mgEnd(true)}
+        else pop(gx-40,b.y-20,'골대 밖!');
+        if(M.shots<=0)setTimeout(()=>{if(M&&!M.over)mgEnd(false)},500)}}
+  }
+}
+/* ── 리듬 ── */
+function updRhythm(dt,taps){
+  const tt=M.time;
+  if(tt>=M.nextBeat+1.4&&tt<M.end-1){beep(70,.12,'sine',.25);M.nextBeat+=M.beat}
+  const speed=(M.hitY-40)/M.travel;
+  for(const tp of taps){const lane={l:0,j:1,r:2}[tp];if(lane===undefined)continue;
+    let best=null,bd=99;for(const n of M.notes){if(n.hit||n.miss||n.lane!==lane)continue;const y=M.hitY-(n.t-tt)*speed;const d=Math.abs(y-M.hitY);if(d<bd){bd=d;best=n}}
+    if(best&&bd<36){best.hit=true;M.got++;M.combo++;M.fb=bd<14?'PERFECT!':'GOOD';M.fbT=.5;beep([523,659,784][lane]*(bd<14?2:1),.12,'triangle',.12)}
+  }
+  for(const n of M.notes){if(!n.hit&&!n.miss&&(M.hitY-(n.t-tt)*speed)>M.hitY+36){n.miss=true;M.combo=0;M.fb='MISS';M.fbT=.4}}
+  M.fbT=Math.max(0,M.fbT-dt);
+}
+/* ── 쌓기 ── */
+function updStack(dt,taps){
+  const W=LW,cur=M.cur,top=M.stack[M.stack.length-1];
+  cur.x+=cur.dir*(150+M.stack.length*16)*dt;if(cur.x<10){cur.x=10;cur.dir=1}if(cur.x+cur.w>W-10){cur.x=W-10-cur.w;cur.dir=-1}
+  if(taps.includes('j')){
+    const L=Math.max(cur.x,top.x),R=Math.min(cur.x+cur.w,top.x+top.w),ov=R-L;
+    if(ov<=6){hurt('빗나감!');M.debris.push({x:cur.x,w:cur.w,y:0,lvl:M.stack.length,vy:0})}
+    else if(Math.abs(cur.x-top.x)<7){M.stack.push({x:top.x,w:top.w});M.got++;pop(W/2,LH/2,'퍼펙트!');beep(1046,.15,'triangle')}
+    else{M.stack.push({x:L,w:ov});M.got++;beep(660,.1,'triangle');
+      const cutX=cur.x<top.x?cur.x:R,cutW=cur.w-ov;M.debris.push({x:cutX,w:cutW,y:0,lvl:M.stack.length-1,vy:0})}
+    const nt=M.stack[M.stack.length-1];M.cur={x:Math.random()<.5?10:W-10-nt.w,w:nt.w,dir:Math.random()<.5?1:-1};
+  }
+  for(const d of M.debris){d.vy+=900*dt;d.y+=d.vy*dt}M.debris=M.debris.filter(d=>d.y<LH);
+  M.cam+=((Math.max(0,M.stack.length-3)*M.bh)-M.cam)*Math.min(1,dt*5);
+}
+/* ── 분류 ── */
+function updSort(dt,taps){
+  const W=LW,g=M.g,lineY=LH-170;M.sp.a-=dt;
+  if(M.sp.a<=0){M.sp.a=Math.max(.9,1.6-M.got*.05);const side=Math.random()<.5?'L':'R';M.queue.push({e:rnd(g[side].items),side,x:W/2,y:56,fly:0})}
+  const front=M.queue.find(it=>!it.fly);
+  for(const tp of taps){if(!front)break;const s=tp==='l'?'L':(tp==='r'||tp==='j')?'R':null;if(!s)continue;
+    front.fly=s==='L'?-1:1;if(front.side===s){M.got++;pop(W/2,lineY-30,'딩동!');beep(880,.1)}else{front.wrong=true;hurt('땡!')}break}
+  for(const it of M.queue){if(it.fly){it.x+=it.fly*520*dt;it.y+=120*dt}else it.y+=(70+M.got*3)*dt;
+    if(!it.fly&&it.y>lineY+50){it.fly=it.side==='L'?-1:1;it.missed=true;pop(W/2,lineY,'놓쳤다');}}
+  M.queue=M.queue.filter(it=>it.x>-40&&it.x<W+40&&it.y<LH+40);
+}
+/* ── 조준 ── */
+function updAim(dt,taps){
+  const P=M.P,W=LW,tg=M.tg;const dir=(keys.r?1:0)-(keys.l?1:0);P.x=Math.max(30,Math.min(W-30,P.x+dir*260*dt));
+  tg.x+=tg.vx*dt;if(tg.x<40||tg.x>W-40){tg.vx*=-1;tg.x=Math.max(40,Math.min(W-40,tg.x))}
+  if(M.g.target==='🪅'||M.g.target==='🌠')tg.y=100+Math.sin(M.time*2.3)*30;
+  M.cd=Math.max(0,M.cd-dt);
+  if(taps.includes('j')&&M.cd<=0){M.cd=.45;M.shotsF.push({x:P.x,y:P.y-40});beep(400,.06,'square',.06)}
+  for(const s of M.shotsF){s.y-=560*dt;if(!s.hit&&dist(s.x,s.y,tg.x,tg.y-18)<30){s.hit=true;M.got++;pop(tg.x,tg.y-40,'명중!');beep(990,.15);
+    tg.vx=Math.sign(tg.vx||1)*(Math.abs(tg.vx)+35);tg.x=40+Math.random()*(W-80)}}
+  M.shotsF=M.shotsF.filter(s=>!s.hit&&s.y>-20);
+}
+function mgEnd(ok){
+  if(M.over)return;M.over=true;const perfect=ok&&M.hearts===M.maxH&&(!['run','lane'].includes(M.t)||M.bonus>=3);
+  $('#mgMsg').hidden=false;$('#mgMsg').textContent=ok?(perfect?'🌟 퍼펙트!':'🎉 미션 성공!'):(M.hearts<=0?'💔 하트가 다 떨어졌어요':'⏰ 아쉬워요!');
+  if(ok){beep(784,.15,'triangle');setTimeout(()=>beep(1046,.3,'triangle'),150)}
+  const q=M.q,k=M.k;
+  setTimeout(()=>{M.done=true;cancelAnimationFrame(mgRAF);$('#mg').hidden=true;$('#mgMsg').hidden=true;showResult(q,k,ok,perfect)},1300);
+}
+function emo(e,x,y,size,alpha=1,flip=false){mx.globalAlpha=alpha;mx.font=`${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;mx.textAlign='center';mx.textBaseline='bottom';
+  if(flip){mx.save();mx.translate(x,y);mx.scale(-1,1);mx.fillText(e,0,0);mx.restore()}else mx.fillText(e,x,y);mx.globalAlpha=1}
+function txt(s,x,y,size,col){mx.font=`${size}px Jua, sans-serif`;mx.textAlign='center';mx.textBaseline='middle';mx.lineWidth=4;mx.strokeStyle='rgba(0,0,0,.45)';mx.strokeText(s,x,y);mx.fillStyle=col||'#fff';mx.fillText(s,x,y)}
+function hero(){return M.g.skin||STAGES[S.stage].e}
+function mgDraw(ts){
+  if(!M)return;const W=LW,P=M.P,t=M.t,bob=Math.sin(ts/250)*3;
+  if(isLaneT(t))drawLane(ts,bob);
+  else if(t==='rhythm')drawRhythm(ts);
+  else if(t==='stack')drawStack(ts);
+  else if(t==='sort')drawSort(ts,bob);
+  else{
+    const g=mx.createLinearGradient(0,0,0,LH);g.addColorStop(0,M.sky[0]);g.addColorStop(1,M.sky[1]);mx.fillStyle=g;mx.fillRect(0,0,W,LH);
+    if(M.w==='rain'){mx.fillStyle='rgba(40,55,90,.25)';mx.fillRect(0,0,W,LH)}else if(M.w==='sand'){mx.fillStyle='rgba(215,165,90,.3)';mx.fillRect(0,0,W,LH)}else if(M.w==='aurora'){mx.fillStyle='rgba(8,18,45,.5)';mx.fillRect(0,0,W,LH)}
+    const off=t==='run'?(M.scroll*.2)%(W+200):0;
+    emo(M.land,W*.82-off,GY+6,120,.35);if(t==='run')emo(M.land,W*.82-off+W+200,GY+6,120,.35);
+    if(t!=='aim')mgWeather(ts);
+    mx.fillStyle=M.gr;mx.fillRect(0,GY,W,LH-GY);mx.fillStyle='rgba(0,0,0,.15)';mx.fillRect(0,GY,W,4);
+    if(t==='run'){mx.fillStyle='rgba(0,0,0,.08)';for(let x=-(M.scroll%60);x<W;x+=60)mx.fillRect(x,GY+18,30,6)}
+    for(const pl of M.plats){mx.fillStyle=M.gr;roundRect(pl.x,pl.y,pl.w,16,8);mx.fill();mx.fillStyle='rgba(0,0,0,.18)';roundRect(pl.x,pl.y+11,pl.w,5,3);mx.fill()}
+    if(t==='collect')for(const it of M.items)if(!it.got)emo(it.e,it.x,it.y-4+bob,30);
+    if(t==='catch'||t==='run')for(const it of M.items)emo(it.e,it.x,it.y,it.ob?34:30);
+    if(t==='deliver'&&M.src){emo('📦',M.src.x,M.src.y,34);emo(M.item,M.src.x,M.src.y-28+bob,20);
+      for(const n of M.npcs){emo(n.e,n.x,n.y,34);emo(n.done?'💖':'💭',n.x+16,n.y-34+bob,18);if(!n.done)emo(M.item,n.x+16,n.y-38+bob,11)}}
+    if(t==='aim'){const tg=M.tg;if(tg){emo(M.g.target||'🎯',tg.x,tg.y+bob,40);for(const s of M.shotsF)emo(M.g.shot||'🔸',s.x,s.y,22)}}
+    for(const h of M.hz)emo(M.haz,h.x,h.y,28);
+    if(!(M.inv>0&&Math.floor(ts/90)%2)){emo(hero(),P.x,P.y+2,40,1,!!M.g.skin&&['🚴','🏇','🐪','🦘','🏃'].includes(M.g.skin));if(S.job&&!M.g.skin)emo(jobEmoji(),P.x+16,P.y-26,16)}
+    if(M.carry)emo(M.item,P.x,P.y-40+bob*.5,24);
+  }
+  for(const p of M.pops){mx.globalAlpha=Math.min(1,p.life*2);txt(p.t,p.x,p.y-(.9-p.life)*30,18);mx.globalAlpha=1}
+  /* HUD */
+  const left=Math.max(0,M.tLimit-M.time);
+  $('#mgCount').textContent=
+    t==='run'||t==='lane'?`🏁 ${Math.round(Math.min(1,M.time/M.tLimit)*100)}%${M.g.v==='ski'&&M.g.skin==='⛷️'?' · 🚩'+M.got:''} · ★${M.bonus}`
+    :t==='soccer'?(M.phase==='drib'?`${M.g.v==='rugby'?'🏉':M.g.v==='ice'?'🏒':'⚽'} 골대까지 ${Math.max(0,Math.round((1-M.dist/M.goalDist)*100))}%`:M.g.v==='rugby'?'🏉 트라이 존으로!':`🥅 슛 기회 ${M.shots}번`)
+    :t==='rhythm'?`🎵 ${M.got}/${M.need||'?'} · 콤보 ${M.combo||0}`
+    :t==='stack'?`${M.item} ${M.got}/${M.need}층`:`${t==='aim'?'🎯':t==='sort'?'🗂️':M.item} ${M.got}/${M.need}`;
+  $('#mgHearts').textContent=t==='rhythm'?'':'❤️'.repeat(Math.max(0,M.hearts))+'🤍'.repeat(Math.max(0,M.maxH-M.hearts));
+  $('#mgTime').style.width=(t==='rhythm'?Math.max(0,1-M.time/(M.end||1))*100:left/M.tLimit*100)+'%';
+  $('#mgTitle').textContent=gName(M.g);
+}
+function drawLane(ts,bob){
+  const W=LW,g=M.g,P=M.P,soccer=M.t==='soccer';
+  const bg=soccer?(g.v==='ice'?['#e8f4fb','#cfe6f5']:['#3fa34d','#38954a']):({boat:['#3b8fd6','#2f7bc0'],ski:['#f4f8fc','#e3edf7'],road:['#5c6470','#525a66'],sky:['#8fd0ff','#cfeaff']})[g.v];
+  mx.fillStyle=bg[0];mx.fillRect(0,0,W,LH);
+  const sc=M.scroll||0;
+  if(soccer){mx.fillStyle=bg[1];for(let x=-(sc%120);x<W;x+=120)mx.fillRect(x,0,60,LH);
+    mx.strokeStyle=g.v==='ice'?'rgba(220,40,60,.5)':'rgba(255,255,255,.7)';mx.lineWidth=3;mx.strokeRect(6,M.top,W-12,M.bot-M.top);
+    if(M.phase==='shoot'){const gx=W-46;
+      if(g.v==='rugby'){mx.fillStyle='rgba(255,255,255,.35)';mx.fillRect(gx-6,M.top,52,M.bot-M.top);txt('TRY',gx+20,LH/2,22)}
+      else{mx.strokeStyle='#fff';mx.lineWidth=5;mx.strokeRect(gx,LH/2-74,40,148);mx.lineWidth=1;mx.strokeStyle='rgba(255,255,255,.5)';for(let y=LH/2-74;y<LH/2+74;y+=10){mx.beginPath();mx.moveTo(gx,y);mx.lineTo(gx+40,y);mx.stroke()}}
+      emo(g.v==='rugby'?'🏃':'🧤',g.v==='rugby'?W*.7:gx-8,(g.v==='rugby'?M.kp.y:M.kp.y)+20,38)}}
+  else if(g.v==='boat'){mx.strokeStyle='rgba(255,255,255,.35)';mx.lineWidth=2;for(let i=0;i<8;i++){const y=M.top+i*38;mx.beginPath();for(let x=0;x<=W;x+=20)mx.lineTo(x,y+Math.sin((x+sc)/40+i)*4);mx.stroke()}
+    mx.fillStyle='#8fbf5a';mx.fillRect(0,0,W,M.top-6);mx.fillRect(0,M.bot+4,W,LH-M.bot)}
+  else if(g.v==='ski'){mx.strokeStyle='rgba(120,150,190,.25)';mx.lineWidth=2;for(let i=0;i<6;i++){mx.beginPath();const y=M.top+i*50;mx.moveTo(0,y);mx.lineTo(W,y+20);mx.stroke()}}
+  else if(g.v==='road'){mx.fillStyle='#fff';for(let i=1;i<4;i++){const y=M.top+(M.bot-M.top)*i/4;for(let x=-(sc%80);x<W;x+=80)mx.fillRect(x,y,40,4)}}
+  else if(g.v==='sky'){mx.fillStyle='rgba(255,255,255,.8)';for(let i=0;i<4;i++){const x=((i*W/3)-sc*.5)%(W+120);const xx=x<-60?x+W+120:x;mx.beginPath();mx.arc(xx,80+i*60,22,0,7);mx.arc(xx+24,72+i*60,28,0,7);mx.arc(xx+50,80+i*60,20,0,7);mx.fill()}}
+  for(const it of M.items){if(it.gate){emo('🚩',it.x,it.y-it.gap/2+6,28);emo('🚩',it.x,it.y+it.gap/2+14,28)}else emo(it.e,it.x,it.y+16,34)}
+  if(!(M.inv>0&&Math.floor(ts/90)%2)){
+    const he=soccer?STAGES[S.stage].e:(g.skin||STAGES[S.stage].e);
+    emo(he,P.x,P.y+18,38,1,['🚶','⛷️','🦌','🏄','🤿'].includes(he)?false:false);
+    if(soccer){if(g.v==='ice'){mx.fillStyle='#111';mx.beginPath();mx.ellipse(P.x+22,P.y+14,8,4,0,0,7);mx.fill()}else emo(g.v==='rugby'?'🏉':'⚽',P.x+22+(M.phase==='drib'?Math.abs(Math.sin(ts/150))*5:0),P.y+20,18)}
+    if(M.dash>0)txt('💨',P.x-30,P.y,22)}
+  if(M.ball){if(g.v==='ice'){mx.fillStyle='#111';mx.beginPath();mx.ellipse(M.ball.x,M.ball.y+12,8,4,0,0,7);mx.fill()}else emo('⚽',M.ball.x,M.ball.y+18,18)}
+}
+function drawRhythm(ts){
+  const W=LW,tt=M.time||0;
+  const g=mx.createLinearGradient(0,0,0,LH);g.addColorStop(0,'#2a1f4a');g.addColorStop(1,'#4a2a5a');mx.fillStyle=g;mx.fillRect(0,0,W,LH);
+  const lx=M.lanesX||[W*.36,W*.5,W*.64],hy=M.hitY||LH-80,cols=['#ff6b6b','#ffd43b','#4dabf7'];
+  for(let i=0;i<3;i++){mx.fillStyle='rgba(255,255,255,.07)';mx.fillRect(lx[i]-30,30,60,LH-30);mx.strokeStyle=cols[i];mx.lineWidth=4;mx.beginPath();mx.arc(lx[i],hy,26,0,7);mx.stroke();txt(['◀','●','▶'][i],lx[i],hy,18,cols[i])}
+  if(M.notes){const speed=(hy-40)/M.travel;for(const n of M.notes){if(n.hit||n.miss)continue;const y=hy-(n.t-tt)*speed;if(y<20||y>LH)continue;
+    mx.fillStyle=cols[n.lane];mx.beginPath();mx.arc(lx[n.lane],y,22,0,7);mx.fill();emo(M.item,lx[n.lane],y+13,24)}}
+  const beatBounce=Math.abs(Math.sin(tt*Math.PI/(M.beat||.58)))*10;
+  emo(STAGES[S.stage].e,W*.16,LH*.62-beatBounce,64);if(S.job)emo(jobEmoji(),W*.16+26,LH*.62-50-beatBounce,24);
+  emo(M.land,W*.86,LH*.62,70,.6);
+  if(M.fbT>0)txt(M.fb,W/2,LH*.35,30,M.fb==='MISS'?'#ff8787':'#ffe066');
+  if(M.combo>=3)txt(`${M.combo} 콤보!`,W*.16,LH*.25,20,'#ffe066');
+}
+function drawStack(ts){
+  const W=LW,bh=M.bh||24,baseY=LH-96+(M.cam||0);
+  const g=mx.createLinearGradient(0,0,0,LH);g.addColorStop(0,M.sky[0]);g.addColorStop(1,M.sky[1]);mx.fillStyle=g;mx.fillRect(0,0,W,LH);
+  emo(M.land,W*.86,LH-30,110,.3);
+  mx.fillStyle=M.gr;mx.fillRect(0,baseY,W,LH);
+  const col=M.g.col||'#c48a4a';
+  const block=(x,y,w)=>{mx.fillStyle=col;roundRect(x,y,w,bh-2,5);mx.fill();mx.fillStyle='rgba(255,255,255,.25)';mx.fillRect(x+3,y+2,w-6,4);
+    mx.save();mx.beginPath();mx.rect(x,y,w,bh);mx.clip();for(let xx=x+12;xx<x+w;xx+=26)emo(M.item,xx,y+bh-3,16,.9);mx.restore()};
+  if(M.stack){M.stack.forEach((b,i)=>block(b.x,baseY-(i+1)*bh,b.w));
+    const cy=baseY-(M.stack.length+1)*bh-26;block(M.cur.x,cy,M.cur.w);
+    mx.strokeStyle='rgba(0,0,0,.25)';mx.setLineDash([4,4]);mx.beginPath();mx.moveTo(M.cur.x,cy+bh);mx.lineTo(M.cur.x,cy+bh+24);mx.moveTo(M.cur.x+M.cur.w,cy+bh);mx.lineTo(M.cur.x+M.cur.w,cy+bh+24);mx.stroke();mx.setLineDash([]);
+    for(const d of M.debris){mx.globalAlpha=.7;block(d.x,baseY-(d.lvl+1)*bh+d.y,d.w);mx.globalAlpha=1}
+    emo(STAGES[S.stage].e,40,baseY,40)}
+}
+function drawSort(ts,bob){
+  const W=LW,g=M.g,lineY=LH-170;
+  const gr=mx.createLinearGradient(0,0,0,LH);gr.addColorStop(0,M.sky[0]);gr.addColorStop(1,M.sky[1]);mx.fillStyle=gr;mx.fillRect(0,0,W,LH);
+  mx.fillStyle=M.gr;mx.fillRect(0,LH-96,W,96);
+  mx.fillStyle='#5c6470';mx.fillRect(W/2-34,40,68,lineY+20);mx.fillStyle='rgba(255,255,255,.15)';for(let y=(ts/20)%24+40;y<lineY+80;y+=24)mx.fillRect(W/2-34,y,68,3);
+  mx.fillStyle='rgba(255,210,63,.8)';mx.fillRect(W/2-44,lineY+18,88,4);
+  const bin=(x,o)=>{mx.fillStyle='rgba(21,26,46,.75)';roundRect(x-62,LH-215,124,104,14);mx.fill();emo(o.e,x,LH-147,46);txt(o.n,x,LH-131,15)};
+  bin(W*.16,g.L);bin(W*.84,g.R);
+  txt('◀',W*.16,LH-235,22,'#ffd43b');txt('▶',W*.84,LH-235,22,'#ffd43b');
+  if(M.queue)for(const it of M.queue)emo(it.e,it.x,it.y+20,38,it.missed?.4:1);
+  emo(STAGES[S.stage].e,W/2,LH-60,40);
+}
+function roundRect(x,y,w,h,r){r=Math.min(r,w/2,h/2);mx.beginPath();mx.moveTo(x+r,y);mx.arcTo(x+w,y,x+w,y+h,r);mx.arcTo(x+w,y+h,x,y+h,r);mx.arcTo(x,y+h,x,y,r);mx.arcTo(x,y,x+w,y,r);mx.closePath()}
+let mgParts=[],mgPW=null;
+function mgWeather(ts){
+  const w=M.w;if(w!==mgPW){mgPW=w;mgParts=[]}
+  const n=reduce?10:({rain:70,snow:50,petals:24,leaves:20,sand:50}[w]||0);
+  while(mgParts.length<n)mgParts.push({x:Math.random()*LW,y:Math.random()*LH,s:1+Math.random()*3,a:Math.random()*6});
+  for(const p of mgParts){
+    if(w==='rain'){p.y+=9;p.x-=1.5;mx.strokeStyle='rgba(210,230,255,.6)';mx.lineWidth=1.2;mx.beginPath();mx.moveTo(p.x,p.y);mx.lineTo(p.x-2,p.y+12);mx.stroke()}
+    else if(w==='snow'){p.y+=.9;p.x+=Math.sin(ts/600+p.a)*.4;mx.fillStyle='rgba(255,255,255,.9)';mx.beginPath();mx.arc(p.x,p.y,p.s,0,7);mx.fill()}
+    else if(w==='petals'||w==='leaves'){p.y+=.8;p.x+=.9;p.a+=.04;mx.save();mx.translate(p.x,p.y);mx.rotate(p.a);mx.fillStyle=w==='petals'?'rgba(255,170,200,.9)':'rgba(235,140,40,.9)';mx.beginPath();mx.ellipse(0,0,4+p.s,2.5+p.s*.4,0,0,7);mx.fill();mx.restore()}
+    else if(w==='sand'){p.x+=7;mx.strokeStyle='rgba(255,230,180,.55)';mx.lineWidth=1.5;mx.beginPath();mx.moveTo(p.x,p.y);mx.lineTo(p.x+10+p.s*3,p.y);mx.stroke()}
+    if(p.y>LH){p.y=-10;p.x=Math.random()*LW}if(p.x>LW+20)p.x=-20;if(p.x<-20)p.x=LW+20;
+  }
+  if(w==='aurora'){for(let b=0;b<2;b++){mx.beginPath();const base=LH*(.15+b*.1);mx.moveTo(0,base);for(let x=0;x<=LW;x+=14)mx.lineTo(x,base+Math.sin(x/70+ts/1500+b)*20);mx.lineTo(LW,base+70);mx.lineTo(0,base+70);mx.closePath();mx.fillStyle=b?'rgba(170,110,255,.3)':'rgba(90,255,170,.35)';mx.fill()}}
+}
+/* 조작 */
+function hold(el,key){const on=e=>{e.preventDefault();keys[key]=true;tapQ.push(key);el.classList.add('on');try{el.setPointerCapture(e.pointerId)}catch(_){}};
+  const off=()=>{keys[key]=false;el.classList.remove('on')};
+  el.addEventListener('pointerdown',on);['pointerup','pointercancel','lostpointercapture'].forEach(t=>el.addEventListener(t,off));el.addEventListener('contextmenu',e=>e.preventDefault())}
+hold($('#bL'),'l');hold($('#bR'),'r');
+$('#bJ').addEventListener('pointerdown',e=>{e.preventDefault();jumpQ=true;tapQ.push('j');$('#bJ').classList.add('on')});
+['pointerup','pointercancel','pointerleave'].forEach(t=>$('#bJ').addEventListener(t,()=>$('#bJ').classList.remove('on')));
+$('#bJ').addEventListener('contextmenu',e=>e.preventDefault());
+$('#bQuit').onclick=()=>{if(M&&M.started&&!M.over)mgEnd(false);else if(M&&!M.started){$('#mg').hidden=true}};
+addEventListener('keydown',e=>{if($('#mg').hidden||!$('#mgIntro').hidden)return;const k=e.key,lane=isLane();
+  if(lane&&k==='ArrowUp')keys.u=true;else if(lane&&k==='ArrowDown')keys.d=true;
+  else if(k==='ArrowLeft'||k==='a'){if(!e.repeat)tapQ.push('l');keys.l=true}
+  else if(k==='ArrowRight'||k==='d'){if(!e.repeat)tapQ.push('r');keys.r=true}
+  else if(k===' '||k==='ArrowUp'||k==='w'){if(!e.repeat){jumpQ=true;tapQ.push('j')}}else return;e.preventDefault()});
+addEventListener('keyup',e=>{const k=e.key;if(k==='ArrowLeft'||k==='a')keys.l=false;if(k==='ArrowRight'||k==='d')keys.r=false;if(k==='ArrowUp')keys.u=false;if(k==='ArrowDown')keys.d=false});
+addEventListener('resize',()=>{if(!$('#mg').hidden){mgSize();if(M&&!M.started)mgDraw(0)}});
+mgc.addEventListener('pointerdown',e=>{if(M&&M.started&&M.t==='sort'){const r=mgc.getBoundingClientRect();const x=(e.clientX-r.left)/(r.height/LH);tapQ.push(x<LW/2?'l':'r');return}if(!M||!M.started||M.t!=='rhythm')return;const r=mgc.getBoundingClientRect();const x=(e.clientX-r.left)/(r.height/LH);
+  let best=0,bd=1e9;M.lanesX.forEach((lx,i)=>{const d=Math.abs(lx-x);if(d<bd){bd=d;best=i}});if(bd<60){e.preventDefault();tapQ.push(['l','j','r'][best])}});
+
+/* ───────── 메이플식 마을 맵 (오른쪽으로 진행) ───────── */
+const wc=$('#world'),wx=wc.getContext('2d');let WW=640;const WH=360,WGY=WH-96;
+const DECOR={rain:['🌴','🌳','🛖','🌺','🍌'],sav:['🌳','🛖','🦒','🌾','🦓'],des:['🌵','🧱','🌴','🐪','🏜️'],ste:['⛺','🌾','🐎','🐑','🌿'],med:['🫒','🏠','🍇','🌻','🏛️'],mon:['🏠','🌳','🌾','🌸','🏯'],oce:['🏡','🌳','🐄','⛪','🌷'],cold:['🌲','🏠','⛄','🌲','🦌'],high:['🏔️','🏠','🦙','🌲','⛰️']};
+const STAGEDECOR={baby:['🏠','🧸','🍼'],child:['🏫','🛝','🎒'],teen:['🏫','📚','⚽'],young:['🏢','🚌','☕'],adult:['🏢','🏡','🚗'],senior:['🏡','🌳','🪑']};
+const W_={P:{x:60,y:WGY,vy:0,ground:true},cam:0,len:1200,decor:[],coins:[],plats:[],pops:[],bubble:null,last:0,raf:0,near:null,parts:[],pw:null,talkQ:false};
+function seeded(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function wSize(){const r=wc.getBoundingClientRect();if(!r.width)return;const d=Math.min(2,devicePixelRatio||1);const s=r.height/WH;WW=r.width/s;wc.width=Math.round(r.width*d);wc.height=Math.round(r.height*d);wx.setTransform(d*s,0,0,d*s,0,0)}
+addEventListener('resize',()=>{if(!$('#game').hidden)wSize()});
+
+function stageObj(){return STAGES[S.stage]}
+function buildMap(){
+  const c=C[S.cid],st=stageObj(),done=new Set(S.done),nd=a=>a.filter(q=>!done.has(q.id));
+  const own=nd(c.qs),clim=nd(CLIMQ[c.clim]),cont=nd(CONTQ[c.cont]),grow=nd(G[st.k]),env=nd(ENV),job=S.job?JQ[S.job.line]:[];
+  const picks=[];const take=arr=>{const a=arr.filter(q=>!picks.includes(q.id));if(a.length){picks.push(rnd(a).id);return true}return false};
+  take(own.length&&(Math.random()<.7||!clim.length)?own:clim)||take(own)||take(clim)||take(cont)||take(env);
+  take(grow)||take(cont)||take(env);
+  if(S.job&&Math.random()<.5)take(job)||take(cont)||take(env);else take(own)||take(cont)||take(clim)||take(env)||(S.job&&take(job));
+  while(picks.length<st.q)picks.push('free');
+  /* 순서 섞기: 나라 퀘스트가 맵 곳곳에 */
+  const ids=picks.slice(0,st.q).sort(()=>Math.random()-.5);
+  S.npcs=ids.map((id,i)=>({id,done:false,k:null,e:PEOPLE[(i*3+S.stage)%PEOPLE.length]}));
+  S.wx=60;
+}
+function layoutMap(){
+  const n=S.npcs.length,c=C[S.cid];
+  W_.len=560*(n+1)+260;W_.end=W_.len-90;
+  S.npcs.forEach((np,i)=>np.x=440+560*i);
+  const r=seeded((S.stage+1)*9973+S.cid.charCodeAt(0)*31+S.cid.charCodeAt(1));
+  const pool=[...DECOR[c.clim],...STAGEDECOR[stageObj().k]];
+  W_.decor=[];for(let x=120;x<W_.len;x+=90+r()*120){if(S.npcs.some(np=>Math.abs(np.x-x)<70))continue;W_.decor.push({x,e:pool[Math.floor(r()*pool.length)],s:44+r()*34})}
+  W_.plats=[];W_.coins=[];
+  for(let i=0;i<=n;i++){const x=(i===0?160:440+560*(i-1)+240);const y=WGY-84-(r()<.4?70:0);W_.plats.push({x,y,w:110});
+    for(let j=0;j<3;j++)W_.coins.push({x:x+20+j*35,y:y-14,got:false})}
+  for(let x=300;x<W_.len-150;x+=180+r()*160)W_.coins.push({x,y:WGY-26,got:false});
+  W_.P={x:S.wx||60,y:WGY,vy:0,ground:true};W_.cam=0;
+}
+function enterGame(isNew){
+  show('game');wSize();
+  if(!S.npcs||!S.npcs.length)buildMap();
+  layoutMap();renderAll();
+  if(isNew){banner(`👶 ${C[S.cid].name}에서 태어났어요!`,'❗ 표시한 사람에게 가서 말을 걸어 봐요');say(`${C[S.cid].greet}! ◀ ▶로 걸어 가 볼까?`)}
+  else say('다시 왔구나! 계속 가 보자 →');
+  if(!W_.raf)W_.raf=requestAnimationFrame(wLoop);
+  save();
+}
+function renderAll(){renderHUD([]);renderTop()}
+function renderHUD(bumped){
+  const c=C[S.cid],st=stageObj();
+  $('#hAva').innerHTML=`${st.e}${S.job?`<span class="jb">${jobEmoji()}</span>`:''}`;
+  $('#hName').textContent=S.name;
+  $('#hSub').innerHTML=`<span class="lv">Lv.${S.lv}</span>${c.flag} ${c.name}`;
+  $('#hJob').textContent=S.job?`${['1차','2차','3차'][S.job.tier-1]} · ${jobName()}`:'직업: 아직 없음';
+  $('#hCoin').textContent=`🪙 ${S.st.m}  😊 ${S.st.j}`;
+  if(bumped&&bumped.length&&W_.lastE){for(const k of bumped){const v=W_.lastE[k];if(v)W_.pops.push({x:W_.P.x+(Math.random()-.5)*40,y:W_.P.y-70-W_.pops.length*14,t:`${v>0?'+':''}${v} ${SM[k].e}`,life:1.4})}}
+}
+function statRows(bumped=[]){return['s','i','c','d','j','m'].map(k=>{const v=S.st[k],max=k==='j'?100:k==='m'?300:50;
+  return`<div class="srow${bumped.includes(k)?' bump':''}"><span>${SM[k].e}</span><span class="lab">${SM[k].n}</span><span class="bar"><i style="width:${Math.min(100,v/max*100)}%;background:${SM[k].c}"></i></span><span class="val">${v}</span></div>`}).join('')}
+function renderTop(){
+  $('#tStages').innerHTML=STAGES.map((s,i)=>`<span class="${i<S.stage?'done':i===S.stage?'now':''}" title="${s.n}">${s.e}</span>`).join('');
+  $('#tAge').textContent=`🎂 ${S.age}살 · ${stageObj().n}`;
+  const left=S.npcs.filter(n=>!n.done).length;
+  $('#tSteps').textContent=left?`❗ ${left}명이 기다려요`:'🌀 오른쪽 끝 포털로!';
+}
+$('#btnStats').onclick=()=>{const m=$('#modal');m.innerHTML=`<div class="qhead"><span class="big">${stageObj().e}</span><div><h3>${S.name}의 능력치</h3><p class="qtext">${C[S.cid].flag} ${C[S.cid].name} · ${CLIM[C[S.cid].clim].n} · ${S.age}살</p></div></div><div class="stats light">${statRows()}</div><div class="mrow"><button class="btn" id="stClose">닫기</button></div>`;$('#ov').hidden=false;$('#stClose').onclick=()=>$('#ov').hidden=true};
+
+/* NPC와 대화 → 선택 → 포털 */
+function talkNpc(np){openQuest(np.id,np)}
+function questDone(q){
+  const np=S.npcs.find(n=>n.id===q.id&&!n.done&&n.k!==null);if(np){np.done=true;np.k=null}
+  const st=stageObj();S.step++;S.lv++;
+  const to=st.k==='senior'?S.life:st.to;S.age=Math.round(st.from+(to-st.from)*S.step/st.q);
+  if(Math.random()<.15){const l=rnd(LUCK);applyE(adj(l[1]));toast(l[0])}
+  renderAll();
+  if(S.npcs.every(n=>n.done))setTimeout(()=>say('모두 도왔어요! 오른쪽 끝 🌀 포털로 가요 →'),300);
+  save();
+}
+function stageEnd(){
+  const st=stageObj();
+  if(st.after==='job1')return jobPick();
+  if(st.after==='job2'||st.after==='job3')return testIntro();
+  if(st.after==='end')return ending();
+  nextStage();
+}
+function nextStage(){
+  S.stage++;S.step=0;const st=stageObj();S.age=st.from;
+  let extra='';
+  if(st.k==='senior'){const bo=(S.st.s>=30?2:0)+(S.st.j>=70?1:0);S.life=Math.round(C[S.cid].le)+bo;extra=bo?` · 건강과 행복 덕분에 수명 +${bo}년`:''}
+  buildMap();layoutMap();renderAll();
+  banner(`${st.e} ${st.n}이 되었어요!`,`Lv.${S.lv} · ${S.age}살${extra}`);
+  save();
+}
+function wAct(){
+  const n=W_.near;if(!n)return;
+  if(n.type==='npc')talkNpc(n.np);
+  else if(n.type==='portal'){const q=allQ[n.np.id];startMission(q,n.np.k)}
+  else if(n.type==='end'){if(S.npcs.every(x=>x.done)){S.wx=60;stageEnd()}else say('아직 도움을 기다리는 사람이 있어요! ❗')}
+}
+
+/* 말풍선·배너 */
+function say(t){W_.bubble={t,life:3.2}}
+function banner(t,s){$('#banner').innerHTML=`<div>${t}${s?`<small>${s}</small>`:''}</div>`}
+
+/* 루프 */
+function wLoop(ts){
+  W_.raf=requestAnimationFrame(wLoop);
+  if($('#game').hidden||!S||!S.npcs){W_.last=ts;return}
+  const busy=!$('#ov').hidden||!$('#mg').hidden;
+  const dt=Math.min(.033,(ts-(W_.last||ts))/1000);W_.last=ts;
+  if(!busy)wUpdate(dt);else{jumpQ=false;tapQ=[];W_.talkQ=false}
+  wDraw(ts);
+}
+function wUpdate(dt){
+  const P=W_.P,dir=(keys.r?1:0)-(keys.l?1:0);
+  P.x+=dir*230*dt;P.x=Math.max(24,Math.min(W_.len-24,P.x));
+  if(jumpQ&&P.ground){P.vy=-570;P.ground=false}jumpQ=false;tapQ=[];
+  P.vy+=1500*dt;let ny=P.y+P.vy*dt;P.ground=false;
+  if(P.vy>=0){for(const pl of W_.plats){if(P.x>pl.x-8&&P.x<pl.x+pl.w+8&&P.y<=pl.y+1&&ny>=pl.y){ny=pl.y;P.vy=0;P.ground=true}}if(ny>=WGY){ny=WGY;P.vy=0;P.ground=true}}
+  P.y=ny;
+  for(const c of W_.coins)if(!c.got&&Math.hypot(P.x-c.x,P.y-20-c.y)<26){c.got=true;S.st.m+=1;W_.pops.push({x:c.x,y:c.y-20,t:'+1 🪙',life:.8});beep&&beep(1200,.06,'triangle',.05);renderHUD([])}
+  /* 가까운 대상 */
+  W_.near=null;
+  for(const np of S.npcs){
+    if(!np.done&&np.k!==null&&Math.abs(P.x-(np.x+110))<44){W_.near={type:'portal',np};break}
+    if(!np.done&&np.k===null&&Math.abs(P.x-np.x)<56){W_.near={type:'npc',np};break}
+  }
+  if(!W_.near&&Math.abs(P.x-W_.end)<60)W_.near={type:'end'};
+  const tb=$('#wT');
+  if(W_.near){tb.hidden=false;tb.textContent=W_.near.type==='npc'?'💬 대화':W_.near.type==='portal'?'🌀 입장':'🚪 다음 시절'}else tb.hidden=true;
+  if(W_.talkQ){W_.talkQ=false;wAct()}
+  W_.cam+=((Math.max(0,Math.min(W_.len-WW,P.x-WW*.38)))-W_.cam)*Math.min(1,dt*8);
+  S.wx=P.x;
+  for(const p of W_.pops)p.life-=dt;W_.pops=W_.pops.filter(p=>p.life>0);
+  if(W_.bubble){W_.bubble.life-=dt;if(W_.bubble.life<=0)W_.bubble=null}
+}
+function wemo(e,x,y,size,alpha=1){wx.globalAlpha=alpha;wx.font=`${size}px "Apple Color Emoji","Segoe UI Emoji","Noto Color Emoji",sans-serif`;wx.textAlign='center';wx.textBaseline='bottom';wx.fillText(e,x,y);wx.globalAlpha=1}
+function wtxt(s,x,y,size,col,bg){wx.font=`${size}px Jua, sans-serif`;wx.textAlign='center';wx.textBaseline='middle';
+  if(bg){const w=wx.measureText(s).width+14;wx.fillStyle=bg;wrr(x-w/2,y-size*.75,w,size*1.5,8);wx.fill()}
+  else{wx.lineWidth=4;wx.strokeStyle='rgba(0,0,0,.45)';wx.strokeText(s,x,y)}wx.fillStyle=col||'#fff';wx.fillText(s,x,y)}
+function wrr(x,y,w,h,r){wx.beginPath();wx.moveTo(x+r,y);wx.arcTo(x+w,y,x+w,y+h,r);wx.arcTo(x+w,y+h,x,y+h,r);wx.arcTo(x,y+h,x,y,r);wx.arcTo(x,y,x+w,y,r);wx.closePath()}
+function wDraw(ts){
+  const c=C[S.cid],W=WW,cam=W_.cam,bob=Math.sin(ts/260)*3;
+  const g=wx.createLinearGradient(0,0,0,WH);g.addColorStop(0,c.sky[0]);g.addColorStop(1,c.sky[1]);wx.fillStyle=g;wx.fillRect(0,0,W,WH);
+  const w=S.weather||c.w;
+  if(w==='rain'){wx.fillStyle='rgba(40,55,90,.22)';wx.fillRect(0,0,W,WH)}else if(w==='sand'){wx.fillStyle='rgba(215,165,90,.28)';wx.fillRect(0,0,W,WH)}
+  if(w==='sun'||w==='none'){const x=W*.12,y=60;const sg=wx.createRadialGradient(x,y,8,x,y,90);sg.addColorStop(0,'rgba(255,240,170,.95)');sg.addColorStop(1,'rgba(255,220,120,0)');wx.fillStyle=sg;wx.beginPath();wx.arc(x,y,90,0,7);wx.fill();wx.fillStyle='#fff3b0';wx.beginPath();wx.arc(x,y,26,0,7);wx.fill()}
+  /* 구름 (먼 배경) */
+  wx.fillStyle=w==='rain'?'rgba(130,140,160,.85)':'rgba(255,255,255,.85)';
+  for(let i=0;i<5;i++){const x=((i*260-cam*.15+ts*.006)%(W+260)+W+260)%(W+260)-130,y=40+(i%3)*34,s=18+(i%2)*8;wx.beginPath();wx.arc(x,y,s,0,7);wx.arc(x+s,y-s*.4,s*1.1,0,7);wx.arc(x+s*2,y,s*.9,0,7);wx.fill()}
+  /* 먼 산·랜드마크 */
+  wx.fillStyle='rgba(0,0,0,.07)';wx.beginPath();wx.moveTo(0,WGY);for(let x=0;x<=W;x+=20)wx.lineTo(x,WGY-60-Math.sin((x+cam*.3)/110)*26-Math.sin((x+cam*.3)/47)*10);wx.lineTo(W,WGY);wx.fill();
+  for(let lx=500;lx<W_.len+600;lx+=900){const sx=lx-cam*.35;if(sx>-150&&sx<W+150)wemo(c.land,sx,WGY-8,130,.32)}
+  /* 날씨 */
+  wWeather(w,ts);
+  /* 땅 */
+  wx.fillStyle=c.gr;wx.fillRect(0,WGY,W,WH-WGY);wx.fillStyle='rgba(0,0,0,.14)';wx.fillRect(0,WGY,W,5);
+  wx.fillStyle='rgba(0,0,0,.06)';for(let x=-(cam%46);x<W;x+=46)wx.fillRect(x,WGY+20,22,5);
+  wx.save();wx.translate(-cam,0);
+  for(const d of W_.decor)if(d.x>cam-80&&d.x<cam+W+80)wemo(d.e,d.x,WGY+4,d.s,.95);
+  for(const pl of W_.plats){wx.fillStyle=c.gr;wrr(pl.x,pl.y,pl.w,16,8);wx.fill();wx.fillStyle='rgba(0,0,0,.2)';wrr(pl.x,pl.y+11,pl.w,5,3);wx.fill()}
+  for(const co of W_.coins)if(!co.got)wemo('🪙',co.x,co.y+bob,20);
+  /* 시작 표지판 */
+  wtxt(`${stageObj().e} ${stageObj().n} 마을`,90,WGY-110,15,'#3b2d1c','rgba(255,246,223,.92)');
+  /* NPC */
+  for(const np of S.npcs){const q=allQ[np.id];
+    wemo(np.e,np.x,WGY+2,46);
+    if(np.done){wemo('✅',np.x,WGY-56+bob,22)}
+    else if(np.k===null){wx.fillStyle='#ffd23f';wx.beginPath();wx.arc(np.x,WGY-72+bob,14,0,7);wx.fill();wtxt('!',np.x,WGY-72+bob,20,'#3b2d1c','rgba(0,0,0,0)');}
+    else{wemo('💬',np.x,WGY-56,20)}
+    wtxt(`${q.ic} ${fill(q.ti)}`,np.x,WGY+22,13,'#fff','rgba(21,26,46,.78)');
+    if(!np.done&&np.k!==null){const px=np.x+110,spin=ts/300;
+      for(let r=0;r<3;r++){wx.strokeStyle=`rgba(${r?'120,90,255':'90,220,255'},.8)`;wx.lineWidth=4;wx.beginPath();wx.ellipse(px,WGY-38,22-r*6,40-r*10,0,spin+r,spin+r+4.4);wx.stroke()}
+      wtxt(gName(specOf(q.ch[np.k])),px,WGY-96,13,'#fff','rgba(90,60,200,.85)')}}
+  /* 끝 포털 */
+  {const px=W_.end,ok=S.npcs.every(n=>n.done),spin=ts/250;
+    for(let r=0;r<3;r++){wx.strokeStyle=ok?`rgba(255,${200-r*40},60,.9)`:'rgba(120,120,140,.6)';wx.lineWidth=5;wx.beginPath();wx.ellipse(px,WGY-46,30-r*8,52-r*12,0,spin*(ok?1:.2)+r,spin*(ok?1:.2)+r+4.6);wx.stroke()}
+    const nx=STAGES[S.stage+1];wtxt(ok?(nx?`${nx.e} ${nx.n} 시절로 ▶`:'🌅 인생 마무리 ▶'):'🔒 모두 도와야 열려요',px,WGY-118,13,'#fff',ok?'rgba(232,89,12,.9)':'rgba(60,60,80,.8)')}
+  /* 플레이어 */
+  const P=W_.P;wemo(stageObj().e,P.x,P.y+3,44);if(S.job)wemo(jobEmoji(),P.x+18,P.y-30,18);
+  wtxt(S.name,P.x,P.y+16,12,'#fff','rgba(21,26,46,.7)');
+  if(W_.bubble){wx.font='14px "Gowun Dodum", sans-serif';const t=W_.bubble.t,tw=Math.min(260,wx.measureText(t).width+20);const bx=Math.min(Math.max(P.x-tw/2,cam+8),cam+W-tw-8),by=P.y-96;
+    wx.fillStyle='#fff';wrr(bx,by,tw,30,10);wx.fill();wx.beginPath();wx.moveTo(P.x-6,by+30);wx.lineTo(P.x+6,by+30);wx.lineTo(P.x,by+38);wx.fill();
+    wx.fillStyle='#3b2d1c';wx.textAlign='left';wx.textBaseline='middle';wx.save();wx.beginPath();wx.rect(bx,by,tw,30);wx.clip();wx.fillText(t,bx+10,by+15);wx.restore()}
+  for(const p of W_.pops)wtxt(p.t,p.x,p.y-(1.4-p.life)*26,15,'#ffe066');
+  wx.restore();
+  /* 처음 안내 화살표 */
+  if(S.step===0&&W_.P.x<200)wtxt('→ 오른쪽으로!',W*.62,WGY-150+bob,18,'#fff');
+}
+function wWeather(w,ts){
+  if(w!==W_.pw){W_.pw=w;W_.parts=[]}
+  const n=reduce?10:({rain:70,snow:50,petals:24,leaves:20,sand:50}[w]||0);
+  while(W_.parts.length<n)W_.parts.push({x:Math.random()*WW,y:Math.random()*WH,s:1+Math.random()*3,a:Math.random()*6});
+  for(const p of W_.parts){
+    if(w==='rain'){p.y+=9;p.x-=1.5;wx.strokeStyle='rgba(210,230,255,.6)';wx.lineWidth=1.2;wx.beginPath();wx.moveTo(p.x,p.y);wx.lineTo(p.x-2,p.y+12);wx.stroke()}
+    else if(w==='snow'){p.y+=.9;p.x+=Math.sin(ts/600+p.a)*.4;wx.fillStyle='rgba(255,255,255,.9)';wx.beginPath();wx.arc(p.x,p.y,p.s,0,7);wx.fill()}
+    else if(w==='petals'||w==='leaves'){p.y+=.8;p.x+=.9;p.a+=.04;wx.save();wx.translate(p.x,p.y);wx.rotate(p.a);wx.fillStyle=w==='petals'?'rgba(255,170,200,.9)':'rgba(235,140,40,.9)';wx.beginPath();wx.ellipse(0,0,4+p.s,2.5+p.s*.4,0,0,7);wx.fill();wx.restore()}
+    else if(w==='sand'){p.x+=7;wx.strokeStyle='rgba(255,230,180,.55)';wx.lineWidth=1.5;wx.beginPath();wx.moveTo(p.x,p.y);wx.lineTo(p.x+10+p.s*3,p.y);wx.stroke()}
+    if(p.y>WH){p.y=-10;p.x=Math.random()*WW}if(p.x>WW+20)p.x=-20;if(p.x<-20)p.x=WW+20;
+  }
+  if(w==='aurora'){wx.fillStyle='rgba(8,18,45,.45)';wx.fillRect(0,0,WW,WH);for(let b=0;b<2;b++){wx.beginPath();const base=WH*(.12+b*.1);wx.moveTo(0,base);for(let x=0;x<=WW;x+=14)wx.lineTo(x,base+Math.sin(x/70+ts/1500+b)*20);wx.lineTo(WW,base+70);wx.lineTo(0,base+70);wx.closePath();wx.fillStyle=b?'rgba(170,110,255,.3)':'rgba(90,255,170,.35)';wx.fill()}}
+}
+/* 마을 조작 버튼 */
+hold($('#wL'),'l');hold($('#wR'),'r');
+$('#wJ').addEventListener('pointerdown',e=>{e.preventDefault();jumpQ=true;$('#wJ').classList.add('on')});
+['pointerup','pointercancel','pointerleave'].forEach(t=>$('#wJ').addEventListener(t,()=>$('#wJ').classList.remove('on')));
+$('#wT').addEventListener('pointerdown',e=>{e.preventDefault();W_.talkQ=true});
+addEventListener('keydown',e=>{if($('#game').hidden||!$('#ov').hidden||!$('#mg').hidden)return;const k=e.key;
+  if(k==='ArrowLeft'||k==='a')keys.l=true;else if(k==='ArrowRight'||k==='d')keys.r=true;
+  else if(k===' '){if(!e.repeat)jumpQ=true}else if(k==='ArrowUp'||k==='Enter'||k==='e'){if(!e.repeat)W_.talkQ=true}else return;e.preventDefault()});
+
+/* 시작 */
+renderTitle();
+</script>
