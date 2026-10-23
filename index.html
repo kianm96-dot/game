@@ -1364,7 +1364,7 @@ function startMission(q,k){
     chop:'숲을 돌아다니며 통나무 앞에서 막대가 초록 칸에 올 때 🪓! 한 통나무에 두 번',
     money:g.send?'화면의 돈 버튼을 눌러 보낼 금액을 정확히 맞춘 뒤 ✔ 건네기! 5번 성공':'손님이 낸 돈에서 물건값을 빼고, 거스름돈을 돈 버튼으로 정확히 맞춰 ✔ 건네기! 손님 5명',
     pour:'시험관을 눌러 고르고, 옮길 시험관을 누르면 맨 위 액체가 부어져요. 같은 색끼리만 쌓여요! 시험관마다 한 가지 색만 남기면 성공 (↩️ 되돌리기)',
-    harvest:g.animal?`${g.crop}을(를) 여러 번 톡톡 눌러 ${g.yield} ${need}개 얻기!`:`${g.crop}을(를) 직접 톡톡 눌러 ${g.tool==='scissors'?'가위로 잘라요':'낫으로 베어요'}! 한 번에 안 베이니 여러 번! ${need}개${g.ripe?' · 🟢 덜 익은 건 건드리지 마요':''}`,
+    harvest:g.animal?`${g.crop}을(를) 여러 번 톡톡 눌러 ${g.yield} ${need}개 얻기!`:`${g.crop}을(를) 직접 톡톡 눌러 ${g.tool==='scissors'?'가위로 잘라요':'낫으로 베어요'}! 한 번에 안 베이니 여러 번! ${need}개${g.ripe?' · 🟢 덜 익은 건 건드리지 말고 기다려요 (🟡가 되면 곧 익어요). 딴 자리엔 새 열매가 열려요':''}`,
     memo:'카드를 두 장씩 뒤집어 같은 그림 짝 8쌍을 찾아요! 화면을 직접 눌러요',
     dots:'1번부터 순서대로 점을 눌러 이으면 그림이 완성돼요! 3장 그리기 · 틀린 점을 누르면 처음부터',
     plant:g.nocrow?`⬇ 표시된 자리에 서서 ${g.btn||'🌱'} 버튼을 눌러요! ${need}곳`:`⬇ 표시된 빈 자리에 서서 🌱 버튼으로 ${need}곳에 심어요! 새가 오면 가서 쫓아내요`,
@@ -1923,6 +1923,7 @@ function drawKitchen(ts){
 }
 /* ── 균형 잡기 탑 (받기) ── */
 const LIQ_E=new Set(['💧','🥛','🍯','🌧️','☁️','🔥','💤','⭐','🪙','📄','📦']);
+function headY(){return M.P.y-54*stageScale(stageObj().k)-2}
 function initTower(W){M.h=0;M.a=0;M.av=0;M.lastX=M.P.x;M.lastV=0;M.items=[];M.sp.a=.4;M.sp.b=1.3}
 function updTower(dt){
   const P=M.P,W=LW;const v=(P.x-M.lastX)/Math.max(dt,.001);const dv=v-M.lastV;M.lastX=P.x;M.lastV=v;
@@ -1931,16 +1932,16 @@ function updTower(dt){
   M.sp.a-=dt;M.sp.b-=dt;
   if(M.sp.a<=0){M.sp.a=.7;M.items.push({x:30+Math.random()*(W-60),y:-20,vy:150+Math.random()*80,e:M.item,good:true})}
   if(M.sp.b<=0){M.sp.b=1.1;M.items.push({x:30+Math.random()*(W-60),y:-20,vy:190+Math.random()*90,e:'🪨',good:false})}
-  const topX=P.x+Math.sin(M.a)*M.h*18,topY=P.y-60-M.h*20;
+  const topX=P.x+Math.sin(M.a)*M.h*18,topY=headY()-4-M.h*20;
   for(const it of M.items){it.y+=it.vy*dt;if(!it.hit&&Math.abs(it.x-topX)<26&&Math.abs(it.y-topY)<22){it.hit=true;
       if(it.good){M.h++;M.got=M.h;M.av+=(it.x-topX)*.02;pop(topX,topY-20,'+1');beep(700+M.h*40,.06)}else{hurt('돌에 맞았다!');M.h=Math.max(0,M.h-2);M.got=M.h}}}
   M.items=M.items.filter(it=>!it.hit&&it.y<GY+30);M.got=M.h;
 }
 function drawTower(ts){
-  const P=M.P;for(const it of M.items||[])emo(it.e,it.x,it.y,30);
-  for(let i=0;i<M.h;i++){const x=P.x+Math.sin(M.a)*(i+1)*18,y=P.y-64-i*20;mx.save();mx.translate(x,y);mx.rotate(M.a*.6);emo(M.item,0,0,26);mx.restore()}
-  mx.fillStyle='#a07a4a';roundRect(P.x-18+Math.sin(M.a)*10,P.y-66,36,8,4);mx.fill();
-  const w=Math.abs(M.a);if(w>.55)txt(w>.8?'⚠️ 쓰러져요!':'흔들흔들',P.x,P.y-90-M.h*20,15,w>.8?'#e03131':'#f08c00');
+  const P=M.P;for(const it of M.items||[])emo(it.e,it.x,it.y,it.good?34:30);
+  const hy=headY();for(let i=0;i<M.h;i++){const x=P.x+Math.sin(M.a)*(i+1)*18,y=hy-6-i*20;mx.save();mx.translate(x,y);mx.rotate(M.a*.6);emo(M.item,0,0,26);mx.restore()}
+  mx.fillStyle='#a07a4a';roundRect(P.x-22+Math.sin(M.a)*6,hy-8,44,8,4);mx.fill();
+  const w=Math.abs(M.a);if(w>.55)txt(w>.8?'⚠️ 쓰러져요!':'흔들흔들',P.x,hy-30-M.h*20,15,w>.8?'#e03131':'#f08c00');
 }
 /* ── 관광 가이드 퀴즈 ── */
 const LMK={
@@ -2254,7 +2255,7 @@ function initHarvest(W){
   const g=M.g;M.cuts=[];M.flyers=[];M.clicks=[];
   if(g.animal){M.crops=[0,1,2,3,4].map(i=>({x:W*(.18+i*.16),y:LH-110,hp:5,max:5,cool:0}));}
   else{const rows=[LH-104,LH-160,LH-216],cols=8;M.crops=[];
-    rows.forEach((y,ri)=>{for(let c=0;c<cols;c++){const x=W*.13+c*(W*.74/(cols-1))+(ri%2?14:0);M.crops.push({x,y,hp:g.hp||3,max:g.hp||3,cut:false,unripe:g.ripe?Math.random()<.32:false})}})}
+    rows.forEach((y,ri)=>{for(let c=0;c<cols;c++){const x=W*.13+c*(W*.74/(cols-1))+(ri%2?14:0);M.crops.push({x,y,hp:g.hp||3,max:g.hp||3,cut:false,unripe:g.ripe?Math.random()<.32:false,rip:2.5+Math.random()*3})}})}
 }
 function chop(cr){
   const g=M.g;M.cuts.push({x:cr.x,y:cr.y-18,life:.22});
@@ -2266,6 +2267,9 @@ function chop(cr){
 function updHarvest(dt,taps){
   for(const c of M.clicks){let best=null,bd=40;for(const cr of M.crops){if(cr.cut||cr.cool>0)continue;const d=Math.hypot(c.x-cr.x,c.y-(cr.y-18));if(d<bd){bd=d;best=cr}}if(best)chop(best)}
   M.clicks=[];
+  if(M.g.ripe)for(const c of M.crops)if(c.unripe&&!c.cut){c.rip=(c.rip??4)-dt;if(c.rip<=0){c.unripe=false;pop(c.x,c.y-50,'익었다!')}}
+  /* 다 딴 열매 자리엔 새 열매가 열려요 */
+  if(M.g.ripe&&!M.g.animal)for(const c of M.crops)if(c.cut){c.regrow=(c.regrow||0)+dt;if(c.regrow>3.5){c.cut=false;c.regrow=0;c.hp=c.max;c.unripe=true;c.rip=2+Math.random()*2.5}}
   if(taps.includes('j')){const cr=M.crops.find(c=>!c.cut&&!c.unripe&&!(c.cool>0));if(cr)chop(cr)}
   for(const cr of M.crops)if(cr.cool>0)cr.cool-=dt;
   for(const c of M.cuts)c.life-=dt;M.cuts=M.cuts.filter(c=>c.life>0);
@@ -2282,8 +2286,8 @@ function drawHarvest(ts){
   for(const cr of M.crops||[]){
     if(g.animal){emo(g.crop,cr.x,cr.y,54,cr.cool>0?.5:1);if(cr.cool<=0){for(let i=0;i<cr.max;i++){mx.fillStyle=i<cr.hp?'#ffd43b':'rgba(0,0,0,.2)';mx.beginPath();mx.arc(cr.x-12+i*12,cr.y-62,4,0,7);mx.fill()}}continue}
     if(cr.cut){mx.fillStyle='rgba(90,60,20,.5)';mx.fillRect(cr.x-8,cr.y-6,16,4);continue}
-    const sway=Math.sin(ts/400+cr.x)*2;const e=cr.unripe?'🟢':g.crop;
-    emo(e,cr.x+sway,cr.y,cr.unripe?22:34,1);
+    const sway=Math.sin(ts/400+cr.x)*2;const e=cr.unripe?(cr.rip<1.2?'🟡':'🟢'):g.crop;
+    emo(e,cr.x+sway,cr.y,cr.unripe?(cr.rip<1.2?26:22):34,1);
     if(cr.hp<cr.max&&!cr.unripe){mx.fillStyle='#fff';mx.beginPath();mx.arc(cr.x,cr.y-46,4,0,7);mx.fill()}
   }
   for(const c of M.cuts||[]){const a=(1-c.life/.22)*Math.PI*1.2;mx.save();mx.translate(c.x,c.y);mx.rotate(-1+a);
@@ -2498,6 +2502,7 @@ function mgDraw(ts){
     if(M.bees)for(const b of M.bees)emo('🐝',b.x,GY-4+Math.sin(ts/120+b.x)*6,30);
     if(!(M.inv>0&&Math.floor(ts/90)%2)){if(M.g.skin&&M.g.skin!=='🏃')emo(hero(),P.x,P.y+2,40,1,['🚴','🏇','🐪','🦘'].includes(M.g.skin));else drawMe(mx,P.x,P.y+2,54,P.ground===false?1.2:((keys.l||keys.r)?ts/70:0),M.face||1)}
     if(M.carry)emo(M.item,P.x,P.y-40+bob*.5,24);
+    if(t==='tower')drawTower(ts);
     if(t==='clean')for(let i=0;i<(M.carryN||0);i++)emo('📦',P.x,P.y-42-i*14,16);
   }
   for(const p of M.pops){mx.globalAlpha=Math.min(1,p.life*2);txt(p.t,p.x,p.y-(.9-p.life)*30,18);mx.globalAlpha=1}
