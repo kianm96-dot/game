@@ -2275,7 +2275,9 @@ const fmt=n=>n.toLocaleString('ko-KR');
 const XR={JP:[100,1000],CN:[1,200],IN:[10,150],VN:[1000,50],TH:[1,40],PH:[1,25],ID:[1000,100],MN:[100,40],SA:[1,400],TR:[1,40],RU:[1,15],GB:[1,1800],
  FR:[1,1500],DE:[1,1500],IT:[1,1500],ES:[1,1500],NL:[1,1500],GR:[1,1500],FI:[1,1500],CH:[1,1600],NO:[1,130],SE:[1,130],DK:[1,200],EG:[1,30],KE:[1,10],ZA:[1,80],
  NG:[1,1],MA:[1,140],ET:[1,10],US:[1,1400],CA:[1,1000],MX:[1,70],BR:[1,250],AR:[1,1],PE:[1,400],CL:[10,15],AU:[1,900],NZ:[1,800],FJ:[1,600]};
-const XGOODS=[['🥩','돼지고기 1kg',12,30],['🍎','사과 한 봉지',4,12],['☕','커피 한 잔',2,6],['🍞','빵 한 봉지',2,6],['👟','운동화 한 켤레',50,120],['⚽','축구공',20,40],['🍌','바나나 한 송이',3,8],['📚','책 한 권',10,25],['🎒','책가방',30,80],['🚌','버스 요금 10번',10,20]];
+const XGOODS=[['🥩','돼지고기 1kg',12,30,'돼지고기'],['🍎','사과 한 봉지',4,12,'사과'],['☕','커피 한 잔',2,6,'커피'],['🍞','빵 한 봉지',2,6,'빵'],['👟','운동화 한 켤레',50,120,'운동화'],['⚽','축구공',20,40,'축구공'],['🍌','바나나 한 송이',3,8,'바나나'],['📚','책 한 권',10,25,'책'],['🎒','책가방',30,80,'책가방'],['🚌','버스 요금 10번',10,20,'버스 요금']];
+/* 받침 따라 조사 고르기 (숫자·kg 끝도 읽는 소리대로) */
+function jo(w,a,b){const ch=w[w.length-1],c=ch.charCodeAt(0);const has=c>=0xAC00&&c<=0xD7A3?(c-0xAC00)%28>0:'0136789gml'.includes(ch);return w+(has?a:b)}
 /* 나라별 물가 수준(우리나라=1): 세계은행 물가 수준 지수를 어림한 값 */
 const XPL={JP:.95,CN:.55,IN:.3,VN:.4,TH:.45,PH:.45,ID:.4,MN:.4,SA:.8,TR:.45,RU:.45,GB:1.3,FR:1.3,DE:1.3,IT:1.15,ES:1,NL:1.4,GR:.95,FI:1.4,CH:2,NO:1.7,SE:1.3,DK:1.7,
  EG:.25,KE:.45,ZA:.5,NG:.35,MA:.45,ET:.3,US:1.5,CA:1.3,MX:.6,BR:.55,AR:.5,PE:.5,CL:.65,AU:1.4,NZ:1.35,FJ:.55};
@@ -2286,21 +2288,25 @@ const XTROP=new Set(['VN','TH','PH','ID','IN','BR','MX','PE','FJ','KE','ET','NG'
 /* 우리나라 값 대비 그 나라 값(r)과 이유 */
 function xItem(cid,e){const pl=XPL[cid]||1,k=XKIND[e];
   let r=k==='trade'?Math.pow(pl,.3):k==='serv'?Math.pow(pl,1.3):Math.pow(pl,.9),why=null;
-  if(e==='🍌'&&XTROP.has(cid)){r*=.5;why='바나나가 많이 나는 나라라서'}
-  else if(e==='🍎'&&cid!=='JP'){r*=.5;why='우리나라는 사과값이 비싼 편이라'}
-  else if(e==='🥩'&&XPORK.has(cid)){r*=.5;why='돼지를 많이 기르는 나라라서'}
-  else if(e==='☕'&&XCOFFEE.has(cid)){r*=.7;why='커피가 나는 나라라서'}
-  else if(e==='🚌'&&pl>1){r*=1.5;why='우리나라는 버스 요금이 싼 편이라'}
+  if(e==='🍌'&&XTROP.has(cid)){r*=.5;why='banana'}
+  else if(e==='🍎'&&cid!=='JP'){r*=.5;why='apple'}
+  else if(e==='🥩'&&XPORK.has(cid)){r*=.5;why='pork'}
+  else if(e==='☕'&&XCOFFEE.has(cid)){r*=.7;why='coffee'}
+  else if(e==='🚌'&&pl>1){r*=1.5;why='bus'}
   return{r,why,k,pl}}
 const XSNAP=[[1,4],[1,3],[1,2],[2,3],[1,1],[3,2],[2,1],[3,1]];
 function xSnap(r){let best=XSNAP[0],bd=99;for(const f of XSNAP){const dd=Math.abs(Math.log(f[0]/f[1])-Math.log(r));if(dd<bd){bd=dd;best=f}}return best}
 const frx=(n,d)=>n===d?'같은 값':d===1?n+'배':n===3&&d===2?'1.5배':n===1&&d===2?'절반(1/2)':n+'/'+d;
-function xRatio(e){const kr=S.cid==='KR';let{r,why,k,pl}=xItem(kr?'US':S.cid,e);
-  if(kr){r=1/r;pl=1/pl;why=e==='🍎'?'우리나라는 사과값이 비싼 편이라':e==='🥩'?'돼지고기는 미국이 많이 길러서 우리나라가':e==='🚌'?'우리나라는 버스 요금이 싼 편이라':null}
-  const[n,d]=xSnap(r),dir=n===d?'값이 비슷해요':n<d?'더 싸요':'더 비싸요',ow=kr?'미국':'우리나라';
-  if(!why)why=k==='trade'?(n===d?'공장 물건은 나라끼리 사고팔아서':'공장 물건이라 차이는 작지만')
-    :n===d?(k==='serv'?'서비스 요금을 정하는 인건비가 비슷해서':'물가 차이가 크지 않아서'):k==='serv'?`서비스는 인건비 차이가 커서 훨씬`:`물가가 ${ow}보다 ${pl<1?'싸서':'비싸서'}`;
-  return{n,d,why:`💬 ${why} ${dir}`}}
+function xRatio(e,short){const kr=S.cid==='KR';let{r,why,k,pl}=xItem(kr?'US':S.cid,e);
+  if(kr){r=1/r;pl=1/pl;if(why==='banana'||why==='coffee')why=null}
+  const[n,d]=xSnap(r),nm=C[S.cid].name,ow=kr?'미국':'우리나라',sub=jo(nm,'은','는');
+  const W={banana:`${sub} 바나나가 많이 나서`,apple:'우리나라는 사과값이 유난히 비싸서',
+    pork:kr?'미국은 돼지를 많이 길러서 고기값이 싸기 때문에':`${sub} 돼지를 많이 길러서`,coffee:`${sub} 커피가 나는 나라라서`,bus:'우리나라는 버스 요금이 싼 편이라'}[why];
+  const base=W||(k==='trade'?(n===d?'공장 물건은 수출·수입이 쉬워서 나라마다 값 차이가 작아':'공장 물건이라 값 차이가 크진 않지만')
+    :n===d?`${sub} ${k==='serv'?'인건비':'물가'}가 ${ow}와 비슷해서`.replace('미국와','미국과')
+    :`${sub} ${k==='serv'?'인건비':'물가'}가 ${ow}보다 ${pl<1?'싸서':'비싸서'}`);
+  const res=n===d?`${jo(short,'은','는')} ${ow}와 거의 같은 값이에요.`.replace('미국와','미국과'):`${jo(short,'은','는')} ${ow} 값의 ${frx(n,d)} 정도예요.`;
+  return{n,d,l1:`💬 ${base},`,l2:res}}
 function xProblem(cn,d){
   const kr=S.cid==='KR',nm=C[S.cid].name;
   /* 한국에서 태어났으면 미국 달러와 비교, 다른 나라면 우리나라 원과 비교 */
@@ -2308,18 +2314,19 @@ function xProblem(cn,d){
   const rate=kr?'1달러 = 1,400원':`${fmt(a)}${cn} = ${fmt(b)}원`;
   const goods=XGOODS.filter(g=>!(g[0]==='🥩'&&XNOPORK.has(S.cid)));
   for(let tries=0;tries<800;tries++){
-    const kind=Math.random(),[e,gn,lo,hi]=rnd(goods);
+    const kind=Math.random(),[e,gn,lo,hi,short]=rnd(goods);
     let K=(lo+Math.floor(Math.random()*(hi-lo+1)))*(kr?1:1000);if(!kr&&hi<=8&&Math.random()<.5)K+=500;
-    /* price: 물건별 물가 반영 가격 비교 · save: 물가 반영 + 나눠 저축 · conv: 돈만 바꾸기(물가와 무관) */
-    const ty=kind<.5?'price':kind<.75?'save':'conv',x=ty==='conv'?{n:1,d:1}:xRatio(e),pn=x.n,pd=x.d,mon=ty==='save'?rnd([2,3,4,5]):1;
+    /* price: 물건별 물가 반영 가격 비교 · save: 돈 바꿔서 나눠 쓰기 · conv: 돈만 바꾸기 (save·conv는 물가와 무관) */
+    const ty=kind<.55?'price':kind<.8?'save':'conv',x=ty==='price'?xRatio(e,short):{n:1,d:1},pn=x.n,pd=x.d,mon=ty==='save'?rnd([2,3,4,5]):1;
     const num=K*pn*a,den=pd*b*mon;if(num%den)continue;const A=num/den;
     if(A%d[2]||A<d[2]*3||A>d[0]*20)continue;
-    const W=K*pn/pd,same=pn===pd,rt=frx(pn,pd),yo=kr?'예요':'이에요',tail=same?`${ow}와(과) 거의 같은 값`.replace('와(과)',kr?'과':'와'):`${ow} 값의 ${rt} 정도`;
-    const L=ty==='price'?[`${e} ${ow}에서 ${gn} 값은 ${fmt(K)}${on}${yo}.`,x.why,`${nm}에서는 ${tail}! 몇 ${cn}일까요?`]
-      :ty==='save'?[`🏦 저축 목표: ${e} ${gn} (${ow} 값 ${fmt(K)}${on})`,x.why,`→ ${nm}에서는 ${tail}`,`${mon}달 동안 똑같이 나눠 모으면 한 달에 몇 ${cn}씩?`]
-      :[`🏦 ${ow} 돈 ${fmt(K)}${on}${kr?'를':'을'} ${nm} 돈으로 바꿔 저축해요.`,`환율에 맞게 바꾸면`,`통장에 넣을 돈은 몇 ${cn}일까요?`];
-    const cv=kr?'1달러=1,400원으로':'환율로 바꾸면',step=same?`값이 같으니 ${fmt(W)}${on}`:`${ow} 값의 ${rt} = ${fmt(W)}${on}`;
-    const hint=ty==='price'?`💡 ${step} → ${cv} ${fmt(A)}${cn}`:ty==='save'?`💡 ${step} → ${cv} ${fmt(A*mon)}${cn} → ${mon}달로 나누면 ${fmt(A)}${cn}`:kr?`💡 1달러마다 1,400원씩 → ${fmt(A)}원`:`💡 ${fmt(b)}원마다 ${fmt(a)}${cn}씩 → ${fmt(A)}${cn}`;
+    if(ty!=='price'&&kr)K=Math.round(K);
+    const W=K*pn/pd,yo=kr?'예요':'이에요',money=`${fmt(K)}${on}`;
+    const L=ty==='price'?[`${e} ${ow}에서 ${jo(gn,'은','는')} ${money}${yo}.`,x.l1,x.l2,`그럼 ${nm}에서 ${jo(gn,'은','는')} 몇 ${cn}일까요?`]
+      :ty==='save'?[`🏦 ${ow} 돈 ${jo(money,'을','를')} ${nm} 돈(${cn})으로 바꿔 저축했어요.`,`이 돈을 ${mon}달 동안 똑같이 나눠 쓰려면`,`한 달에 몇 ${cn}씩 쓸 수 있을까요?`]
+      :[`🏦 ${ow} 돈 ${jo(money,'을','를')} ${nm} 돈(${cn})으로 바꿔 저축해요.`,`환율에 맞게 바꾸면`,`통장에 넣을 돈은 몇 ${cn}일까요?`];
+    const cv=kr?'1달러=1,400원으로':'환율로 바꾸면',step=pn===pd?`값이 같으니 ${fmt(W)}${on}`:`${ow} 값의 ${frx(pn,pd)} = ${fmt(W)}${on}`;
+    const hint=ty==='price'?`💡 ${step} → ${cv} ${fmt(A)}${cn}`:ty==='save'?`💡 ${money} = ${fmt(A*mon)}${cn} → ${mon}달로 나누면 ${fmt(A)}${cn}`:kr?`💡 1달러마다 1,400원씩 → ${fmt(A)}원`:`💡 ${fmt(b)}원마다 ${fmt(a)}${cn}씩 → ${fmt(A)}${cn}`;
     return{lines:L,rate,ans:A,hint}}
   return null}
 function newCustomer(){const[cn,d]=CUR[S.cid]||CUR.KR,u=d[2],g=M.g;
