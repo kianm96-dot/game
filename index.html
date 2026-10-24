@@ -1360,6 +1360,9 @@ const mgc=$('#mgCanvas'),mx=mgc.getContext('2d');
 const LH=360;let LW=640,MSC=1,GY=LH-92;
 const keys={l:false,r:false,u:false,d:false};let jumpQ=false,tapQ=[];
 let M=null,mgRAF=0,AC=null;
+/* 소리 켜기: 브라우저는 사용자가 누른 뒤에만 소리를 허락하고, PC에서는 출력 장치가 바뀌거나 탭이 오래 숨겨지면 멈추기도 해서 누를 때마다 다시 켜 둠 */
+function audioOn(){try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();if(AC.state!=='running')AC.resume()}catch(e){}}
+addEventListener('pointerdown',audioOn,true);addEventListener('keydown',audioOn,true);
 const HAZ={rain:'⚡',sand:'🌪️',snow:'🧊',sun:'🔥'};
 const PEOPLE=['🧑','👵','👴','👩','🧔','👧','👦','🧑‍🦱','👩‍🦳'];
 function mgSize(){const r=mgc.getBoundingClientRect();const d=Math.min(2,devicePixelRatio||1);MSC=r.height/LH;LW=r.width/MSC;mgc.width=Math.round(r.width*d);mgc.height=Math.round(r.height*d);mx.setTransform(d*MSC,0,0,d*MSC,0,0)}
@@ -1433,7 +1436,7 @@ function startMission(q,k,g0){
   $('#mg').hidden=false;$('#mgIntro').hidden=false;
   $('#mgIntro').innerHTML=`<div class="mg-card"><span class="mtag">${gName(g,q,c)}</span><h3>${fill(c.l)}</h3><p>${text}${haz?`<br><b>${haz} 날씨 방해물</b>도 피해야 해요!`:''}</p>
     <p class="hint">${ctrl}</p><div class="mrow" style="justify-content:center"><button class="btn" id="mgGo">▶ 시작!</button></div></div>`;
-  $('#mgGo').onclick=()=>{try{AC=AC||new (window.AudioContext||window.webkitAudioContext)();AC.resume&&AC.resume()}catch(e){}$('#mgIntro').hidden=true;mgInit()};
+  $('#mgGo').onclick=()=>{audioOn();$('#mgIntro').hidden=true;mgInit()};
   $('#mgGo').focus();
   if(['whack','slide','match','simon','pipe','maze','snake','paint'].includes(t))setPads(null,null,null);else if(t==='weave')setPads(null,null,'🪡');else if(t==='flap'||t==='rope')setPads(null,null,'⤴');else if(t==='brk')setPads('◀','▶',null);else if(t==='dress'||t==='grill')setPads(null,null,null);else if(t==='wrap')setPads(null,null,'⬇');else if(t==='find'||t==='talk')setPads(null,null,null);else if(t==='kitchen')setPads(null,null,'🔥');else if(t==='tower')setPads('◀','▶',null);else if(t==='fish')setPads(null,null,'🎣');else if(t==='chop')setPads('◀','▶','🪓');else if(t==='money')setPads(null,null,null);else if(t==='pour')setPads(null,null,'↩️');else if(t==='harvest')setPads(null,null,g.animal?(g.tool==='bucket'?'🪣':'✂️'):g.tool==='scissors'?'✂️':'베기');else if(t==='memo'||t==='dots')setPads(null,null,null);else if(t==='plant')setPads('◀','▶',g.btn||'🌱');else if(t==='safari')setPads('📸',null,'⤴');else if(isLaneT(t))setPads('▲','▼',t==='soccer'?'⚡':'💨');
   else if(t==='rhythm')setPads(null,null,null);
