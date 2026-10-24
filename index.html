@@ -1144,7 +1144,7 @@ Object.assign(OVR,{
 });
 Object.entries(OVR).forEach(([key,g])=>{const[id,k]=key.split(':');if(allQ[id]&&allQ[id].ch[+k])allQ[id].ch[+k].g=g});
 
-function fresh(name){return{look:randLook(Date.now()%100000),owned:[],name:name||'모험가',cid:null,fam:0,age:0,stage:0,step:0,lv:1,st:{s:5,i:5,c:5,d:5,j:40,m:0},job:null,life:80,done:[],album:[],cards:[],weather:null,phase:'play'}}
+function fresh(name){return{look:randLook(Date.now()%100000),owned:[],name:name||'모험가',cid:null,fam:0,age:0,stage:0,step:0,lv:1,st:{s:5,i:5,c:5,d:5,j:40,m:0},job:null,life:80,done:[],gc:{},album:[],cards:[],weather:null,phase:'play'}}
 function save(){if(S)LS.set('lifeRPG3.save',S)}
 function jobName(){return S.job?S.job.p[(S.job.tier-1)*2]:''}
 function jobEmoji(){return S.job?S.job.p[(S.job.tier-1)*2+1]:''}
@@ -1315,17 +1315,27 @@ const GN2={paint:'🖌️ 바르기·칠하기',weave:'🧶 엮기·짜기',whac
 const GN={money:'💰 거스름돈 계산',pour:'🧪 시험관 색 정렬',harvest:'🌾 수확 미션',memo:'🧠 카드 짝 맞추기',dots:'✏️ 점 잇기 그리기',plant:'🌱 심기 미션',guide:'🧭 안내 미션',safari:'📸 사파리 촬영',cook:'🍳 요리 미션',clean:'🧹 청소 미션',herd:'🐾 가축 몰기',run:'🏃 달리기 미션',collect:'🔍 찾기 미션',deliver:'🎁 전달 미션',catch:'🧺 받기 미션',soccer:'⚽ 드리블 & 슛',rhythm:'🎵 리듬 미션',stack:'🧱 쌓기 미션',sort:'🗂️ 분류 미션',aim:'🎯 조준 미션'};
 const GSTAT={paint:'s',weave:'d',whack:'s',flap:'d',slide:'i',match:'i',simon:'c',brk:'d',snake:'d',pipe:'i',maze:'i',rope:'s',dress:'c',grill:'d',wrap:'d',find:'i',order:'c',talk:'c',kitchen:'d',tower:'d',tour:'c',evac:'s',fish:'d',chop:'s',money:'i',pour:'i',harvest:'s',memo:'i',dots:'d',plant:'s',guide:'c',safari:'i',cook:'d',clean:'s',herd:'s',run:'s',collect:'i',deliver:'c',catch:'d',soccer:'s',lane:'s',rhythm:'c',stack:'d',sort:'i',aim:'d'};
 function specOf(c){if(c.g)return c.g;let b=null,v=0;for(const k of['s','i','c','d'])if((c.e[k]||0)>v){v=c.e[k];b=k}return{t:({s:'run',i:'collect',c:'deliver',d:'catch'})[b]||'catch'}}
+/* 한 나라(한 인생)에서 같은 유형 미니게임은 최대 2번: 넘치면 다른 유형으로 바꿔 줌 */
+const GMAX=2,GFB=['memo','whack','flap','match','simon','brk','pipe','maze','rope','slide','snake','pour'];
+function gUsed(t){return((S.gc||{})[t]||0)+S.npcs.filter(n=>!n.done&&n.k!==null&&n.gt===t).length}
+function effGs(q){const out=[],ts=[];
+  q.ch.forEach((c,i)=>{const b=specOf(c),bt=realT(b,q,c);let g=b,t=bt;
+    if(gUsed(bt)>=GMAX||ts.includes(bt)){const fb=GFB.filter(x=>gUsed(x)<GMAX&&!ts.includes(x));
+      if(fb.length){let h=0;for(const ch of q.id+i)h=h*31+ch.charCodeAt(0)|0;t=fb[Math.abs(h)%fb.length];g={t}}}
+    out.push(g);ts.push(t)});
+  return out}
 function gName(g,q,c){if(g.name)return g.name;const rt=q?realT(g,q,c):g.t;if(rt==='order')return DTHEME[g.theme||themeOf(q,c)].replace(/배달|전달|운반/,'주문 러시');if(GN2[rt])return GN2[rt];if(g.t==='deliver'&&q)return DTHEME[g.theme||themeOf(q,c)];if(g.t==='lane')return({ski:g.skin==='⛸️'?'⛸️ 스케이트 미션':g.skin==='🦌'?'🛷 썰매 미션':'⛷️ 활강 미션',road:'🚸 안전하게 건너기',sky:'🎈 하늘 비행 미션',boat:g.skin==='🤿'?'🤿 바닷속 탐험':g.skin==='🏄'?'🏄 서핑 미션':'🚣 노 젓기 미션'})[g.v];
   if(g.t==='soccer')return g.v==='ice'?'🏒 하키 드리블 & 슛':g.v==='rugby'?'🏉 럭비 돌파':GN.soccer;return GN[g.t]}
 function openQuest(id,np){
   const q=allQ[id];
   const m=$('#modal');
+  const gs=effGs(q);
   m.innerHTML=`<div class="qhead"><span class="big">${np?np.e:q.ic}</span><div><span class="chip" style="background:var(--t-${q.t});color:#fff">${q.ic} ${TYPES[q.t]} 퀘스트</span><h3>${fill(q.ti)}</h3></div></div>
     <p class="qtext">${fill(q.tx)}</p>
-    <div class="choices">${q.ch.map((c,i)=>`<button class="choice" data-k="${i}"><span class="mtag">${gName(specOf(c),q,c)}</span><b>${fill(c.l)}</b><span class="chips">${chips(adj(c.e))}</span></button>`).join('')}</div>
+    <div class="choices">${q.ch.map((c,i)=>`<button class="choice" data-k="${i}"><span class="mtag">${gName(gs[i],q,c)}</span><b>${fill(c.l)}</b><span class="chips">${chips(adj(c.e))}</span></button>`).join('')}</div>
     <div class="mrow"><button class="btn ghost small" id="qBack">나중에 할게요</button></div>`;
   $('#ov').hidden=false;
-  m.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{$('#ov').hidden=true;if(np){np.k=+b.dataset.k;save();say('고마워! 옆에 열린 🌀 포털로 들어가 봐!')}else startMission(q,+b.dataset.k)});
+  m.querySelectorAll('.choice').forEach(b=>b.onclick=()=>{$('#ov').hidden=true;const k=+b.dataset.k;if(np){np.k=k;np.g=gs[k];np.gt=realT(gs[k],q,q.ch[k]);save();say('고마워! 옆에 열린 🌀 포털로 들어가 봐!')}else startMission(q,k,gs[k])});
   $('#qBack').onclick=()=>{$('#ov').hidden=true;say('준비되면 다시 말 걸어 줘!')};
 }
 function half(e){const o={};for(const k in e){const v=e[k]>0?Math.floor(e[k]/2):e[k];if(v)o[k]=v}return o}
@@ -1337,8 +1347,10 @@ function showResult(q,k,ok,perfect){
     <p class="tip"><b>💡 알고 있었나요?</b> ${fill(q.tip)}</p>
     <div class="mrow">${ok?'<button class="btn" id="qNext">계속하기 ▶</button>':'<button class="btn" id="qRetry">🔁 다시 도전</button><button class="btn ghost" id="qNext">보상 절반 받고 계속</button>'}</div>`;
   $('#ov').hidden=false;
-  if($('#qRetry'))$('#qRetry').onclick=()=>{$('#ov').hidden=true;startMission(q,k)};
+  const lg=M&&M.q===q?M.g:null;
+  if($('#qRetry'))$('#qRetry').onclick=()=>{$('#ov').hidden=true;startMission(q,k,lg)};
   $('#qNext').onclick=()=>{
+    if(lg){const t=realT(lg,q,c);S.gc=S.gc||{};S.gc[t]=(S.gc[t]||0)+1}
     applyE(e);if(q.id!=='free'&&q.t!=='job')S.done.push(q.id);S.album.push(q.ic);
     say(ok?fill(c.r):'다음엔 꼭 성공할 거야!');$('#ov').hidden=true;questDone(q)};
 }
@@ -1355,8 +1367,8 @@ function beep(f,dur,type,vol){if(!AC)return;try{const o=AC.createOscillator(),g=
 function setPads(L,R,J){const s=(id,t)=>{const b=$(id);b.style.visibility=t?'visible':'hidden';b.style.display=t?'':'none';if(t)b.textContent=t};s('#bL',L);s('#bR',R);s('#bJ',J)}
 function isLane(){return M&&(M.g.t==='lane'||M.g.t==='soccer')}
 
-function startMission(q,k){
-  const c=q.ch[k],g=specOf(c),cc=C[S.cid],K=CLIM[cc.clim],t=realT(g,q,c);
+function startMission(q,k,g0){
+  const c=q.ch[k],g=g0||specOf(c),cc=C[S.cid],K=CLIM[cc.clim],t=realT(g,q,c);
   const haz=g.haz||(q.w&&HAZ[q.w]&&['wea','clim','cont'].includes(q.t)&&['run','collect','catch','deliver'].includes(t)?HAZ[q.w]:null);
   const stat=S.st[GSTAT[t]];
   const item=g.item||q.ic;
@@ -1392,7 +1404,7 @@ function startMission(q,k){
     evac:'아이 4명을 데리고 떨어지는 물건을 피해 대피소까지! 놀란 아이는 다시 가서 데려와요',
     fish:'🎣 버튼을 꾹 눌렀다 떼서 던지고, 찌가 쑥 들어가면 바로 🎣! 당길 땐 물고기를 초록 칸 안에 두세요. 3마리',
     chop:'숲을 돌아다니며 통나무 앞에서 막대가 초록 칸에 올 때 🪓! 한 통나무에 두 번',
-    money:g.send?'화면의 돈 버튼을 눌러 보낼 금액을 정확히 맞춘 뒤 ✔ 건네기! 5번 성공':'손님이 낸 돈에서 물건값을 빼고, 거스름돈을 돈 버튼으로 정확히 맞춰 ✔ 건네기! 손님 5명',
+    money:g.send?'💱 환율 문제를 읽고 계산한 금액을 돈 버튼으로 정확히 맞춘 뒤 ✔ 건네기! 4문제 성공 (틀리면 💡 힌트가 나와요)':'손님이 낸 돈에서 물건값을 빼고, 거스름돈을 돈 버튼으로 정확히 맞춰 ✔ 건네기! 손님 5명',
     pour:'시험관을 눌러 고르고, 옮길 시험관을 누르면 맨 위 액체가 부어져요. 같은 색끼리만 쌓여요! 시험관마다 한 가지 색만 남기면 성공 (↩️ 되돌리기)',
     harvest:g.animal?`${g.crop}을(를) 여러 번 톡톡 눌러 ${g.yield} ${need}개 얻기!`:`${g.crop}을(를) 직접 톡톡 눌러 ${g.tool==='scissors'?'가위로 잘라요':'낫으로 베어요'}! 한 번에 안 베이니 여러 번! ${need}개${g.ripe?' · 🟢 덜 익은 건 건드리지 말고 기다려요 (🟡가 되면 곧 익어요). 딴 자리엔 새 열매가 열려요':''}`,
     memo:'카드를 두 장씩 뒤집어 같은 그림 짝 8쌍을 찾아요! 화면을 직접 눌러요',
@@ -2259,12 +2271,37 @@ const CUR={KR:['원',[1000,500,100]],JP:['엔',[1000,500,100]],CN:['위안',[10,
  NG:['나이라',[1000,500,100]],MA:['디르함',[10,5,1]],ET:['비르',[100,50,10]],US:['달러',[10,5,1]],CA:['달러',[10,5,1]],MX:['페소',[100,50,10]],BR:['헤알',[10,5,1]],AR:['페소',[1000,500,100]],PE:['솔',[10,5,1]],
  CL:['페소',[1000,500,100]],AU:['달러',[10,5,1]],NZ:['달러',[10,5,1]],FJ:['달러',[10,5,1]]};
 const fmt=n=>n.toLocaleString('ko-KR');
+/* 환율 문제: a(현지 돈) = b원 — 계산하기 쉽게 어림한 환율 */
+const XR={JP:[100,1000],CN:[1,200],IN:[10,150],VN:[1000,50],TH:[1,40],PH:[1,25],ID:[1000,100],MN:[100,40],SA:[1,400],TR:[1,40],RU:[1,15],GB:[1,1800],
+ FR:[1,1500],DE:[1,1500],IT:[1,1500],ES:[1,1500],NL:[1,1500],GR:[1,1500],FI:[1,1500],CH:[1,1600],NO:[1,130],SE:[1,130],DK:[1,200],EG:[1,30],KE:[1,10],ZA:[1,80],
+ NG:[1,1],MA:[1,140],ET:[1,10],US:[1,1400],CA:[1,1000],MX:[1,70],BR:[1,250],AR:[1,1],PE:[1,400],CL:[10,15],AU:[1,900],NZ:[1,800],FJ:[1,600]};
+const XGOODS=[['🥩','돼지고기 1kg',12,30],['🍎','사과 한 봉지',4,12],['☕','커피 한 잔',2,6],['🍞','빵 한 봉지',2,6],['👟','운동화 한 켤레',50,120],['⚽','축구공',20,40],['🍌','바나나 한 송이',3,8],['📚','책 한 권',10,25],['🎒','책가방',30,80],['🚌','버스 요금 10번',10,20]];
+const XRAT=[[1,2,'절반(1/2)','의 절반(1/2)이래요'],[1,4,'1/4','의 1/4이래요'],[2,1,'2배','의 2배래요'],[3,1,'3배','의 3배래요'],[1,1,'같은 값','과 똑같대요'],[3,2,'1.5배','의 1.5배래요']];
+function xProblem(cn,d){
+  const kr=S.cid==='KR',nm=C[S.cid].name;
+  /* 한국에서 태어났으면 미국 달러와 비교, 다른 나라면 우리나라 원과 비교 */
+  const[a,b]=kr?[1400,1]:(XR[S.cid]||[1,1000]),on=kr?'달러':'원',ow=kr?'미국':'우리나라';
+  const rate=kr?'1달러 = 1,400원':`${fmt(a)}${cn} = ${fmt(b)}원`;
+  for(let tries=0;tries<400;tries++){
+    const kind=Math.random(),[e,gn,lo,hi]=rnd(XGOODS);
+    let K=(lo+Math.floor(Math.random()*(hi-lo+1)))*(kr?1:1000);if(!kr&&hi<=8&&Math.random()<.5)K+=500;
+    let pn=1,pd=1,rt=null,rp='',mon=1;
+    if(kind<.5){[pn,pd,rt,rp]=rnd(XRAT)}else if(kind<.75){mon=rnd([2,3,4,5])}
+    const num=K*pn*a,den=pd*b*mon;if(num%den)continue;const A=num/den;
+    if(A%d[2]||A<d[2]*3||A>d[0]*20)continue;
+    const yo=kr?'예요':'이에요',L=rt?[`${e} ${ow}에서 ${gn} 값은 ${fmt(K)}${on}${yo}.`,`${nm}에서는 ${ow} 가격${rp}`,`${nm}에서는 몇 ${cn}일까요?`]
+      :mon>1?[`🏦 저축 목표: ${e} ${gn} (${ow} 값 ${fmt(K)}${on})`,`${mon}달 동안 똑같이 나눠 저축하려면`,`한 달에 몇 ${cn}씩 모아야 할까요?`]
+      :[`🏦 ${ow} 돈 ${fmt(K)}${on}${kr?'를':'을'} ${nm} 돈으로 바꿔 저축해요.`,`환율에 맞게 바꾸면`,`통장에 넣을 돈은 몇 ${cn}일까요?`];
+    const W=K*pn/pd;
+    const hint=rt?`💡 ${pn===pd?'값이 같으니':ow+' 값의 '+rt+' ='} ${fmt(W)}${on} → 환율로 바꾸면 ${fmt(A)}${cn}`:mon>1?`💡 ${fmt(K)}${on} = ${fmt(A*mon)}${cn} → ${mon}달로 나누면 ${fmt(A)}${cn}`:`💡 ${fmt(b)}원마다 ${fmt(a)}${cn}씩 → ${fmt(A)}${cn}`;
+    return{lines:L,rate,ans:A,hint:kr?hint.replace(/환율로 바꾸면/,'1달러=1,400원으로'):hint}}
+  return null}
 function newCustomer(){const[cn,d]=CUR[S.cid]||CUR.KR,u=d[2],g=M.g;
   const goods=g.goods||['🍞','🥛','🍎','🧃','🍙','🥚','🍌','🧀'];
-  if(g.send){const amt=u*(6+Math.floor(Math.random()*40));M.cust={e:rnd(PEOPLE),item:g.item||'📱',price:amt,paid:0,change:amt}}
+  if(g.send){const xp=xProblem(cn,d),amt=xp?xp.ans:u*(6+Math.floor(Math.random()*40));M.cust={e:rnd(PEOPLE),item:g.item||'📱',price:amt,paid:0,change:amt,xp,miss:0}}
   else{const price=u*(13+Math.floor(Math.random()*84)),paid=price<d[0]*5?d[0]*5:d[0]*10;M.cust={e:rnd(PEOPLE),item:rnd(goods),price,paid,change:paid-price}}
   M.tray=[];M.cn=cn;M.den=d;M.cust.x=LW+40}
-function initMoney(W){M.clicks=[];newCustomer();M.btns=[]}
+function initMoney(W){M.clicks=[];if(M.g.send)M.need=4;newCustomer();M.btns=[]}
 function moneyBtns(){const W=LW,y=LH-58,d=M.den,b=[];const bw=Math.min(92,(W-120)/5);const x0=W/2-bw*2.5;
   d.forEach((v,i)=>b.push({x:x0+i*bw,y,w:bw-8,h:46,k:'add',v,label:fmt(v)}));
   b.push({x:x0+3*bw,y,w:bw-8,h:46,k:'undo',label:'↩️ 빼기'});b.push({x:x0+4*bw,y,w:bw-8,h:46,k:'give',label:'✔ 건네기'});return b}
@@ -2273,7 +2310,7 @@ function updMoney(dt){
   for(const p of M.clicks){const b=moneyBtns().find(b=>p.x>b.x&&p.x<b.x+b.w&&p.y>b.y&&p.y<b.y+b.h);if(!b)continue;
     if(b.k==='add'){M.tray.push(b.v);beep(880,.05,'triangle')}else if(b.k==='undo'){M.tray.pop();beep(400,.05)}
     else{const sum=M.tray.reduce((a,v)=>a+v,0);if(sum===c.change){M.got++;pop(c.x,GY-150,'고마워요! 😊');beep(990,.15);if(M.got<M.need)setTimeout(()=>{if(M&&!M.over)newCustomer()},500)}
-      else{hurt(sum>c.change?'너무 많이 줬어요!':'모자라요!');M.tray=[]}}}
+      else{hurt(sum>c.change?'너무 많이 줬어요!':'모자라요!');M.tray=[];c.miss++}}}
   M.clicks=[];
 }
 function drawMoney(ts){
@@ -2283,11 +2320,15 @@ function drawMoney(ts){
   for(let i=0;i<5;i++){mx.fillStyle=i%2?'#e03131':'#fff';mx.fillRect(i*W/5,40,W/5,18)}
   if(c){drawNPC(mx,c.e,c.x,GY-48,62);
     mx.fillStyle='#fff';roundRect(c.x-120,GY-200,170,76,12);mx.fill();
-    if(M.g.send){txt(`${c.item} 보낼 돈: ${fmt(c.price)}${M.cn}`,c.x-35,GY-176,15,'#3b2d1c');txt('정확히 맞춰 주세요',c.x-35,GY-150,13,'#7a6a52')}
+    if(M.g.send&&c.xp){const x=c.xp,bw=Math.min(W*.9,560),bx=W/2-bw/2;mx.fillStyle='rgba(255,255,255,.96)';roundRect(bx,56,bw,90,12);mx.fill();
+      mx.fillStyle='#fff3bf';roundRect(bx+10,61,bw-20,20,6);mx.fill();txt(`💱 환율: ${x.rate}`,W/2,71,13,'#7a4b00');
+      x.lines.forEach((l,i)=>txt(l,W/2,96+i*18,14,'#3b2d1c'));
+      if(c.miss)txt(x.hint,W/2,GY-28,14,'#fff')}
+    else if(M.g.send){txt(`${c.item} 보낼 돈: ${fmt(c.price)}${M.cn}`,c.x-35,GY-176,15,'#3b2d1c');txt('정확히 맞춰 주세요',c.x-35,GY-150,13,'#7a6a52')}
     else{txt(`${c.item} ${fmt(c.price)}${M.cn}`,c.x-35,GY-180,16,'#3b2d1c');txt(`💵 ${fmt(c.paid)}${M.cn} 낼게요`,c.x-35,GY-152,14,'#7a6a52')}}
   drawMe(mx,W*.2,GY-48,62,0,1);
   const sum=M.tray?M.tray.reduce((a,v)=>a+v,0):0;
-  mx.fillStyle='#212529';roundRect(W*.3,GY-118,150,46,8);mx.fill();txt(`${M.g.send?'보낼 돈':'거스름돈'} ${fmt(sum)}${M.cn||''}`,W*.3+75,GY-95,15,'#69db7c');
+  mx.fillStyle='#212529';roundRect(W*.3,GY-118,150,46,8);mx.fill();txt(`${c&&c.xp?'내 답':M.g.send?'보낼 돈':'거스름돈'} ${fmt(sum)}${M.cn||''}`,W*.3+75,GY-95,15,'#69db7c');
   if(M.tray){M.tray.slice(-10).forEach((v,i)=>{const big=v===M.den[0];mx.fillStyle=big?'#8ce99a':'#ffd43b';if(big){roundRect(W*.3+i*14,GY-66,30,16,3);mx.fill()}else{mx.beginPath();mx.arc(W*.3+10+i*14,GY-58,8,0,7);mx.fill()}})}
   if(M.started)for(const b of moneyBtns()){const add=b.k==='add',big=add&&b.v===M.den[0];mx.fillStyle=b.k==='give'?'#2f9e44':b.k==='undo'?'#868e96':big?'#69db7c':'#fcc419';roundRect(b.x,b.y,b.w,b.h,10);mx.fill();
     txt(add?`${b.label}${M.cn}`:b.label,b.x+b.w/2,b.y+b.h/2,add?14:15,'#fff')}
@@ -2974,7 +3015,7 @@ function nextStage(){
 function wAct(){
   const n=W_.near;if(!n)return;
   if(n.type==='npc')talkNpc(n.np);
-  else if(n.type==='portal'){const q=allQ[n.np.id];startMission(q,n.np.k)}
+  else if(n.type==='portal'){const q=allQ[n.np.id];startMission(q,n.np.k,n.np.g)}
   else if(n.type==='shop'){openShop()}
   else if(n.type==='end'){if(S.npcs.every(x=>x.done)){S.wx=60;stageEnd()}else say('아직 도움을 기다리는 사람이 있어요! ❗')}
 }
@@ -3054,7 +3095,7 @@ function wDraw(ts){
     wtxt(`${q.ic} ${fill(q.ti)}`,np.x,WGY+22,13,'#fff','rgba(21,26,46,.78)');
     if(!np.done&&np.k!==null){const px=np.x+110,spin=ts/300;
       for(let r=0;r<3;r++){wx.strokeStyle=`rgba(${r?'120,90,255':'90,220,255'},.8)`;wx.lineWidth=4;wx.beginPath();wx.ellipse(px,WGY-38,22-r*6,40-r*10,0,spin+r,spin+r+4.4);wx.stroke()}
-      wtxt(gName(specOf(q.ch[np.k]),q,q.ch[np.k]),px,WGY-96,13,'#fff','rgba(90,60,200,.85)')}}
+      wtxt(gName(np.g||specOf(q.ch[np.k]),q,q.ch[np.k]),px,WGY-96,13,'#fff','rgba(90,60,200,.85)')}}
   /* 끝 포털 */
   {const px=W_.end,ok=S.npcs.every(n=>n.done),spin=ts/250;
     for(let r=0;r<3;r++){wx.strokeStyle=ok?`rgba(255,${200-r*40},60,.9)`:'rgba(120,120,140,.6)';wx.lineWidth=5;wx.beginPath();wx.ellipse(px,WGY-46,30-r*8,52-r*12,0,spin*(ok?1:.2)+r,spin*(ok?1:.2)+r+4.6);wx.stroke()}
