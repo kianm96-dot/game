@@ -2322,12 +2322,12 @@ function xProblem(cn,d){
     if(A%d[2]||A<d[2]*3||A>d[0]*20)continue;
     if(ty!=='price'&&kr)K=Math.round(K);
     const W=K*pn/pd,yo=kr?'예요':'이에요',money=`${fmt(K)}${on}`;
-    const L=ty==='price'?[`${e} ${ow}에서 ${jo(gn,'은','는')} ${money}${yo}.`,x.l1,x.l2,`그럼 ${nm}에서 ${jo(gn,'은','는')} 몇 ${cn}일까요?`]
-      :ty==='save'?[`🏦 ${ow} 돈 ${jo(money,'을','를')} ${nm} 돈(${cn})으로 바꿔 저축했어요.`,`이 돈을 ${mon}달 동안 똑같이 나눠 쓰려면`,`한 달에 몇 ${cn}씩 쓸 수 있을까요?`]
-      :[`🏦 ${ow} 돈 ${jo(money,'을','를')} ${nm} 돈(${cn})으로 바꿔 저축해요.`,`환율에 맞게 바꾸면`,`통장에 넣을 돈은 몇 ${cn}일까요?`];
+    const L=ty==='price'?[`${e} ${ow}에서 ${jo(gn,'은','는')} ${money}${yo}.`,x.l1,x.l2,`그럼 ${nm}에서는 몇 ${cn}일까요? (환율은 맨 위 노란 칸)`]
+      :ty==='save'?[`🏦 ${ow} 돈 ${jo(money,'을','를')} ${nm} 돈(${cn})으로 바꿔 저축했어요.`,`💱 환율은 ${rate}이에요.`,`이 돈을 ${mon}달 동안 똑같이 나눠 쓰려면`,`한 달에 몇 ${cn}씩 쓸 수 있을까요?`]
+      :[`🏦 ${ow} 돈 ${jo(money,'을','를')} ${nm} 돈(${cn})으로 바꿔 저축해요.`,`💱 환율은 ${rate}이에요.`,`통장에 넣을 돈은 몇 ${cn}일까요?`];
     const cv=kr?'1달러=1,400원으로':'환율로 바꾸면',step=pn===pd?`값이 같으니 ${fmt(W)}${on}`:`${ow} 값의 ${frx(pn,pd)} = ${fmt(W)}${on}`;
     const hint=ty==='price'?`💡 ${step} → ${cv} ${fmt(A)}${cn}`:ty==='save'?`💡 ${money} = ${fmt(A*mon)}${cn} → ${mon}달로 나누면 ${fmt(A)}${cn}`:kr?`💡 1달러마다 1,400원씩 → ${fmt(A)}원`:`💡 ${fmt(b)}원마다 ${fmt(a)}${cn}씩 → ${fmt(A)}${cn}`;
-    return{lines:L,rate,ans:A,hint}}
+    return{lines:L,rate,rateTip:kr?'1달러를 바꾸면 1,400원이 돼요':`${fmt(b)}원을 내면 ${fmt(a)}${cn}${(c=>(c-0xAC00)%28>0&&(c-0xAC00)%28!==8?'으로':'로')(cn.charCodeAt(cn.length-1))} 바꿔 줘요`,ans:A,hint}}
   return null}
 function newCustomer(){const[cn,d]=CUR[S.cid]||CUR.KR,u=d[2],g=M.g;
   const goods=g.goods||['🍞','🥛','🍎','🧃','🍙','🥚','🍌','🧀'];
@@ -2354,7 +2354,7 @@ function drawMoney(ts){
   if(c){drawNPC(mx,c.e,c.x,GY-48,62);
     if(!c.xp){mx.fillStyle='#fff';roundRect(c.x-120,GY-200,170,76,12);mx.fill()}
     if(M.g.send&&c.xp){const x=c.xp,bw=Math.min(W*.9,560),bx=W/2-bw/2;mx.fillStyle='rgba(255,255,255,.96)';roundRect(bx,46,bw,38+x.lines.length*18,12);mx.fill();
-      mx.fillStyle='#fff3bf';roundRect(bx+10,51,bw-20,20,6);mx.fill();txt(`💱 환율: ${x.rate}`,W/2,61,13,'#7a4b00');
+      mx.fillStyle='#fff3bf';roundRect(bx+10,51,bw-20,20,6);mx.fill();const rs=`💱 오늘의 환율: ${x.rate}  (${x.rateTip})`;txt(rs,W/2,61,Math.min(13,(bw-30)/rs.length*1.15),'#7a4b00');
       x.lines.forEach((l,i)=>txt(l,W/2,84+i*18,14,'#3b2d1c'));
       if(c.miss)txt(x.hint,W/2,GY-28,14,'#fff')}
     else if(M.g.send){txt(`${c.item} 보낼 돈: ${fmt(c.price)}${M.cn}`,c.x-35,GY-176,15,'#3b2d1c');txt('정확히 맞춰 주세요',c.x-35,GY-150,13,'#7a6a52')}
