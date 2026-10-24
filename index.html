@@ -2276,25 +2276,32 @@ const XR={JP:[100,1000],CN:[1,200],IN:[10,150],VN:[1000,50],TH:[1,40],PH:[1,25],
  FR:[1,1500],DE:[1,1500],IT:[1,1500],ES:[1,1500],NL:[1,1500],GR:[1,1500],FI:[1,1500],CH:[1,1600],NO:[1,130],SE:[1,130],DK:[1,200],EG:[1,30],KE:[1,10],ZA:[1,80],
  NG:[1,1],MA:[1,140],ET:[1,10],US:[1,1400],CA:[1,1000],MX:[1,70],BR:[1,250],AR:[1,1],PE:[1,400],CL:[10,15],AU:[1,900],NZ:[1,800],FJ:[1,600]};
 const XGOODS=[['🥩','돼지고기 1kg',12,30],['🍎','사과 한 봉지',4,12],['☕','커피 한 잔',2,6],['🍞','빵 한 봉지',2,6],['👟','운동화 한 켤레',50,120],['⚽','축구공',20,40],['🍌','바나나 한 송이',3,8],['📚','책 한 권',10,25],['🎒','책가방',30,80],['🚌','버스 요금 10번',10,20]];
-const XRAT=[[1,2,'절반(1/2)','의 절반(1/2)이래요'],[1,4,'1/4','의 1/4이래요'],[2,1,'2배','의 2배래요'],[3,1,'3배','의 3배래요'],[1,1,'같은 값','과 똑같대요'],[3,2,'1.5배','의 1.5배래요']];
+/* 나라별 물가 수준(우리나라=1): 세계은행 물가 수준 지수를 계산하기 쉬운 분수로 어림 */
+const XPL={JP:[1,1],CN:[1,2],IN:[1,4],VN:[1,2],TH:[1,2],PH:[1,2],ID:[1,2],MN:[1,2],SA:[1,1],TR:[1,2],RU:[1,2],GB:[3,2],FR:[3,2],DE:[3,2],IT:[1,1],ES:[1,1],NL:[3,2],
+ GR:[1,1],FI:[3,2],CH:[2,1],NO:[2,1],SE:[3,2],DK:[2,1],EG:[1,4],KE:[1,2],ZA:[1,2],NG:[1,4],MA:[1,2],ET:[1,4],US:[3,2],CA:[3,2],MX:[1,2],BR:[1,2],AR:[1,2],PE:[1,2],
+ CL:[1,2],AU:[3,2],NZ:[3,2],FJ:[1,2],KR:[2,3]};
+const frx=(n,d)=>n===d?'같은 값':d===1?n+'배':n===3&&d===2?'1.5배':n===1&&d===2?'절반(1/2)':n+'/'+d;
 function xProblem(cn,d){
   const kr=S.cid==='KR',nm=C[S.cid].name;
   /* 한국에서 태어났으면 미국 달러와 비교, 다른 나라면 우리나라 원과 비교 */
   const[a,b]=kr?[1400,1]:(XR[S.cid]||[1,1000]),on=kr?'달러':'원',ow=kr?'미국':'우리나라';
   const rate=kr?'1달러 = 1,400원':`${fmt(a)}${cn} = ${fmt(b)}원`;
-  for(let tries=0;tries<400;tries++){
+  const[pn,pd]=XPL[S.cid]||[1,1],rt=frx(pn,pd);
+  const owa=kr?'미국과':'우리나라와',why=pn===pd?`물가가 ${owa} 비슷해서`:pn<pd?`물가가 ${ow}보다 싸서`:`물가가 ${ow}보다 비싸서`;
+  for(let tries=0;tries<600;tries++){
     const kind=Math.random(),[e,gn,lo,hi]=rnd(XGOODS);
     let K=(lo+Math.floor(Math.random()*(hi-lo+1)))*(kr?1:1000);if(!kr&&hi<=8&&Math.random()<.5)K+=500;
-    let pn=1,pd=1,rt=null,rp='',mon=1;
-    if(kind<.5){[pn,pd,rt,rp]=rnd(XRAT)}else if(kind<.75){mon=rnd([2,3,4,5])}
-    const num=K*pn*a,den=pd*b*mon;if(num%den)continue;const A=num/den;
+    /* price: 물가 반영 가격 비교 · save: 물가 반영 + 나눠 저축 · conv: 돈만 바꾸기(물가와 무관) */
+    const ty=kind<.5?'price':kind<.75?'save':'conv',P=ty==='conv'?[1,1]:[pn,pd],mon=ty==='save'?rnd([2,3,4,5]):1;
+    const num=K*P[0]*a,den=P[1]*b*mon;if(num%den)continue;const A=num/den;
     if(A%d[2]||A<d[2]*3||A>d[0]*20)continue;
-    const yo=kr?'예요':'이에요',L=rt?[`${e} ${ow}에서 ${gn} 값은 ${fmt(K)}${on}${yo}.`,`${nm}에서는 ${ow} 가격${rp}`,`${nm}에서는 몇 ${cn}일까요?`]
-      :mon>1?[`🏦 저축 목표: ${e} ${gn} (${ow} 값 ${fmt(K)}${on})`,`${mon}달 동안 똑같이 나눠 저축하려면`,`한 달에 몇 ${cn}씩 모아야 할까요?`]
+    const W=K*P[0]/P[1],same=pn===pd,yo=kr?'예요':'이에요';
+    const L=ty==='price'?[`${e} ${ow}에서 ${gn} 값은 ${fmt(K)}${on}${yo}.`,`${nm}에서는 ${why} ${same?'값이 거의 같아요':ow+' 값의 '+rt+' 정도예요'}.`,`${nm}에서는 몇 ${cn}일까요?`]
+      :ty==='save'?[`🏦 저축 목표: ${e} ${gn} (${ow} 값 ${fmt(K)}${on})`,`${nm}에서는 ${why} ${same?'값이 거의 같아요':ow+' 값의 '+rt+' 정도예요'}.`,`${mon}달 동안 똑같이 나눠 모으면 한 달에 몇 ${cn}씩?`]
       :[`🏦 ${ow} 돈 ${fmt(K)}${on}${kr?'를':'을'} ${nm} 돈으로 바꿔 저축해요.`,`환율에 맞게 바꾸면`,`통장에 넣을 돈은 몇 ${cn}일까요?`];
-    const W=K*pn/pd;
-    const hint=rt?`💡 ${pn===pd?'값이 같으니':ow+' 값의 '+rt+' ='} ${fmt(W)}${on} → 환율로 바꾸면 ${fmt(A)}${cn}`:mon>1?`💡 ${fmt(K)}${on} = ${fmt(A*mon)}${cn} → ${mon}달로 나누면 ${fmt(A)}${cn}`:`💡 ${fmt(b)}원마다 ${fmt(a)}${cn}씩 → ${fmt(A)}${cn}`;
-    return{lines:L,rate,ans:A,hint:kr?hint.replace(/환율로 바꾸면/,'1달러=1,400원으로'):hint}}
+    const cv=kr?'1달러=1,400원으로':'환율로 바꾸면',step=same?`값이 같으니 ${fmt(W)}${on}`:`${ow} 값의 ${rt} = ${fmt(W)}${on}`;
+    const hint=ty==='price'?`💡 ${step} → ${cv} ${fmt(A)}${cn}`:ty==='save'?`💡 ${step} → ${cv} ${fmt(A*mon)}${cn} → ${mon}달로 나누면 ${fmt(A)}${cn}`:kr?`💡 1달러마다 1,400원씩 → ${fmt(A)}원`:`💡 ${fmt(b)}원마다 ${fmt(a)}${cn}씩 → ${fmt(A)}${cn}`;
+    return{lines:L,rate,ans:A,hint}}
   return null}
 function newCustomer(){const[cn,d]=CUR[S.cid]||CUR.KR,u=d[2],g=M.g;
   const goods=g.goods||['🍞','🥛','🍎','🧃','🍙','🥚','🍌','🧀'];
@@ -2319,7 +2326,7 @@ function drawMoney(ts){
   mx.fillStyle='#a07a4a';mx.fillRect(0,GY-50,W,LH);mx.fillStyle='#8b5a2b';mx.fillRect(0,GY-50,W,8);
   for(let i=0;i<5;i++){mx.fillStyle=i%2?'#e03131':'#fff';mx.fillRect(i*W/5,40,W/5,18)}
   if(c){drawNPC(mx,c.e,c.x,GY-48,62);
-    mx.fillStyle='#fff';roundRect(c.x-120,GY-200,170,76,12);mx.fill();
+    if(!c.xp){mx.fillStyle='#fff';roundRect(c.x-120,GY-200,170,76,12);mx.fill()}
     if(M.g.send&&c.xp){const x=c.xp,bw=Math.min(W*.9,560),bx=W/2-bw/2;mx.fillStyle='rgba(255,255,255,.96)';roundRect(bx,56,bw,90,12);mx.fill();
       mx.fillStyle='#fff3bf';roundRect(bx+10,61,bw-20,20,6);mx.fill();txt(`💱 환율: ${x.rate}`,W/2,71,13,'#7a4b00');
       x.lines.forEach((l,i)=>txt(l,W/2,96+i*18,14,'#3b2d1c'));
