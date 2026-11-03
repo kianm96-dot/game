@@ -1,6 +1,6 @@
 <title>지구별 인생 RPG</title>
 <meta name="claude:viewport-fit-sides" content="cover">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,viewport-fit=cover">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -26,6 +26,8 @@
   --fs:clamp(11px,3.3vh,15px);
 }
 [hidden]{display:none!important}
+/* 아이폰: 확대·스크롤로 화면이 밀리지 않게 화면에 고정 */
+body:not(.portrait-ok){position:fixed;inset:0;width:100%;touch-action:manipulation}
 html{box-sizing:border-box;height:100%}
 *,*::before,*::after{box-sizing:inherit}
 body{height:100%;margin:0;background:var(--night);color:var(--text);font-family:var(--body);font-size:var(--fs);overflow:hidden;-webkit-tap-highlight-color:transparent;-webkit-user-select:none;user-select:none;
@@ -66,7 +68,7 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance}
 .logo p{margin:0;color:var(--muted);font-size:1.05em;line-height:1.5}
 .start-box{background:var(--panel);border:2px solid var(--edge);border-radius:16px;padding:14px;display:flex;flex-direction:column;gap:10px;min-width:0}
 .start-box label{font-family:var(--display);color:var(--gold)}
-.start-box input{width:100%;padding:.55em .8em;border-radius:10px;border:2px solid var(--edge);background:var(--night);color:var(--text);font:inherit;font-size:1.1em;-webkit-user-select:text;user-select:text}
+.start-box input{width:100%;padding:.55em .8em;border-radius:10px;border:2px solid var(--edge);background:var(--night);color:var(--text);font:inherit;font-size:max(16px,1.1em);-webkit-user-select:text;user-select:text}
 .start-row{display:flex;gap:8px;flex-wrap:wrap}
 .start-row .btn{flex:1}
 .dex h3{font-size:1em;color:var(--muted);margin-bottom:4px}
@@ -2960,6 +2962,12 @@ const W_={P:{x:60,y:WGY,vy:0,ground:true},cam:0,len:1200,decor:[],coins:[],plats
 function seeded(seed){let a=seed>>>0;return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
 function wSize(){const r=wc.getBoundingClientRect();if(!r.width)return;const d=Math.min(2,devicePixelRatio||1);const s=r.height/WH;WW=r.width/s;wc.width=Math.round(r.width*d);wc.height=Math.round(r.height*d);wx.setTransform(d*s,0,0,d*s,0,0)}
 addEventListener('resize',()=>{if(!$('#game').hidden)wSize()});
+/* 아이폰: 입력칸 확대·회전 뒤 화면이 밀려 있으면 제자리로 */
+function fixView(){if(!document.body.classList.contains('portrait-ok'))scrollTo(0,0);if(!$('#game').hidden)wSize()}
+addEventListener('orientationchange',()=>setTimeout(fixView,300));
+addEventListener('focusout',()=>setTimeout(fixView,50));
+if(window.visualViewport)visualViewport.addEventListener('resize',()=>setTimeout(fixView,50));
+document.addEventListener('gesturestart',e=>e.preventDefault());
 
 function stageObj(){return STAGES[S.stage]}
 function buildMap(){
