@@ -1460,7 +1460,7 @@ function startMission(q,k){
     order:`손님마다 원하는 물건이 달라요! 왼쪽 상자에서 맞는 물건을 들고 시간 안에 가져다줘요. 들고 있는 걸 바꾸려면 다른 상자 앞에 잠깐 멈춰 서요. ${need}번 성공`,
     talk:'인사말 카드가 나오면 그 나라 국기를 든 사람을 눌러요! 8번 성공',
     kitchen:`레시피 순서대로 재료를 고르고${FOODD.has(g.dish)?', 🔥 불을 초록 칸에 맞춰 익혀요':''}! 엉뚱한 재료는 감점`,
-    tower:`머리에 ${g.tray||'🧺'}을(를) 이고 떨어지는 ${item}을(를) 받아요! 걸으면 짐이 뒤로 기울어요. 위 게이지가 기울면 그쪽으로 걸어서 바로 세워요. ${need}개 모으기 (돌은 피해요)`,
+    tower:`머리에 ${g.tray||'🧺'}을(를) 이고 떨어지는 ${item}을(를) 받아요! 위 게이지가 한쪽으로 기울면 반대쪽으로 걸어서 바로 세워요. ${need}개 모으기 (돌은 피해요)`,
     paint:`손가락으로 벽을 문질러 ${g.what||'칠해요'}! 바람에 조금씩 벗겨지니 빈틈 없이 95% 이상`,
     weave:`바늘이 위·아래로 움직여요. 초록 칸(위→아래→위…)에 왔을 때 톡 눌러 ${item} ${need}줄을 엮어요. 갈수록 빨라져요`,
     tour:'손님 3명을 데리고 명소를 돌며 손님 질문에 답해요. 사진 찍느라 멈춘 손님은 다시 데려와요!',
@@ -2032,12 +2032,12 @@ function drawKitchen(ts){
 const LIQ_E=new Set(['💧','🥛','🍯','🌧️','☁️','🔥','💤','⭐','🪙','📄','📦']);
 /* ── 머리에 이고 받기 (재설계) ── */
 function headY(){return M.P.y-54*stageScale(stageObj().k)-2}
-function initTower(W){M.h=0;M.a=0;M.av=0;M.items=[];M.sp.a=.4;M.sp.b=1.6;M.pile=[]}
+function initTower(W){M.h=0;M.a=0;M.av=0;M.px=M.P.x;M.items=[];M.sp.a=.4;M.sp.b=1.6;M.pile=[]}
 function updTower(dt){
-  const P=M.P,W=LW,d=(keys.r?1:0)-(keys.l?1:0);
+  const P=M.P,W=LW,d=Math.max(-1,Math.min(1,dt>0?(P.x-(M.px??P.x))/(240*dt):0));M.px=P.x;
   const k=.45+.035*M.h,noise=(Math.random()-.5)*(.25+.03*M.h);
-  /* 걸으면 짐이 뒤로 기울어요 → 기운 쪽으로 걸어가면 바로 서요 */
-  M.av+=(k*M.a*(M.h?1:0)-d*1.5+noise*(M.h?1:0))*dt;M.av*=Math.pow(.25,dt);M.a+=M.av*dt*2.2;
+  /* 기운 반대쪽으로 걸으면 바로 서요 (벽에 막혀 못 움직이면 효과 없음) */
+  M.av+=(k*M.a*(M.h?1:0)+d*1.5+noise*(M.h?1:0))*dt;M.av*=Math.pow(.25,dt);M.a+=M.av*dt*2.2;
   if(!M.h){M.a*=Math.pow(.05,dt);}
   M.a=Math.max(-1.2,Math.min(1.2,M.a));
   if(Math.abs(M.a)>1){hurt('와르르!');const keep=Math.floor(M.h/2);M.h=keep;M.pile.length=keep;M.a=0;M.av=0}
@@ -2059,7 +2059,7 @@ function drawTower(ts){
   const gx=W/2-110,gy=56;mx.fillStyle='rgba(255,255,255,.85)';roundRect(gx,gy,220,16,8);mx.fill();
   mx.fillStyle='rgba(47,158,68,.35)';mx.fillRect(W/2-30,gy+2,60,12);mx.fillStyle='rgba(224,49,49,.35)';mx.fillRect(gx+2,gy+2,26,12);mx.fillRect(gx+192,gy+2,26,12);
   const mxp=W/2+Math.max(-1,Math.min(1,M.a))*105;mx.fillStyle=Math.abs(M.a)>.7?'#e03131':Math.abs(M.a)>.35?'#f08c00':'#2f9e44';mx.beginPath();mx.arc(mxp,gy+8,9,0,7);mx.fill();
-  if(Math.abs(M.a)>.35)txt(M.a>0?'기울었어요! ▶ 오른쪽으로 걸어요':'◀ 왼쪽으로 걸어요! 기울었어요',W/2,gy+32,15,Math.abs(M.a)>.7?'#ffe3e3':'#fff');
+  if(Math.abs(M.a)>.35)txt(M.a>0?'오른쪽으로 기울었어요! ◀ 왼쪽으로 걸어요':'왼쪽으로 기울었어요! 오른쪽으로 걸어요 ▶',W/2,gy+32,15,Math.abs(M.a)>.7?'#ffe3e3':'#fff');
 }
 /* ── 바르기·칠하기 (손가락으로 문질러 칠하기) ── */
 function initPaint(W){const cols=24,rows=9;M.pc={cols,rows,x:W*.17,y:84,w:W*.66,h:GY-104};M.cells=new Array(cols*rows).fill(0);M.drag=null;M.br={x:W/2,y:LH/2};M.wind=3.5;M.need=100;
