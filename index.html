@@ -1,5 +1,13 @@
 <title>지구별 인생 RPG</title>
 <meta name="claude:viewport-fit-sides" content="cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="인생 RPG">
+<meta name="theme-color" content="#151a2e">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="icon-180.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Jua&family=Gowun+Dodum&display=swap">
@@ -68,6 +76,9 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance}
 /* ── QR 접속 ── */
 .qr-btn{align-self:flex-start;font-size:1em;margin-top:4px}
 #qrOv{z-index:30}
+#iosOv{z-index:30}
+.ios-steps{margin:0;padding-left:1.4em;text-align:left;line-height:1.6}
+.ios-steps b{color:var(--accent-deep)}
 .qr-card{background:var(--paper);color:var(--paper-ink);border:3px solid var(--paper-edge);border-radius:18px;padding:14px 18px;display:flex;flex-direction:column;align-items:center;gap:8px;max-width:100%;max-height:100%;overflow:auto;animation:rise .25s;text-align:center}
 .qr-card h3{font-size:1.5em}
 .qr-card p{margin:0;line-height:1.4}
@@ -397,6 +408,19 @@ h1,h2,h3{font-family:var(--display);font-weight:400;margin:0;text-wrap:balance}
   <div class="mg-msg" id="mgMsg" hidden></div>
 </div>
 <div class="overlay" id="ov" hidden><div class="modal" id="modal"></div></div>
+<div class="overlay" id="iosOv" hidden role="dialog" aria-label="아이폰 전체 화면 안내">
+  <div class="qr-card">
+    <h3>📱 아이폰은 이렇게 전체 화면!</h3>
+    <p>아이폰 Safari는 웹페이지 전체 화면을 막아 둬서, 홈 화면에 앱처럼 추가해야 해요.</p>
+    <ol class="ios-steps">
+      <li>Safari 아래(또는 위) <b>공유 버튼 ⬆️</b> 누르기</li>
+      <li><b>홈 화면에 추가 ➕</b> 누르기 (‘웹 앱으로 열기’는 켜 두기)</li>
+      <li>홈 화면의 <b>🌏 인생 RPG</b> 아이콘으로 열기</li>
+    </ol>
+    <p>저장된 게임은 새 아이콘에서 다시 시작해야 할 수 있어요.</p>
+    <button class="btn" id="iosClose">알겠어요</button>
+  </div>
+</div>
 <div class="overlay" id="qrOv" hidden role="dialog" aria-label="QR로 접속하기">
   <div class="qr-card">
     <h3>📱 휴대폰 카메라로 찍어 접속해요!</h3>
@@ -1191,15 +1215,26 @@ function renderTitle(){
   const sv=LS.get('lifeRPG3.save');$('#btnCont').hidden=!(sv&&sv.cid&&C[sv.cid]&&sv.phase!=='end');
   show('title');
 }
-function tryLandscape(){
-  const el=document.documentElement;
-  try{const p=el.requestFullscreen&&el.requestFullscreen();if(p&&p.then)p.then(()=>{try{screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}).catch(()=>{})}catch(e){}
+/* 아이폰 Safari는 전체 화면 API가 없어서, 홈 화면에 추가(웹 앱)로 열어야 꽉 차요 */
+const isStandalone=()=>navigator.standalone===true||matchMedia('(display-mode: standalone),(display-mode: fullscreen)').matches;
+const isIOS=/iP(hone|od|ad)/.test(navigator.userAgent)||(navigator.platform==='MacIntel'&&navigator.maxTouchPoints>1);
+function tryLandscape(fromBtn){
+  const el=document.documentElement,req=el.requestFullscreen||el.webkitRequestFullscreen;
+  if(document.fullscreenElement||document.webkitFullscreenElement||isStandalone())return;
+  if(!req){
+    if(isIOS&&(fromBtn===true||!LS.get('lifeRPG3.iosTip'))){LS.set('lifeRPG3.iosTip',1);$('#iosOv').hidden=false}
+    return;
+  }
+  try{const p=req.call(el);if(p&&p.then)p.then(()=>{try{screen.orientation.lock('landscape').catch(()=>{})}catch(e){}}).catch(()=>{})}catch(e){}
 }
+if(isStandalone())$('#btnFull').hidden=true;
+$('#iosClose').onclick=()=>$('#iosOv').hidden=true;
+$('#iosOv').onclick=e=>{if(e.target.id==='iosOv')$('#iosOv').hidden=true};
 $('#btnStart').onclick=()=>{tryLandscape();S=fresh($('#nameIn').value.trim());startBirth()};
 $('#btnCont').onclick=()=>{tryLandscape();S=LS.get('lifeRPG3.save');enterGame(false)};
 $('#skipRotate').onclick=()=>document.body.classList.add('portrait-ok');
 $('#btnHome').onclick=()=>{save();renderTitle()};
-$('#btnFull').onclick=tryLandscape;
+$('#btnFull').onclick=()=>tryLandscape(true);
 
 /* QR 접속: 지금 주소(파일로 열었으면 공개 주소)를 QR로 보여 줘요 */
 const SITE_URL='https://kianm96-dot.github.io/game/';
@@ -1214,7 +1249,7 @@ function showQR(){
 $('#btnQR').onclick=showQR;
 $('#qrClose').onclick=()=>$('#qrOv').hidden=true;
 $('#qrOv').onclick=e=>{if(e.target.id==='qrOv')$('#qrOv').hidden=true};
-addEventListener('keydown',e=>{if(e.key==='Escape')$('#qrOv').hidden=true});
+addEventListener('keydown',e=>{if(e.key==='Escape'){$('#qrOv').hidden=true;$('#iosOv').hidden=true}});
 
 /* 탄생: 실제 출생 비율대로 뽑기 */
 function pickCountry(){
